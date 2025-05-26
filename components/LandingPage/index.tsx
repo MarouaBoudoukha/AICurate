@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MiniKit, VerifyCommandInput, VerificationLevel } from "@worldcoin/minikit-js";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 export function LandingPage() {
   const [username, setUsername] = useState("");
@@ -16,48 +15,33 @@ export function LandingPage() {
       alert("Please enter a username");
       return;
     }
-
     setIsVerifying(true);
-
     try {
       if (!MiniKit.isInstalled()) {
         alert("Please install World App to continue");
         return;
       }
-
       const verifyPayload: VerifyCommandInput = {
         action: "verify",
         verification_level: VerificationLevel.Orb,
       };
-
       const response = await MiniKit.commandsAsync.verify(verifyPayload);
-      
       if (!response || !response.finalPayload) {
         throw new Error("Invalid response from World App");
       }
-
       const { finalPayload } = response;
       if (finalPayload.status === "error") {
         throw new Error("Verification failed");
       }
-
       // Verify the proof in the backend
       const verifyResponse = await fetch("/api/verify", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          payload: finalPayload,
-          action: "verify",
-          username,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: finalPayload, action: "verify", username }),
       });
-
       if (!verifyResponse.ok) {
         throw new Error("Backend verification failed");
       }
-
       router.push("/quiz");
     } catch (error) {
       console.error("Verification failed:", error);
@@ -68,85 +52,172 @@ export function LandingPage() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 space-y-6"
-    >
-      <div className="text-center space-y-2">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="w-24 h-24 mx-auto mb-4"
-        >
-          <Image
-            src="/aicuratelogo.png"
-            alt="AICurate Logo"
-            width={96}
-            height={96}
-            className="object-contain"
-            priority
-          />
-        </motion.div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome to AICurate</h1>
-        <p className="text-gray-600">
-          Join our community of AI app reviewers and earn rewards
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-            Choose your username
-          </label>
-          <input
-            type="text"
-            id="username"
-            className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter a unique username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </div>
-
-        <motion.button
-          onClick={handleVerify}
-          disabled={isVerifying}
-          whileTap={{ scale: 0.98 }}
-          className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-medium shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isVerifying ? (
-            <span className="flex items-center justify-center gap-2">
-              <motion.span
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa]">
+      <div className="screen-frame flex items-center justify-center">
+        <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
+          <div className="screen-1-content flex flex-col items-center justify-between">
+            {/* Lightning Icon */}
+            <img src="/onboarding/lightning.svg" alt="Lightning" className="lightning-svg-no-bg" />
+            {/* Headline */}
+            <h1 className="welcome-headline" style={{color: '#1f2937'}}>Your AI Hunt starts with Proof</h1>
+            {/* Username Input */}
+            <div className="username-input-container">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your username"
+                className="username-input"
               />
-              Verifying...
-            </span>
-          ) : (
-            "Verify with World ID"
-          )}
-        </motion.button>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+            </div>
+            {/* Login Buttons */}
+            <div className="login-buttons-container">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleVerify}
+                disabled={isVerifying}
+                className="sign-in-button"
+              >
+                Sign in with World ID
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => router.push("/quiz")}
+                className="guest-signup-button"
+              >
+                Sign up as Guest
+              </motion.button>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 text-gray-500 bg-white">Or</span>
-          </div>
+          <style jsx>{`
+            .screen-frame {
+              background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+              padding: 3px;
+              border-radius: 33px;
+              box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+              width: 375px;
+              height: 812px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .screen-1-container {
+              width: 400px;
+              height: 700px;
+              background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+              border-radius: 30px;
+              border: 1px solid #c7d2fe;
+              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-start;
+            }
+            .screen-1-content {
+              background: #f8fafc;
+              height: 100%;
+              padding: 60px 30px 40px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-between;
+            }
+            .lightning-svg-no-bg {
+              width: 60px;
+              height: 60px;
+              display: block;
+              margin: 0 auto 30px auto;
+              filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5));
+              animation: lightningPulse 2s ease-in-out infinite;
+            }
+            @keyframes lightningPulse {
+              0%, 100% {
+                filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.5));
+                transform: scale(1);
+              }
+              50% {
+                filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.8));
+                transform: scale(1.05);
+              }
+            }
+            .welcome-headline {
+              font-size: 28px;
+              font-weight: 700;
+              color: #1f2937;
+              text-align: center;
+              margin: 0 0 30px 0;
+              line-height: 1.2;
+              letter-spacing: -0.3px;
+              max-width: 280px;
+            }
+            .username-input-container {
+              width: 100%;
+              max-width: 280px;
+              margin-bottom: 30px;
+            }
+            .username-input {
+              width: 100%;
+              height: 50px;
+              background: #fff;
+              border: 1px solid #e5e7eb;
+              border-radius: 25px;
+              padding: 0 20px;
+              font-size: 16px;
+              color: #1f2937;
+              outline: none;
+              transition: all 0.3s ease;
+            }
+            .username-input:focus {
+              border-color: #4f46e5;
+              box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            }
+            .username-input::placeholder {
+              color: #9ca3af;
+            }
+            .login-buttons-container {
+              display: flex;
+              flex-direction: column;
+              gap: 15px;
+              width: 100%;
+              max-width: 320px;
+              margin-bottom: 40px;
+            }
+          `}</style>
+          <style jsx global>{`
+            .sign-in-button {
+              width: 100%;
+              height: 48px;
+              background: #111827;
+              border: none;
+              border-radius: 10px;
+              color: #fff;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              margin-bottom: 10px;
+              transition: background 0.2s;
+            }
+            .sign-in-button:hover {
+              background: #1f2937;
+            }
+            .guest-signup-button {
+              width: 100%;
+              height: 48px;
+              background: #fff;
+              border: 1.5px solid #111827;
+              border-radius: 10px;
+              color: #111827;
+              font-size: 16px;
+              font-weight: 600;
+              cursor: pointer;
+              transition: background 0.2s, color 0.2s;
+            }
+            .guest-signup-button:hover {
+              background: #f3f4f6;
+              color: #1f2937;
+            }
+          `}</style>
         </div>
-
-        <motion.button
-          onClick={() => router.push("/quiz")}
-          whileTap={{ scale: 0.98 }}
-          className="w-full px-4 py-3 text-gray-700 bg-white border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        >
-          Continue as Guest
-        </motion.button>
       </div>
-    </motion.div>
+    </div>
   );
 } 

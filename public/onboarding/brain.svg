@@ -1,0 +1,32 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="welcomeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9333ea;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main circle background -->
+  <circle cx="60" cy="60" r="50" fill="url(#welcomeGrad)" />
+  
+  <!-- Robot head -->
+  <rect x="35" y="35" width="50" height="40" rx="8" fill="white" opacity="0.95" />
+  
+  <!-- Eyes -->
+  <circle cx="45" cy="50" r="4" fill="#2563eb" />
+  <circle cx="75" cy="50" r="4" fill="#2563eb" />
+  
+  <!-- Eye highlights -->
+  <circle cx="46" cy="48" r="1.5" fill="white" />
+  <circle cx="76" cy="48" r="1.5" fill="white" />
+  
+  <!-- Antenna -->
+  <line x1="60" y1="35" x2="60" y2="25" stroke="white" stroke-width="3" stroke-linecap="round" />
+  <circle cx="60" cy="22" r="3" fill="#fbbf24" />
+  
+  <!-- Smile -->
+  <path d="M 50 65 Q 60 72 70 65" stroke="#2563eb" stroke-width="3" fill="none" stroke-linecap="round" />
+  
+  <!-- Robot body accent -->
+  <rect x="40" y="70" width="40" height="4" rx="2" fill="white" opacity="0.8" />
+</svg>
