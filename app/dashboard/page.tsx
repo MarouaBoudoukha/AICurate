@@ -4,7 +4,8 @@ import { UserCircle, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React, { useRef } from 'react';
 
-export default function UserDashboard() {
+// ProofProfile Home Screen (formerly Dashboard)
+export default function ProofProfile() {
   const router = useRouter();
   // Mock user data
   const username = 'Explorer';

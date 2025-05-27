@@ -192,8 +192,18 @@ export default function MadameDappai() {
   ]
 
   return (
-    <div className="h-full flex flex-col">
-      <header className="p-4 border-b sticky top-0 bg-white z-10">
+    <motion.div
+      className="h-full flex flex-col"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      <motion.header
+        className="p-4 border-b sticky top-0 bg-white z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+      >
         <div className="flex items-center gap-4 mb-3">
           <div className="relative w-16 h-16">
             <Image
@@ -206,18 +216,22 @@ export default function MadameDappai() {
             />
           </div>
           <div>
-            <h1 className="text-xl font-semibold">AI Guide</h1>
+            <h1 className="text-xl font-semibold text-indigo-700">AI Guide</h1>
             <p className="text-sm text-gray-600">
               Welcome {username}, let me help you discover the perfect AI tools
             </p>
           </div>
         </div>
-      </header>
-
+      </motion.header>
       <main className="flex-1 overflow-y-auto">
         <div className="p-4 space-y-6">
           {/* Search Bar */}
-          <div className="relative">
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
             <input
               type="text"
               placeholder="Search AI tools..."
@@ -225,13 +239,13 @@ export default function MadameDappai() {
               className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          </div>
-
+          </motion.div>
           {/* AI Consultation Card */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white"
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
@@ -244,13 +258,12 @@ export default function MadameDappai() {
             </div>
             <button
               onClick={() => setShowConsultation(prev => !prev)}
-              className="w-full py-2.5 bg-white text-blue-600 rounded-lg font-medium flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-white text-blue-600 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-blue-50 focus:ring-2 focus:ring-blue-300 transition"
             >
               Start Consultation
               <ChevronRight className="w-4 h-4" />
             </button>
           </motion.div>
-
           {showConsultation && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -260,70 +273,66 @@ export default function MadameDappai() {
               <AiConsultation />
             </motion.div>
           )}
-
-          {/* Featured Apps */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold">Featured Apps</h2>
-              <button className="text-sm text-blue-600">See all</button>
-            </div>
-            <div className="grid grid-cols-1 gap-3">
-              {filteredApps.length > 0 ? (
-                filteredApps.map((app) => (
-                  <motion.div
-                    key={app.name}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-white border border-gray-200 rounded-xl p-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
-                        {app.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium truncate">{app.name}</h3>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium">{app.rating}</span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-600 truncate">{app.description}</p>
-                        <p className="text-xs text-gray-500 mt-1">{app.reviews.toLocaleString()} reviews</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No apps found matching your search.</p>
-                </div>
-              )}
-            </div>
-          </section>
-
           {/* Categories */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold">Categories</h2>
-              <button className="text-sm text-blue-600">See all</button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {categories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="p-4 bg-white border border-gray-200 rounded-xl text-left transition-colors hover:border-blue-500"
-                >
-                  <span className="text-2xl mb-2 block">{category.icon}</span>
-                  <h3 className="font-medium text-sm mb-1">{category.name}</h3>
-                  <p className="text-xs text-gray-600 line-clamp-2">{category.description}</p>
-                </motion.button>
-              ))}
-            </div>
-          </section>
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 gap-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.08 } }
+            }}
+          >
+            {categories.map((cat, i) => (
+              <motion.button
+                key={cat.id}
+                className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl shadow p-4 flex flex-col items-center hover:scale-105 transition-transform focus:ring-2 focus:ring-indigo-300 focus:outline-none"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.08, duration: 0.4 }}
+                onClick={() => setSelectedCategory(cat.name)}
+              >
+                <span className="text-2xl mb-2">{cat.icon}</span>
+                <span className="font-semibold text-indigo-700 text-sm mb-1">{cat.name}</span>
+                <span className="text-xs text-gray-500 text-center">{cat.description}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+          {/* Featured Apps */}
+          <motion.div
+            className="space-y-4"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.08 } }
+            }}
+          >
+            {filteredApps.map((app, i) => (
+              <motion.div
+                key={app.name}
+                className="bg-white rounded-xl shadow-lg p-4 flex items-center gap-4 hover:scale-[1.02] transition-transform"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + i * 0.08, duration: 0.4 }}
+              >
+                <span className="text-3xl">{app.icon}</span>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-indigo-700">{app.name}</h4>
+                  <p className="text-sm text-gray-600">{app.description}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-yellow-500 text-xs flex items-center gap-1"><Star className="w-3 h-3" /> {app.rating}</span>
+                    <span className="text-xs text-gray-400">({app.reviews} reviews)</span>
+                  </div>
+                </div>
+                <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+                  {app.category}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </main>
-    </div>
+    </motion.div>
   )
 } 
