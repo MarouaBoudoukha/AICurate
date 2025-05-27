@@ -1,9 +1,57 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Rocket, ThumbsUp, Share2, FlaskConical, Award, BookOpen, PlusCircle, ChevronRight, Coins } from 'lucide-react';
+
+const huntSections = [
+  {
+    label: 'Start a Hunt',
+    icon: Rocket,
+    color: 'text-indigo-600',
+    path: '/hunt/start',
+  },
+  {
+    label: 'Vote',
+    icon: ThumbsUp,
+    color: 'text-purple-600',
+    path: '/hunt/vote',
+  },
+  {
+    label: 'Share',
+    icon: Share2,
+    color: 'text-pink-500',
+    path: '/hunt/share',
+  },
+  {
+    label: 'Test',
+    icon: FlaskConical,
+    color: 'text-blue-500',
+    path: '/hunt/test',
+  },
+  {
+    label: 'Claim',
+    icon: Award,
+    color: 'text-yellow-500',
+    path: '/hunt/claim',
+  },
+  {
+    label: 'Educate',
+    icon: BookOpen,
+    color: 'text-green-600',
+    path: '/hunt/educate',
+  },
+  {
+    label: 'List Your AI App',
+    icon: PlusCircle,
+    color: 'text-indigo-500',
+    path: '/hunt/list',
+  },
+];
 
 export default function HuntPage() {
   const router = useRouter();
+  const credits = 3; // Replace with real credits logic if available
+
   return (
     <motion.div
       className="p-4 max-w-2xl mx-auto"
@@ -11,95 +59,58 @@ export default function HuntPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
-      <motion.button
-        onClick={() => router.push('/dashboard')}
-        className="mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 rounded hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-400 transition"
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.1, duration: 0.4 }}
-      >
-        ← Back to Dashboard
-      </motion.button>
       <motion.h1
         className="text-2xl font-bold mb-6 text-indigo-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+      >
+        AI Tool Hunt
+      </motion.h1>
+      {/* Credits Widget */}
+      <motion.div
+        className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow px-5 py-4 mb-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        Start New Hunt
-      </motion.h1>
+        <div className="flex items-center gap-3">
+          <Coins className="w-7 h-7 text-yellow-500" />
+          <div>
+            <div className="text-xs text-gray-500">Credits Available</div>
+            <div className="text-xl font-bold text-indigo-700">{credits}</div>
+          </div>
+        </div>
+        <button className="ml-4 px-4 py-2 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-yellow-500 hover:to-pink-600 focus:ring-2 focus:ring-pink-300 transition">
+          Buy More
+        </button>
+      </motion.div>
+      {/* Hunt Sections */}
       <motion.div
-        className="space-y-6"
+        className="space-y-4"
         initial="hidden"
         animate="visible"
         variants={{
           hidden: {},
-          visible: { transition: { staggerChildren: 0.12 } }
+          visible: { transition: { staggerChildren: 0.08 } }
         }}
       >
-        <motion.div
-          className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-lg p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-lg text-indigo-700">AI Art Explorer</h3>
-              <p className="text-sm text-gray-600">Review 5 different AI art generation apps</p>
+        {huntSections.map((section, i) => (
+          <motion.button
+            key={section.label}
+            className="w-full flex items-center justify-between bg-white rounded-xl shadow-lg px-4 py-4 hover:bg-indigo-50 focus:ring-2 focus:ring-indigo-300 transition group"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+            onClick={() => router.push(section.path)}
+          >
+            <div className="flex items-center gap-4">
+              <section.icon className={`w-6 h-6 ${section.color} group-hover:scale-110 transition-transform`} />
+              <span className="font-medium text-gray-900 text-base">{section.label}</span>
             </div>
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-              Active
-            </span>
-          </div>
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-1">Participants: 156</p>
-            <div className="h-2 bg-gray-200 rounded-full">
-              <div className="h-2 bg-blue-600 rounded-full w-3/5 transition-all"></div>
-            </div>
-            <p className="text-xs text-gray-600 mt-1">3/5 completed</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Reward: <span className="text-indigo-600 font-semibold">Miss Artsy NFT</span></p>
-            <motion.button
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-md text-sm font-medium shadow hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-400 focus:outline-none transition-all"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              Join Challenge
-            </motion.button>
-          </div>
-        </motion.div>
-        <motion.div
-          className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-lg p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-lg text-purple-700">Image Generation Master</h3>
-              <p className="text-sm text-gray-600">Compare Midjourney, DALL-E, and Stable Diffusion</p>
-            </div>
-            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-              Upcoming
-            </span>
-          </div>
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">Participants: 89</p>
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">Reward: <span className="text-purple-600 font-semibold">Exclusive AI Artist Badge</span></p>
-            <motion.button
-              className="px-4 py-2 bg-gray-200 text-gray-600 rounded-md text-sm font-medium shadow hover:bg-gray-300 focus:ring-2 focus:ring-purple-300 focus:outline-none transition-all"
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              disabled
-            >
-              Coming Soon
-            </motion.button>
-          </div>
-        </motion.div>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition" />
+          </motion.button>
+        ))}
       </motion.div>
     </motion.div>
   );
