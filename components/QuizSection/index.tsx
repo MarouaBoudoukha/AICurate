@@ -12,41 +12,233 @@ import { useSession, signIn } from 'next-auth/react';
 const quizSteps: QuizStep[] = [
   {
     key: 'interests',
-    title: "What interests you most?",
+    title: "What are you passionate about?",
+    subtitle: "(Choose up to 3)",
     type: 'multi',
-    max: 2,
+    max: 3,
     options: [
-      { label: "AI & Tech", icon: "🤖" },
-      { label: "Gaming", icon: "🕹️" },
-      { label: "Art & Design", icon: "🧑‍🎨" },
-      { label: "Business & Startups", icon: "🚀" },
-      { label: "Education & Research", icon: "🧬" },
-      { label: "Writing & Blogging", icon: "📝" },
-      { label: "Music & Audio", icon: "🎧" },
-      { label: "Travel & Culture", icon: "🌐" },
-      { label: "Marketing & Social Media", icon: "📱" },
-      { label: "Mental Health & Wellness", icon: "🧠" },
-      { label: "Finance & Investing", icon: "💹" },
-      { label: "Lifestyle & Productivity", icon: "🦾" },
+      { label: "AI & Tech", icon: "📲", desc: "The core magnet for early adopters and curious minds" },
+      { label: "Gaming", icon: "🎮", desc: "Huge crossover with tool testers, meme culture, and reward-motivated users" },
+      { label: "Art & Design", icon: "🎨", desc: "Attracts creators, designers, and prompt engineers" },
+      { label: "Writing & Storytelling", icon: "✍️", desc: "Bloggers, marketers, screenwriters, educators" },
+      { label: "Wellness & Mindset", icon: "🧠", desc: "Broad, inclusive: includes mental health, spirituality, coaching" },
+      { label: "Business & Productivity", icon: "💼", desc: "High-value users looking to optimize, automate, or scale" },
       { label: "Other", icon: "✨", isOther: true },
     ],
   },
   {
     key: 'location',
     title: "Where do you live?",
-    type: 'dropdown',
+    type: 'country_grid',
     options: [
-      // You can use a country list library or static list for production
-      { label: "United States" },
-      { label: "United Kingdom" },
-      { label: "France" },
-      { label: "Germany" },
-      { label: "India" },
-      { label: "China" },
-      { label: "Japan" },
-      { label: "Brazil" },
-      { label: "South Africa" },
-      { label: "Other" },
+      // Africa
+      { label: "Algeria", tribe: "African" },
+      { label: "Angola", tribe: "African" },
+      { label: "Benin", tribe: "African" },
+      { label: "Botswana", tribe: "African" },
+      { label: "Burkina Faso", tribe: "African" },
+      { label: "Burundi", tribe: "African" },
+      { label: "Cabo Verde", tribe: "African" },
+      { label: "Cameroon", tribe: "African" },
+      { label: "Central African Republic", tribe: "African" },
+      { label: "Chad", tribe: "African" },
+      { label: "Comoros", tribe: "African" },
+      { label: "Congo", tribe: "African" },
+      { label: "Democratic Republic of the Congo", tribe: "African" },
+      { label: "Djibouti", tribe: "African" },
+      { label: "Egypt", tribe: "African" },
+      { label: "Equatorial Guinea", tribe: "African" },
+      { label: "Eritrea", tribe: "African" },
+      { label: "Eswatini", tribe: "African" },
+      { label: "Ethiopia", tribe: "African" },
+      { label: "Gabon", tribe: "African" },
+      { label: "Gambia", tribe: "African" },
+      { label: "Ghana", tribe: "African" },
+      { label: "Guinea", tribe: "African" },
+      { label: "Guinea-Bissau", tribe: "African" },
+      { label: "Ivory Coast", tribe: "African" },
+      { label: "Kenya", tribe: "African" },
+      { label: "Lesotho", tribe: "African" },
+      { label: "Liberia", tribe: "African" },
+      { label: "Libya", tribe: "African" },
+      { label: "Madagascar", tribe: "African" },
+      { label: "Malawi", tribe: "African" },
+      { label: "Mali", tribe: "African" },
+      { label: "Mauritania", tribe: "African" },
+      { label: "Mauritius", tribe: "African" },
+      { label: "Morocco", tribe: "African" },
+      { label: "Mozambique", tribe: "African" },
+      { label: "Namibia", tribe: "African" },
+      { label: "Niger", tribe: "African" },
+      { label: "Nigeria", tribe: "African" },
+      { label: "Rwanda", tribe: "African" },
+      { label: "São Tomé and Príncipe", tribe: "African" },
+      { label: "Senegal", tribe: "African" },
+      { label: "Seychelles", tribe: "African" },
+      { label: "Sierra Leone", tribe: "African" },
+      { label: "Somalia", tribe: "African" },
+      { label: "South Africa", tribe: "African" },
+      { label: "South Sudan", tribe: "African" },
+      { label: "Sudan", tribe: "African" },
+      { label: "Tanzania", tribe: "African" },
+      { label: "Togo", tribe: "African" },
+      { label: "Tunisia", tribe: "African" },
+      { label: "Uganda", tribe: "African" },
+      { label: "Zambia", tribe: "African" },
+      { label: "Zimbabwe", tribe: "African" },
+      
+      // Asia
+      { label: "Afghanistan", tribe: "Asian" },
+      { label: "Bangladesh", tribe: "Asian" },
+      { label: "Bhutan", tribe: "Asian" },
+      { label: "Brunei", tribe: "Asian" },
+      { label: "Cambodia", tribe: "Asian" },
+      { label: "China", tribe: "Asian" },
+      { label: "India", tribe: "Asian" },
+      { label: "Indonesia", tribe: "Asian" },
+      { label: "Japan", tribe: "Asian" },
+      { label: "Kazakhstan", tribe: "Asian" },
+      { label: "Kyrgyzstan", tribe: "Asian" },
+      { label: "Laos", tribe: "Asian" },
+      { label: "Malaysia", tribe: "Asian" },
+      { label: "Maldives", tribe: "Asian" },
+      { label: "Mongolia", tribe: "Asian" },
+      { label: "Myanmar", tribe: "Asian" },
+      { label: "Nepal", tribe: "Asian" },
+      { label: "North Korea", tribe: "Asian" },
+      { label: "Pakistan", tribe: "Asian" },
+      { label: "Philippines", tribe: "Asian" },
+      { label: "Singapore", tribe: "Asian" },
+      { label: "South Korea", tribe: "Asian" },
+      { label: "Sri Lanka", tribe: "Asian" },
+      { label: "Tajikistan", tribe: "Asian" },
+      { label: "Thailand", tribe: "Asian" },
+      { label: "Timor-Leste", tribe: "Asian" },
+      { label: "Turkmenistan", tribe: "Asian" },
+      { label: "Uzbekistan", tribe: "Asian" },
+      { label: "Vietnam", tribe: "Asian" },
+      
+      // Europe
+      { label: "Albania", tribe: "European" },
+      { label: "Andorra", tribe: "European" },
+      { label: "Armenia", tribe: "European" },
+      { label: "Austria", tribe: "European" },
+      { label: "Azerbaijan", tribe: "European" },
+      { label: "Belarus", tribe: "European" },
+      { label: "Belgium", tribe: "European" },
+      { label: "Bosnia and Herzegovina", tribe: "European" },
+      { label: "Bulgaria", tribe: "European" },
+      { label: "Croatia", tribe: "European" },
+      { label: "Cyprus", tribe: "European" },
+      { label: "Czech Republic", tribe: "European" },
+      { label: "Denmark", tribe: "European" },
+      { label: "Estonia", tribe: "European" },
+      { label: "Finland", tribe: "European" },
+      { label: "France", tribe: "European" },
+      { label: "Georgia", tribe: "European" },
+      { label: "Germany", tribe: "European" },
+      { label: "Greece", tribe: "European" },
+      { label: "Hungary", tribe: "European" },
+      { label: "Iceland", tribe: "European" },
+      { label: "Ireland", tribe: "European" },
+      { label: "Italy", tribe: "European" },
+      { label: "Latvia", tribe: "European" },
+      { label: "Liechtenstein", tribe: "European" },
+      { label: "Lithuania", tribe: "European" },
+      { label: "Luxembourg", tribe: "European" },
+      { label: "Malta", tribe: "European" },
+      { label: "Moldova", tribe: "European" },
+      { label: "Monaco", tribe: "European" },
+      { label: "Montenegro", tribe: "European" },
+      { label: "Netherlands", tribe: "European" },
+      { label: "North Macedonia", tribe: "European" },
+      { label: "Norway", tribe: "European" },
+      { label: "Poland", tribe: "European" },
+      { label: "Portugal", tribe: "European" },
+      { label: "Romania", tribe: "European" },
+      { label: "Russia", tribe: "European" },
+      { label: "San Marino", tribe: "European" },
+      { label: "Serbia", tribe: "European" },
+      { label: "Slovakia", tribe: "European" },
+      { label: "Slovenia", tribe: "European" },
+      { label: "Spain", tribe: "European" },
+      { label: "Sweden", tribe: "European" },
+      { label: "Switzerland", tribe: "European" },
+      { label: "Turkey", tribe: "European" },
+      { label: "Ukraine", tribe: "European" },
+      { label: "United Kingdom", tribe: "European" },
+      { label: "Vatican City", tribe: "European" },
+      
+      // North America
+      { label: "Antigua and Barbuda", tribe: "American" },
+      { label: "Bahamas", tribe: "American" },
+      { label: "Barbados", tribe: "American" },
+      { label: "Belize", tribe: "American" },
+      { label: "Canada", tribe: "American" },
+      { label: "Costa Rica", tribe: "American" },
+      { label: "Cuba", tribe: "American" },
+      { label: "Dominica", tribe: "American" },
+      { label: "Dominican Republic", tribe: "American" },
+      { label: "El Salvador", tribe: "American" },
+      { label: "Grenada", tribe: "American" },
+      { label: "Guatemala", tribe: "American" },
+      { label: "Haiti", tribe: "American" },
+      { label: "Honduras", tribe: "American" },
+      { label: "Jamaica", tribe: "American" },
+      { label: "Mexico", tribe: "American" },
+      { label: "Nicaragua", tribe: "American" },
+      { label: "Panama", tribe: "American" },
+      { label: "Saint Kitts and Nevis", tribe: "American" },
+      { label: "Saint Lucia", tribe: "American" },
+      { label: "Saint Vincent and the Grenadines", tribe: "American" },
+      { label: "Trinidad and Tobago", tribe: "American" },
+      { label: "United States", tribe: "American" },
+      
+      // South America
+      { label: "Argentina", tribe: "South American" },
+      { label: "Bolivia", tribe: "South American" },
+      { label: "Brazil", tribe: "South American" },
+      { label: "Chile", tribe: "South American" },
+      { label: "Colombia", tribe: "South American" },
+      { label: "Ecuador", tribe: "South American" },
+      { label: "Guyana", tribe: "South American" },
+      { label: "Paraguay", tribe: "South American" },
+      { label: "Peru", tribe: "South American" },
+      { label: "Suriname", tribe: "South American" },
+      { label: "Uruguay", tribe: "South American" },
+      { label: "Venezuela", tribe: "South American" },
+      
+      // Oceania
+      { label: "Australia", tribe: "Oceanic" },
+      { label: "Fiji", tribe: "Oceanic" },
+      { label: "Kiribati", tribe: "Oceanic" },
+      { label: "Marshall Islands", tribe: "Oceanic" },
+      { label: "Micronesia", tribe: "Oceanic" },
+      { label: "Nauru", tribe: "Oceanic" },
+      { label: "New Zealand", tribe: "Oceanic" },
+      { label: "Palau", tribe: "Oceanic" },
+      { label: "Papua New Guinea", tribe: "Oceanic" },
+      { label: "Samoa", tribe: "Oceanic" },
+      { label: "Solomon Islands", tribe: "Oceanic" },
+      { label: "Tonga", tribe: "Oceanic" },
+      { label: "Tuvalu", tribe: "Oceanic" },
+      { label: "Vanuatu", tribe: "Oceanic" },
+      
+      // Middle East
+      { label: "Bahrain", tribe: "Middle Eastern" },
+      { label: "Iran", tribe: "Middle Eastern" },
+      { label: "Iraq", tribe: "Middle Eastern" },
+      { label: "Israel", tribe: "Middle Eastern" },
+      { label: "Jordan", tribe: "Middle Eastern" },
+      { label: "Kuwait", tribe: "Middle Eastern" },
+      { label: "Lebanon", tribe: "Middle Eastern" },
+      { label: "Oman", tribe: "Middle Eastern" },
+      { label: "Palestine", tribe: "Middle Eastern" },
+      { label: "Qatar", tribe: "Middle Eastern" },
+      { label: "Saudi Arabia", tribe: "Middle Eastern" },
+      { label: "Syria", tribe: "Middle Eastern" },
+      { label: "United Arab Emirates", tribe: "Middle Eastern" },
+      { label: "Yemen", tribe: "Middle Eastern" },
     ],
   },
   {
@@ -68,41 +260,43 @@ const quizSteps: QuizStep[] = [
     type: 'multi',
     max: 2,
     options: [
-      { label: "X", icon: "𝕏" },
-      { label: "LinkedIn", icon: "💼" },
-      { label: "TikTok", icon: "🎵" },
-      { label: "YouTube", icon: "▶️" },
-      { label: "Instagram", icon: "📸" },
-      { label: "Farcaster", icon: "🟣" },
-      { label: "Other", icon: "➕", isOther: true },
+      { label: "X" },
+      { label: "LinkedIn" },
+      { label: "TikTok" },
+      { label: "YouTube" },
+      { label: "Instagram" },
+      { label: "Farcaster" },
+      { label: "Other", isOther: true },
     ],
   },
   {
     key: 'tasks',
     title: "What do you want AI to help you with?",
+    subtitle: "(Choose up to 3)",
     type: 'multi',
     max: 3,
     options: [
-      { label: "Work" },
-      { label: "Personal Projects" },
-      { label: "Entertainment" },
-      { label: "Learning" },
-      { label: "Art" },
-      { label: "Automation" },
-      { label: "Business" },
-      { label: "Other", isOther: true },
+      { label: "Business", icon: "📊" },
+      { label: "Projects", icon: "🛠" },
+      { label: "Entertainment", icon: "🍿" },
+      { label: "Learning", icon: "📖" },
+      { label: "Art", icon: "🎭" },
+      { label: "Writing", icon: "✍️" },
+      { label: "Marketing", icon: "📢" },
+      { label: "Automation", icon: "⚙️" },
+      { label: "Other", icon: "🧩", isOther: true },
     ],
   },
   {
     key: 'comfort',
-    title: "What's your AI comfort level?",
+    title: "What's your comfort level with AI?",
     type: 'single',
     options: [
-      { label: "Newcomer", icon: "🟣", desc: "Just getting started" },
-      { label: "Beginner", icon: "🚀", desc: "Curious mind" },
-      { label: "Intermediate", icon: "🔨", desc: "Task tamer" },
-      { label: "Advanced / Pro", icon: "⚡", desc: "Power hustler" },
-      { label: "Builder / Developer", icon: "🧱", desc: "Maker spirit" },
+      { label: "Newcomer", icon: "✨", desc: "Sparkles" },
+      { label: "Beginner", icon: "🚀", desc: "Rocket" },
+      { label: "Intermediate", icon: "🔨", desc: "Hammer" },
+      { label: "Advanced", icon: "⚡", desc: "Zap" },
+      { label: "Expert Builder", icon: "🧱", desc: "Blocks" },
     ],
   },
 ];
@@ -113,11 +307,13 @@ interface QuizOption {
   icon?: string;
   desc?: string;
   isOther?: boolean;
+  tribe?: string;
 }
 interface QuizStep {
   key: string;
   title: string;
-  type: 'multi' | 'dropdown' | 'radio' | 'single';
+  subtitle?: string;
+  type: 'multi' | 'dropdown' | 'radio' | 'single' | 'country_grid';
   max?: number;
   options: QuizOption[];
 }
@@ -127,12 +323,21 @@ export function QuizSection() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [otherInputs, setOtherInputs] = useState<Record<string, any>>({});
+  const [selectedTribe, setSelectedTribe] = useState<string>('');
   const [showConfetti, setShowConfetti] = useState(false);
   const [showReveal, setShowReveal] = useState(false);
   const [isMinting, setIsMinting] = useState(false);
   const [mintError, setMintError] = useState<string | null>(null);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const router = useRouter();
+
+  // Country grid selection handler
+  const handleCountrySelect = (option: QuizOption, step: QuizStep) => {
+    setAnswers({ ...answers, [step.key]: option.label });
+    if (option.tribe) {
+      setSelectedTribe(option.tribe);
+    }
+  };
 
   // --- Refactored 'Other' logic for all step types ---
   // Multi-select
@@ -205,6 +410,38 @@ export function QuizSection() {
 
   // --- UI for each step ---
   const renderStep = (step: QuizStep, idx: number) => {
+    if (step.type === 'country_grid') {
+      const value = answers[step.key] || '';
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
+            {step.options.map((option: QuizOption) => (
+              <motion.button
+                key={option.label}
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleCountrySelect(option, step)}
+                className={`p-3 text-left text-gray-700 bg-white border rounded-lg flex items-center justify-center transition-colors font-medium text-sm shadow-sm ${value === option.label ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
+              >
+                <span>{option.label}</span>
+                {value === option.label && <span className="ml-auto text-indigo-600 font-bold">✓</span>}
+              </motion.button>
+            ))}
+          </div>
+          {selectedTribe && value && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-green-50 border border-green-200 rounded-xl text-center"
+            >
+              <p className="text-green-800 font-semibold">
+                Welcome to the {selectedTribe} Proof Tribe! 🎉
+              </p>
+            </motion.div>
+          )}
+        </div>
+      );
+    }
     if (step.type === 'multi') {
       const selected: string[] = answers[step.key] || [];
       const isDisabled = step.max !== undefined ? (selected.length >= step.max) : false;
@@ -217,13 +454,18 @@ export function QuizSection() {
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={() => handleMultiSelect(option, step)}
-              className={`w-full p-4 text-left text-gray-700 bg-white border rounded-xl flex items-center gap-3 transition-colors font-semibold text-lg shadow-sm ${selected.includes(option.label) || (option.isOther && otherSelected) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
+              className={`w-full p-4 text-left text-gray-700 bg-white border rounded-xl transition-colors font-semibold text-lg shadow-sm ${selected.includes(option.label) || (option.isOther && otherSelected) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
               disabled={isDisabled && !selected.includes(option.label) && !option.isOther}
               style={{ cursor: isDisabled && !selected.includes(option.label) && !option.isOther ? 'not-allowed' : 'pointer' }}
             >
-              {option.icon && <span className="text-2xl">{option.icon}</span>}
-              <span>{option.label}</span>
-              {(selected.includes(option.label) || (option.isOther && otherSelected)) && <span className="ml-auto text-indigo-600 font-bold">✓</span>}
+              <div className="flex items-center gap-3">
+                {option.icon && <span className="text-2xl">{option.icon}</span>}
+                <div className="flex-1">
+                  <span>{option.label}</span>
+                  {option.desc && <div className="text-xs text-gray-500 mt-1">{option.desc}</div>}
+                </div>
+                {(selected.includes(option.label) || (option.isOther && otherSelected)) && <span className="ml-auto text-indigo-600 font-bold">✓</span>}
+              </div>
             </motion.button>
           ))}
           {/* Show input if 'Other' is selected */}
@@ -358,7 +600,7 @@ export function QuizSection() {
         selected.every(v => v && v.trim() !== '')
       );
     }
-    if (step.type === 'dropdown' || step.type === 'radio' || step.type === 'single') {
+    if (step.type === 'dropdown' || step.type === 'radio' || step.type === 'single' || step.type === 'country_grid') {
       const value = answers[step.key];
       return !!value && value.trim() !== '';
     }
@@ -441,23 +683,20 @@ export function QuizSection() {
         <div className="screen-1-container flex flex-col relative" style={{ position: 'relative', width: 400, minHeight: 600 }}>
           <div className="screen-1-content flex flex-col items-center justify-between w-full h-full" style={{ padding: '40px 24px 32px' }}>
             {renderProgress()}
-            <motion.h1
-              className="text-3xl font-extrabold text-center text-gray-900 mb-2 tracking-tight"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              Personalization Quiz
-            </motion.h1>
             <motion.div
               className="w-full"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+              <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">
                 {quizSteps[currentStep].title}
               </h2>
+              {quizSteps[currentStep].subtitle && (
+                <p className="text-sm text-gray-600 mb-4 text-center">
+                  {quizSteps[currentStep].subtitle}
+                </p>
+              )}
               {renderStep(quizSteps[currentStep], currentStep)}
             </motion.div>
             <motion.button
@@ -466,10 +705,10 @@ export function QuizSection() {
               onClick={handleNext}
               disabled={!canProceed()}
             >
-              {currentStep === quizSteps.length - 1 ? 'Launch First Hunt with AI Guide' : 'Next →'}
+              {currentStep === quizSteps.length - 1 ? 'Continue → Launch First AI Hunt' : 'Next →'}
             </motion.button>
           </div>
-          {/* Confetti and Reveal/Minting UI remain unchanged */}
+          {/* Confetti and Reveal/Minting UI */}
           <AnimatePresence mode="wait">
             {showReveal && (
               <motion.div
@@ -481,7 +720,7 @@ export function QuizSection() {
                 <div className="relative w-full aspect-square max-w-[300px] mx-auto">
                   <Image
                     src="/madamenft2.jpg"
-                    alt="Your NFT"
+                    alt="Your AIcurator Badge"
                     fill
                     className="object-cover rounded-lg shadow-xl"
                     sizes="(max-width: 300px) 100vw, 300px"
@@ -492,11 +731,17 @@ export function QuizSection() {
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Congratulations! Your Avatar NFT is Ready
+                  Congrats! You&apos;re officially a Proof Hunter.
                 </h2>
+                
                 <p className="text-gray-600">
-                  Your unique NFT is ready to be minted on World Chain. Click below to mint and add it to your collection.
+                  Your unique AIcurator Badge is ready to be minted on World Chain.
                 </p>
+                
+                <p className="text-xs text-gray-500 italic">
+                  Note: Badges, trophies & tokens live in Dashboard
+                </p>
+
                 {mintError && (
                   <p className="text-sm text-red-600">{mintError}</p>
                 )}
@@ -515,7 +760,7 @@ export function QuizSection() {
                       Minting...
                     </span>
                   ) : (
-                    'Mint NFT'
+                    'Get my Badge and Join the Hunt'
                   )}
                 </button>
               </motion.div>

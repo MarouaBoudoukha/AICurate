@@ -10,50 +10,48 @@ import Image from 'next/image';
 const slides = [
   {
     id: 1,
-    title: "Welcome to AICURATE",
-    subtitle: "Your AI Tool Hunt begins here...",
+    title: "",
+    subtitle: "",
     image: "/onboarding/welcome.png"
   },
   {
     id: 2,
-    title: "Launch Your AI Journey in minutes",
-    subtitle: "There is an AI Tool for YOU",
-    image: "/onboarding/launch.png",
+    title: "Meet Your AI Guide",
+    subtitle: "Got a goal? We've got the right AI for You",
+    image: "/onboarding/guide.png",
     checklist: [
-      "Find the AI tool you need",
-      "Earn rewards for testing and giving feedback to the community",
-      "Join the top AI explorers and shape the future of AI"
+      "Share what you want to do — we'll find the best AI for You! Simple!",
+      "No fluff. No hype. No DIY. Just Proof",
+      "If you have a task — we have an AI for you"
     ]
   },
   {
     id: 3,
-    title: "Meet Your AI Guide",
-    subtitle: "Tell me what you need to do — I'll find the AI you need",
-    image: "/onboarding/guide.png",
+    title: "Learn and Share as a Curator",
+    subtitle: "Curate. Elevate. Earn influence.",
+    image: "/onboarding/curator.png",
     checklist: [
-      "No fluff. No hype. No DIY. Just Proof",
-      "You have a task — I have an AI for you"
+      "Learn from verified AI experts",
+      "Earn rewards as you level up",
+      "Gain influence by sharing insights"
     ]
   },
   {
     id: 4,
-    title: "Hunt AI Tools and Get Paid in Proof",
-    subtitle: "Discover. Test. Vote. Share and EARN as you go",
+    title: "🎉 Test, Vote, Earn & Level Up! 🎉",
+    subtitle: "Earn rewards by completing AI challenges",
     image: "/onboarding/hunt.png",
     checklist: [
-      "Your feedback turns into rewards and reputation",
+      "Complete fun tasks and fill your vault with tokens & credits",
+      "Use your credits to unlock exclusive hunts and special features",
       "Join the Proof Revolution"
     ]
   },
   {
     id: 5,
-    title: "Become an Expert Curator",
-    subtitle: "Review. Educate. Share your insights with the world",
-    image: "/onboarding/curator.png",
-    checklist: [
-      "Prove yourself as a trusted voice in AI tools ecosystem",
-      "Claim greater rewards and influence"
-    ]
+    title: "Welcome to AICURATE",
+    subtitle: "Start your AI Tool Journey — I will guide you.",
+    image: "/onboarding/aicurate_agent.png"
   }
 ];
 
@@ -76,146 +74,167 @@ export function Onboarding() {
 
   // Only render the first screen for now
   if (currentSlide === 0) {
-  return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa]">
-        <div className="screen-frame flex items-center justify-center">
-          <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
-            <div className="screen-1-content flex flex-col items-center justify-between">
-              {/* Logo above robot icon - only one, larger */}
-              <div className="flex flex-col items-center mb-2">
-                <img src="/logo.png" alt="AICURATE Logo" className="logo-img mb-4" style={{width: 80, height: 80}} />
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa] pt-safe pb-safe">
+        <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
+          <div className="screen-1-content flex flex-col items-center justify-between">
+            {/* Carousel dots at the top */}
+            <div className="w-full flex flex-col items-center mb-8">
+              <div className="flex flex-row items-center justify-center gap-2">
+                {[...Array(slides.length)].map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={
+                      "carousel-dot" + (idx === currentSlide ? " active" : "")
+                    }
+                  />
+                ))}
               </div>
-              {/* Floating Robot Icon */}
-          <motion.div
+            </div>
+            {/* Logo/Image area with consistent height */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full">
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, type: 'spring' }}
-                className="robot-icon-container"
+                className="rocket-icon-container"
+                style={{ marginBottom: 18 }}
               >
-                <img src="/onboarding/welcome.png" alt="Robot Icon" className="robot-emoji" style={{width: 60, height: 60}} />
+                <img src="/logo.png" alt="AICURATE Logo" style={{width: 140, height: 140}} />
               </motion.div>
-              {/* Headline and subtext */}
-              <div className="flex flex-col items-center w-full">
-                <h1 className="welcome-headline title-format">{slide.title}</h1>
-                <div className="welcome-subtitle">{slide.subtitle}</div>
-              </div>
-              {/* CTA Button at bottom */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
+            </div>
+            {/* Bottom section with button */}
+            <div className="w-full flex flex-col items-center">
+              <button
                 onClick={handleNext}
-                className="lets-go-button flex items-center justify-center gap-2"
+                className="plain-cta-btn"
               >
-                Let&apos;s Go <ChevronRight className="w-5 h-5 ml-1" />
-              </motion.button>
+                Next →
+              </button>
             </div>
           </div>
-          <style jsx>{`
-            .logo-img {
-              width: 60px;
-              height: 60px;
-              object-fit: contain;
-              margin-bottom: 8px;
-            }
-            .title-format {
-              font-size: 32px;
-              font-weight: 700;
-              color: #1f2937;
-              text-align: center;
-              margin: 0 0 15px 0;
-              line-height: 1.1;
-              letter-spacing: -0.5px;
-            }
-            .screen-frame {
-              background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-              padding: 3px;
-              border-radius: 33px;
-              box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
-            }
+        </div>
+        <style jsx>{`
+          .screen-1-container {
+            width: 100%;
+            max-width: 400px;
+            background: #f8fafc;
+            border-radius: 30px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+          }
+          .screen-1-content {
+            min-height: 600px;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+          }
+          .rocket-icon-container {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+          }
+          .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #d1d5db;
+            display: inline-block;
+            transition: background 0.2s;
+          }
+          .carousel-dot.active {
+            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+          }
+          .plain-cta-btn {
+            width: 100%;
+            max-width: 350px;
+            height: 56px;
+            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 0.01em;
+            margin-top: 0;
+          }
+          .plain-cta-btn:active {
+            background: #a78bfa;
+            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
+          }
+          .welcome-cta-btn {
+            width: 100%;
+            max-width: 350px;
+            height: 56px;
+            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
+            transition: background 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 0.01em;
+            margin-top: 0;
+          }
+          .welcome-cta-btn:active {
+            background: #a78bfa;
+            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
+          }
+          @media (max-width: 480px) {
             .screen-1-container {
-              width: 400px;
-              height: 700px;
-              background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-              border-radius: 30px;
-              border: 1px solid #c7d2fe;
-              overflow: hidden;
-              display: flex;
-              flex-direction: column;
-              justify-content: flex-start;
+              max-width: 350px;
+              width: 100%;
+              border-radius: 22px;
             }
             .screen-1-content {
-              background: #f8fafc;
-              height: 100%;
-              padding: 60px 30px 40px;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: space-between;
+              min-height: 500px;
+              padding: 32px 20px;
             }
-            /* Rocket Icon */
             .rocket-icon-container {
-              width: 120px; height: 120px;
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              border-radius: 50%; display: flex; align-items: center; justify-content: center;
-              box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
-              margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite;
+              width: 100px;
+              height: 100px;
             }
-            .rocket-emoji { font-size: 50px; transform: rotate(-15deg); }
-            .coin-effect { position: absolute; width: 12px; height: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 50%; box-shadow: 0 2px 4px rgba(251,191,36,0.3); opacity: 0.8; }
-            .coin-1 { top: -20px; right: 10px; animation: coinFloat 3s ease-in-out infinite; }
-            .coin-2 { bottom: -15px; left: 15px; animation: coinFloat 3s ease-in-out infinite; animation-delay: 1s; }
-            @keyframes coinFloat { 0%,100%{transform:translateY(0px) scale(1);opacity:0.8;} 50%{transform:translateY(-8px) scale(1.1);opacity:1;} }
-            /* Brain Icon */
-            .brain-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(6,182,212,0.25); margin: 0 auto 40px; animation: float 3s ease-in-out infinite; }
-            .brain-emoji { font-size: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-            /* Hunt Icon */
-            .hunt-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(245,158,11,0.25); margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite; }
-            .magnifying-glass-emoji { font-size: 50px; transform: rotate(-10deg); }
-            .hunt-sparkle { position: absolute; width: 8px; height: 8px; background: #fbbf24; border-radius: 50%; opacity: 0.7; }
-            .sparkle-1 { top: 15px; right: 20px; animation: sparkle 2s ease-in-out infinite; }
-            .sparkle-2 { bottom: 20px; left: 25px; animation: sparkle 2s ease-in-out infinite; animation-delay: 1s; }
-            @keyframes sparkle { 0%,100%{opacity:0.4;transform:scale(1);} 50%{opacity:1;transform:scale(1.3);} }
-            /* Crown Icon */
-            .crown-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(139,92,246,0.25); margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite; }
-            .crown-emoji { font-size: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-            .crown-sparkle { position: absolute; width: 8px; height: 8px; background: #fbbf24; border-radius: 50%; opacity: 0.7; }
-            .crown-sparkle-1 { top: 10px; left: 30px; animation: crownSparkle 1.8s ease-in-out infinite; }
-            .crown-sparkle-2 { top: 30px; right: 20px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 0.6s; }
-            .crown-sparkle-3 { bottom: 20px; left: 25px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 1.2s; }
-            .crown-sparkle-4 { bottom: 10px; right: 30px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 0.3s; }
-            @keyframes crownSparkle { 0%,100%{opacity:0.5;transform:scale(1);} 50%{opacity:1;transform:scale(1.3);} }
-            /* Typography and Bullets */
-            .journey-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 12px 0; line-height: 1.2; }
-            .journey-subtitle { font-size: 18px; font-weight: 600; color: #374151; text-align: center; margin: 0 0 30px 0; }
-            .bullet-list { list-style: none; padding: 0; margin: 0 0 40px 0; }
-            .bullet-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 15px 0; padding-left: 25px; position: relative; }
-            .bullet-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-            .guide-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 20px 0; line-height: 1.2; }
-            .guide-description { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 35px 0; line-height: 1.4; }
-            .guide-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-            .guide-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-            .guide-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-            .hunt-headline { font-size: 26px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 15px 0; line-height: 1.2; }
-            .hunt-subtitle { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 30px 0; line-height: 1.4; }
-            .hunt-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-            .hunt-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-            .hunt-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-            .curator-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 20px 0; line-height: 1.2; }
-            .curator-subtitle { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 35px 0; line-height: 1.4; }
-            .curator-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-            .curator-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-            .curator-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-            .next-button { width: 200px; height: 50px; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none; border-radius: 25px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(79,70,229,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
-            .next-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,70,229,0.4); }
-            @media (max-width: 480px) {
-              .screen-1-container { max-width: 350px; width: 100%; height: 520px; border-radius: 22px; }
-              .screen-frame { border-radius: 25px; }
-              .rocket-icon-container, .brain-icon-container, .hunt-icon-container, .crown-icon-container { width: 100px; height: 100px; }
-              .journey-headline, .guide-headline, .curator-headline { font-size: 22px; }
-              .hunt-headline { font-size: 20px; }
-              .next-button { width: 100%; max-width: 180px; }
+            .plain-cta-btn {
+              font-size: 1.1rem;
+              height: 48px;
+              border-radius: 14px;
             }
-          `}</style>
-        </div>
+            .welcome-cta-btn {
+              font-size: 1.1rem;
+              height: 48px;
+              border-radius: 14px;
+            }
+          }
+          /* Safe area utility classes */
+          :global(.pt-safe) {
+            padding-top: env(safe-area-inset-top, 24px);
+          }
+          :global(.pb-safe) {
+            padding-bottom: env(safe-area-inset-bottom, 24px);
+          }
+          @media (max-width: 600px) {
+            :global(.pt-safe) {
+              padding-top: 48px !important;
+            }
+          }
+        `}</style>
       </div>
     );
   }
@@ -223,16 +242,16 @@ export function Onboarding() {
   // Screens 2-5
   // Use SVGs for icons
   const iconSrcs = [
-    '/onboarding/rocket.svg',
-    '/onboarding/curator.svg',
-    '/onboarding/hunt.svg',
-    '/onboarding/crown.svg',
+    '/onboarding/guide.png',
+    '/onboarding/curator.png',
+    '/onboarding/hunt.png',
+    '/onboarding/aicurate_agent.png',
   ];
   const iconAlts = [
-    'Rocket Icon',
+    'AI Guide Icon',
     'Curator Icon',
     'Hunt Icon',
-    'Crown Icon',
+    'AICURATE Agent Icon',
   ];
   const iconClassNames = [
     'rocket-icon-container',
@@ -241,175 +260,294 @@ export function Onboarding() {
     'crown-icon-container',
   ];
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa]">
-      <div className="screen-frame flex items-center justify-center">
-        <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
-          <div className="screen-1-content flex flex-col items-center justify-between">
-            {/* Animated SVG Icon */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, type: 'spring' }}
-              className={iconClassNames[currentSlide - 1]}
-            >
-              <img src={iconSrcs[currentSlide - 1]} alt={iconAlts[currentSlide - 1]} style={{width: 100, height: 100}} />
-              {/* Coin/sparkle effects for rocket/hunt/crown */}
-              {currentSlide === 1 && (
-                <>
-                  <span className="coin-effect coin-1" />
-                  <span className="coin-effect coin-2" />
-                </>
-              )}
-              {currentSlide === 3 && (
-                <>
-                  <span className="hunt-sparkle sparkle-1" />
-                  <span className="hunt-sparkle sparkle-2" />
-                </>
-              )}
-              {currentSlide === 4 && (
-                <>
-                  <span className="crown-sparkle crown-sparkle-1" />
-                  <span className="crown-sparkle crown-sparkle-2" />
-                  <span className="crown-sparkle crown-sparkle-3" />
-                  <span className="crown-sparkle crown-sparkle-4" />
-                </>
-              )}
-            </motion.div>
-            {/* Headline and subtext */}
-            <div className="flex flex-col items-center w-full">
-              <h1 className={
-                currentSlide === 1 ? "journey-headline" :
-                currentSlide === 2 ? "guide-headline" :
-                currentSlide === 3 ? "hunt-headline" :
-                currentSlide === 4 ? "curator-headline" : ""
-              }>{slide.title}</h1>
-              <div className={
-                currentSlide === 1 ? "journey-subtitle" :
-                currentSlide === 2 ? "guide-description" :
-                currentSlide === 3 ? "hunt-subtitle" :
-                currentSlide === 4 ? "curator-subtitle" : ""
-              }>{slide.subtitle}</div>
-              {/* Bullets/Checklist */}
-              {slide.checklist && (
-                <ul className={
-                  currentSlide === 1 ? "bullet-list" :
-                  currentSlide === 2 ? "guide-list" :
-                  currentSlide === 3 ? "hunt-list" :
-                  currentSlide === 4 ? "curator-list" : ""
-                }>
-                  {slide.checklist.map((point, idx) => (
-                    <li key={idx} className={
-                      currentSlide === 1 ? "bullet-item" :
-                      currentSlide === 2 ? "guide-item" :
-                      currentSlide === 3 ? "hunt-item" :
-                      currentSlide === 4 ? "curator-item" : ""
-                    }>{point}</li>
-                  ))}
-                </ul>
-              )}
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa] pt-safe pb-safe">
+      <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
+        <div className="screen-1-content flex flex-col items-center justify-between">
+          {/* Carousel dots at the top */}
+          <div className="w-full flex flex-col items-center mb-8">
+            <div className="flex flex-row items-center justify-center gap-2">
+              {[...Array(slides.length)].map((_, idx) => (
+                <span
+                  key={idx}
+                  className={
+                    "carousel-dot" + (idx === currentSlide ? " active" : "")
+                  }
+                />
+              ))}
             </div>
-            {/* Next button */}
-            <motion.button
-              whileTap={{ scale: 0.97 }}
+          </div>
+          {/* Content area with consistent height */}
+          <div className="flex-1 flex flex-col items-center justify-center w-full">
+            {currentSlide === 4 ? (
+              <>
+                <div className="welcome-headline" style={{ marginBottom: 0 }}>
+                  <span className="welcome-to">Welcome to</span><br />
+                  <span className="aicurate-logo">AICURATE</span>
+                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, type: 'spring' }}
+                  className="welcome-mascot"
+                  style={{ margin: '18px 0 18px 0' }}
+                >
+                  <img src="/onboarding/aicurate_agent.png" alt="AICURATE Agent Icon" style={{width: 120, height: 120}} />
+                </motion.div>
+                <div className="welcome-subtitle">
+                  <b>Start your AI Tool Journey — I will guide you.</b>
+                </div>
+              </>
+            ) : (
+              <>
+                <h1 className="journey-headline" style={{ marginBottom: 18 }}>{slide.title}</h1>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, type: 'spring' }}
+                  className="rocket-icon-container"
+                  style={{ marginBottom: 18 }}
+                >
+                  <img src={iconSrcs[currentSlide - 1]} alt={iconAlts[currentSlide - 1]} style={{width: 140, height: 140}} />
+                  {currentSlide === 3 && (
+                    <>
+                      <span className="coin-effect coin-1" />
+                      <span className="coin-effect coin-2" />
+                      <span className="coin-effect coin-3" />
+                    </>
+                  )}
+                  {currentSlide === 4 && (
+                    <>
+                      <span className="trophy-effect trophy-1" />
+                      <span className="trophy-effect trophy-2" />
+                      <span className="coin-effect coin-1" />
+                      <span className="coin-effect coin-2" />
+                    </>
+                  )}
+                </motion.div>
+                <div className="journey-subtitle" style={{ fontWeight: 'bold', marginBottom: slide.checklist ? 12 : 0 }}><b>{slide.subtitle}</b></div>
+                {slide.checklist && (
+                  <ul className="bullet-list">
+                    {slide.checklist.map((point, idx) => (
+                      <li key={idx} className="bullet-item">{point}</li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
+          </div>
+          {/* Bottom section with button */}
+          <div className="w-full flex flex-col items-center">
+            <button
               onClick={handleNext}
-              className="next-button flex items-center justify-center gap-2"
+              className={currentSlide === 4 ? "welcome-cta-btn" : "plain-cta-btn"}
             >
-              Next <ChevronRight className="w-5 h-5 ml-1" />
-            </motion.button>
+              {currentSlide === slides.length - 1 ? 'Let\'s Go! →' : 
+               currentSlide === slides.length - 2 ? 'Start Earning Now →' :
+               currentSlide === slides.length - 3 ? 'Continue →' :
+               'Next →'}
+            </button>
           </div>
         </div>
-        <style jsx>{`
-          .screen-frame {
-            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-            padding: 3px;
-            border-radius: 33px;
-            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
-          }
+      </div>
+      <style jsx>{`
+        .screen-1-container {
+          width: 100%;
+          max-width: 400px;
+          background: #f8fafc;
+          border-radius: 30px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .screen-1-content {
+          min-height: 600px;
+          padding: 40px 30px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .journey-headline {
+          font-size: 28px;
+          font-weight: 700;
+          color: #1f2937;
+          text-align: center;
+          margin: 0 0 12px 0;
+          line-height: 1.2;
+        }
+        .journey-subtitle {
+          font-size: 18px;
+          font-weight: 600;
+          color: #374151;
+          text-align: center;
+          margin: 0 0 30px 0;
+        }
+        .bullet-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 40px 0;
+        }
+        .bullet-item {
+          color: #4b5563;
+          font-size: 15px;
+          line-height: 1.5;
+          margin: 15px 0;
+          padding-left: 25px;
+          position: relative;
+        }
+        .bullet-item::before {
+          content: '✓';
+          position: absolute;
+          left: 0;
+          color: #10b981;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .rocket-icon-container {
+          width: 140px;
+          height: 140px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
+          position: relative;
+          animation: float 3s ease-in-out infinite;
+        }
+        .coin-effect {
+          position: absolute;
+          width: 12px;
+          height: 12px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(251,191,36,0.3);
+          opacity: 0.8;
+        }
+        .coin-1 {
+          top: -20px;
+          right: 10px;
+          animation: coinFloat 3s ease-in-out infinite;
+        }
+        .coin-2 {
+          bottom: -15px;
+          left: 15px;
+          animation: coinFloat 3s ease-in-out infinite;
+          animation-delay: 1s;
+        }
+        .coin-3 {
+          top: 15px;
+          right: -20px;
+          animation: coinFloat 3s ease-in-out infinite;
+          animation-delay: 0.5s;
+        }
+        @keyframes coinFloat {
+          0%,100%{transform:translateY(0px) scale(1);opacity:0.8;}
+          50%{transform:translateY(-8px) scale(1.1);opacity:1;}
+        }
+        .trophy-effect {
+          position: absolute;
+          width: 16px;
+          height: 16px;
+          background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+          border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(251,191,36,0.3);
+          opacity: 0.8;
+        }
+        .trophy-1 {
+          top: -25px;
+          right: 15px;
+          animation: trophyFloat 3s ease-in-out infinite;
+        }
+        .trophy-2 {
+          bottom: -20px;
+          left: 20px;
+          animation: trophyFloat 3s ease-in-out infinite;
+          animation-delay: 1s;
+        }
+        @keyframes trophyFloat {
+          0%,100%{transform:translateY(0px) scale(1) rotate(0deg);opacity:0.8;}
+          50%{transform:translateY(-8px) scale(1.1) rotate(10deg);opacity:1;}
+        }
+        .carousel-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #d1d5db;
+          display: inline-block;
+          transition: background 0.2s;
+        }
+        .carousel-dot.active {
+          background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+        }
+        .welcome-headline {
+          font-size: 1.7rem;
+          font-weight: 500;
+          color: #222;
+          text-align: center;
+          margin-bottom: 0;
+          line-height: 1.2;
+        }
+        .welcome-to {
+          font-size: 1.3rem;
+          font-weight: 500;
+          color: #444;
+          letter-spacing: 0.01em;
+        }
+        .aicurate-logo {
+          font-size: 2.1rem;
+          font-weight: 800;
+          color: #222;
+          letter-spacing: 0.01em;
+          font-family: inherit;
+          display: inline-block;
+        }
+        .welcome-mascot {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 18px 0 18px 0;
+        }
+        .welcome-subtitle {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: #222;
+          text-align: center;
+          margin-bottom: 0;
+          margin-top: 0;
+          line-height: 1.3;
+        }
+        @media (max-width: 480px) {
           .screen-1-container {
-            width: 400px;
-            height: 700px;
-            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-            border-radius: 30px;
-            border: 1px solid #c7d2fe;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+            max-width: 350px;
+            width: 100%;
+            border-radius: 22px;
           }
           .screen-1-content {
-            background: #f8fafc;
-            height: 100%;
-            padding: 60px 30px 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
+            min-height: 500px;
+            padding: 32px 20px;
           }
-          /* Rocket Icon */
           .rocket-icon-container {
-            width: 120px; height: 120px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
-            margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite;
+            width: 100px;
+            height: 100px;
           }
-          .rocket-emoji { font-size: 50px; transform: rotate(-15deg); }
-          .coin-effect { position: absolute; width: 12px; height: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 50%; box-shadow: 0 2px 4px rgba(251,191,36,0.3); opacity: 0.8; }
-          .coin-1 { top: -20px; right: 10px; animation: coinFloat 3s ease-in-out infinite; }
-          .coin-2 { bottom: -15px; left: 15px; animation: coinFloat 3s ease-in-out infinite; animation-delay: 1s; }
-          @keyframes coinFloat { 0%,100%{transform:translateY(0px) scale(1);opacity:0.8;} 50%{transform:translateY(-8px) scale(1.1);opacity:1;} }
-          /* Brain Icon */
-          .brain-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(6,182,212,0.25); margin: 0 auto 40px; animation: float 3s ease-in-out infinite; }
-          .brain-emoji { font-size: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-          /* Hunt Icon */
-          .hunt-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(245,158,11,0.25); margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite; }
-          .magnifying-glass-emoji { font-size: 50px; transform: rotate(-10deg); }
-          .hunt-sparkle { position: absolute; width: 8px; height: 8px; background: #fbbf24; border-radius: 50%; opacity: 0.7; }
-          .sparkle-1 { top: 15px; right: 20px; animation: sparkle 2s ease-in-out infinite; }
-          .sparkle-2 { bottom: 20px; left: 25px; animation: sparkle 2s ease-in-out infinite; animation-delay: 1s; }
-          @keyframes sparkle { 0%,100%{opacity:0.4;transform:scale(1);} 50%{opacity:1;transform:scale(1.3);} }
-          /* Crown Icon */
-          .crown-icon-container { width: 120px; height: 120px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(139,92,246,0.25); margin: 0 auto 40px; position: relative; animation: float 3s ease-in-out infinite; }
-          .crown-emoji { font-size: 55px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
-          .crown-sparkle { position: absolute; width: 8px; height: 8px; background: #fbbf24; border-radius: 50%; opacity: 0.7; }
-          .crown-sparkle-1 { top: 10px; left: 30px; animation: crownSparkle 1.8s ease-in-out infinite; }
-          .crown-sparkle-2 { top: 30px; right: 20px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 0.6s; }
-          .crown-sparkle-3 { bottom: 20px; left: 25px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 1.2s; }
-          .crown-sparkle-4 { bottom: 10px; right: 30px; animation: crownSparkle 1.8s ease-in-out infinite; animation-delay: 0.3s; }
-          @keyframes crownSparkle { 0%,100%{opacity:0.5;transform:scale(1);} 50%{opacity:1;transform:scale(1.3);} }
-          /* Typography and Bullets */
-          .journey-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 12px 0; line-height: 1.2; }
-          .journey-subtitle { font-size: 18px; font-weight: 600; color: #374151; text-align: center; margin: 0 0 30px 0; }
-          .bullet-list { list-style: none; padding: 0; margin: 0 0 40px 0; }
-          .bullet-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 15px 0; padding-left: 25px; position: relative; }
-          .bullet-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-          .guide-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 20px 0; line-height: 1.2; }
-          .guide-description { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 35px 0; line-height: 1.4; }
-          .guide-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-          .guide-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-          .guide-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-          .hunt-headline { font-size: 26px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 15px 0; line-height: 1.2; }
-          .hunt-subtitle { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 30px 0; line-height: 1.4; }
-          .hunt-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-          .hunt-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-          .hunt-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-          .curator-headline { font-size: 28px; font-weight: 700; color: #1f2937; text-align: center; margin: 0 0 20px 0; line-height: 1.2; }
-          .curator-subtitle { font-size: 16px; font-weight: 400; color: #6b7280; text-align: center; margin: 0 0 35px 0; line-height: 1.4; }
-          .curator-list { list-style: none; padding: 0; margin: 0 0 30px 0; }
-          .curator-item { color: #4b5563; font-size: 15px; line-height: 1.5; margin: 12px 0; padding-left: 25px; position: relative; }
-          .curator-item::before { content: '✓'; position: absolute; left: 0; color: #10b981; font-weight: bold; font-size: 16px; }
-          .next-button { width: 200px; height: 50px; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); border: none; border-radius: 25px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(79,70,229,0.3); transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
-          .next-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79,70,229,0.4); }
-          @media (max-width: 480px) {
-            .screen-1-container { max-width: 350px; width: 100%; height: 520px; border-radius: 22px; }
-            .screen-frame { border-radius: 25px; }
-            .rocket-icon-container, .brain-icon-container, .hunt-icon-container, .crown-icon-container { width: 100px; height: 100px; }
-            .journey-headline, .guide-headline, .curator-headline { font-size: 22px; }
-            .hunt-headline { font-size: 20px; }
-            .next-button { width: 100%; max-width: 180px; }
+          .journey-headline {
+            font-size: 22px;
           }
-        `}</style>
-      </div>
+        }
+        /* Safe area utility classes */
+        :global(.pt-safe) {
+          padding-top: env(safe-area-inset-top, 24px);
+        }
+        :global(.pb-safe) {
+          padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+        @media (max-width: 600px) {
+          :global(.pt-safe) {
+            padding-top: 48px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 } 
