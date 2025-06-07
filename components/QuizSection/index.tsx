@@ -17,19 +17,19 @@ const quizSteps: QuizStep[] = [
     type: 'multi',
     max: 3,
     options: [
-      { label: "AI & Tech", icon: "📲", desc: "The core magnet for early adopters and curious minds" },
-      { label: "Gaming", icon: "🎮", desc: "Huge crossover with tool testers, meme culture, and reward-motivated users" },
-      { label: "Art & Design", icon: "🎨", desc: "Attracts creators, designers, and prompt engineers" },
-      { label: "Writing & Storytelling", icon: "✍️", desc: "Bloggers, marketers, screenwriters, educators" },
-      { label: "Wellness & Mindset", icon: "🧠", desc: "Broad, inclusive: includes mental health, spirituality, coaching" },
-      { label: "Business & Productivity", icon: "💼", desc: "High-value users looking to optimize, automate, or scale" },
+      { label: "AI & Tech", icon: "📲" },
+      { label: "Gaming", icon: "🎮" },
+      { label: "Art & Design", icon: "🎨" },
+      { label: "Writing & Storytelling", icon: "✍️" },
+      { label: "Wellness & Mindset", icon: "🧠" },
+      { label: "Business & Productivity", icon: "💼" },
       { label: "Other", icon: "✨", isOther: true },
     ],
   },
   {
     key: 'location',
     title: "Where do you live?",
-    type: 'country_grid',
+    type: 'dropdown',
     options: [
       // Africa
       { label: "Algeria", tribe: "African" },
@@ -87,37 +87,6 @@ const quizSteps: QuizStep[] = [
       { label: "Zambia", tribe: "African" },
       { label: "Zimbabwe", tribe: "African" },
       
-      // Asia
-      { label: "Afghanistan", tribe: "Asian" },
-      { label: "Bangladesh", tribe: "Asian" },
-      { label: "Bhutan", tribe: "Asian" },
-      { label: "Brunei", tribe: "Asian" },
-      { label: "Cambodia", tribe: "Asian" },
-      { label: "China", tribe: "Asian" },
-      { label: "India", tribe: "Asian" },
-      { label: "Indonesia", tribe: "Asian" },
-      { label: "Japan", tribe: "Asian" },
-      { label: "Kazakhstan", tribe: "Asian" },
-      { label: "Kyrgyzstan", tribe: "Asian" },
-      { label: "Laos", tribe: "Asian" },
-      { label: "Malaysia", tribe: "Asian" },
-      { label: "Maldives", tribe: "Asian" },
-      { label: "Mongolia", tribe: "Asian" },
-      { label: "Myanmar", tribe: "Asian" },
-      { label: "Nepal", tribe: "Asian" },
-      { label: "North Korea", tribe: "Asian" },
-      { label: "Pakistan", tribe: "Asian" },
-      { label: "Philippines", tribe: "Asian" },
-      { label: "Singapore", tribe: "Asian" },
-      { label: "South Korea", tribe: "Asian" },
-      { label: "Sri Lanka", tribe: "Asian" },
-      { label: "Tajikistan", tribe: "Asian" },
-      { label: "Thailand", tribe: "Asian" },
-      { label: "Timor-Leste", tribe: "Asian" },
-      { label: "Turkmenistan", tribe: "Asian" },
-      { label: "Uzbekistan", tribe: "Asian" },
-      { label: "Vietnam", tribe: "Asian" },
-      
       // Europe
       { label: "Albania", tribe: "European" },
       { label: "Andorra", tribe: "European" },
@@ -170,43 +139,74 @@ const quizSteps: QuizStep[] = [
       { label: "Vatican City", tribe: "European" },
       
       // North America
-      { label: "Antigua and Barbuda", tribe: "American" },
-      { label: "Bahamas", tribe: "American" },
-      { label: "Barbados", tribe: "American" },
-      { label: "Belize", tribe: "American" },
-      { label: "Canada", tribe: "American" },
-      { label: "Costa Rica", tribe: "American" },
-      { label: "Cuba", tribe: "American" },
-      { label: "Dominica", tribe: "American" },
-      { label: "Dominican Republic", tribe: "American" },
-      { label: "El Salvador", tribe: "American" },
-      { label: "Grenada", tribe: "American" },
-      { label: "Guatemala", tribe: "American" },
-      { label: "Haiti", tribe: "American" },
-      { label: "Honduras", tribe: "American" },
-      { label: "Jamaica", tribe: "American" },
-      { label: "Mexico", tribe: "American" },
-      { label: "Nicaragua", tribe: "American" },
-      { label: "Panama", tribe: "American" },
-      { label: "Saint Kitts and Nevis", tribe: "American" },
-      { label: "Saint Lucia", tribe: "American" },
-      { label: "Saint Vincent and the Grenadines", tribe: "American" },
-      { label: "Trinidad and Tobago", tribe: "American" },
-      { label: "United States", tribe: "American" },
+      { label: "Antigua and Barbuda", tribe: "North American" },
+      { label: "Bahamas", tribe: "North American" },
+      { label: "Barbados", tribe: "North American" },
+      { label: "Belize", tribe: "North American" },
+      { label: "Canada", tribe: "North American" },
+      { label: "Costa Rica", tribe: "North American" },
+      { label: "Cuba", tribe: "North American" },
+      { label: "Dominica", tribe: "North American" },
+      { label: "Dominican Republic", tribe: "North American" },
+      { label: "El Salvador", tribe: "North American" },
+      { label: "Grenada", tribe: "North American" },
+      { label: "Guatemala", tribe: "North American" },
+      { label: "Haiti", tribe: "North American" },
+      { label: "Honduras", tribe: "North American" },
+      { label: "Jamaica", tribe: "North American" },
+      { label: "Mexico", tribe: "North American" },
+      { label: "Nicaragua", tribe: "North American" },
+      { label: "Panama", tribe: "North American" },
+      { label: "Saint Kitts and Nevis", tribe: "North American" },
+      { label: "Saint Lucia", tribe: "North American" },
+      { label: "Saint Vincent and the Grenadines", tribe: "North American" },
+      { label: "Trinidad and Tobago", tribe: "North American" },
+      { label: "United States", tribe: "North American" },
       
       // South America
-      { label: "Argentina", tribe: "South American" },
-      { label: "Bolivia", tribe: "South American" },
-      { label: "Brazil", tribe: "South American" },
-      { label: "Chile", tribe: "South American" },
-      { label: "Colombia", tribe: "South American" },
-      { label: "Ecuador", tribe: "South American" },
-      { label: "Guyana", tribe: "South American" },
-      { label: "Paraguay", tribe: "South American" },
-      { label: "Peru", tribe: "South American" },
-      { label: "Suriname", tribe: "South American" },
-      { label: "Uruguay", tribe: "South American" },
-      { label: "Venezuela", tribe: "South American" },
+      { label: "Argentina", tribe: "LATAM" },
+      { label: "Bolivia", tribe: "LATAM" },
+      { label: "Brazil", tribe: "LATAM" },
+      { label: "Chile", tribe: "LATAM" },
+      { label: "Colombia", tribe: "LATAM" },
+      { label: "Ecuador", tribe: "LATAM" },
+      { label: "Guyana", tribe: "LATAM" },
+      { label: "Paraguay", tribe: "LATAM" },
+      { label: "Peru", tribe: "LATAM" },
+      { label: "Suriname", tribe: "LATAM" },
+      { label: "Uruguay", tribe: "LATAM" },
+      { label: "Venezuela", tribe: "LATAM" },
+      
+      // Asia
+      { label: "Afghanistan", tribe: "Asian" },
+      { label: "Bangladesh", tribe: "Asian" },
+      { label: "Bhutan", tribe: "Asian" },
+      { label: "Brunei", tribe: "Asian" },
+      { label: "Cambodia", tribe: "Asian" },
+      { label: "China", tribe: "Asian" },
+      { label: "India", tribe: "Asian" },
+      { label: "Indonesia", tribe: "Asian" },
+      { label: "Japan", tribe: "Asian" },
+      { label: "Kazakhstan", tribe: "Asian" },
+      { label: "Kyrgyzstan", tribe: "Asian" },
+      { label: "Laos", tribe: "Asian" },
+      { label: "Malaysia", tribe: "Asian" },
+      { label: "Maldives", tribe: "Asian" },
+      { label: "Mongolia", tribe: "Asian" },
+      { label: "Myanmar", tribe: "Asian" },
+      { label: "Nepal", tribe: "Asian" },
+      { label: "North Korea", tribe: "Asian" },
+      { label: "Pakistan", tribe: "Asian" },
+      { label: "Philippines", tribe: "Asian" },
+      { label: "Singapore", tribe: "Asian" },
+      { label: "South Korea", tribe: "Asian" },
+      { label: "Sri Lanka", tribe: "Asian" },
+      { label: "Tajikistan", tribe: "Asian" },
+      { label: "Thailand", tribe: "Asian" },
+      { label: "Timor-Leste", tribe: "Asian" },
+      { label: "Turkmenistan", tribe: "Asian" },
+      { label: "Uzbekistan", tribe: "Asian" },
+      { label: "Vietnam", tribe: "SEA" },
       
       // Oceania
       { label: "Australia", tribe: "Oceanic" },
@@ -243,7 +243,7 @@ const quizSteps: QuizStep[] = [
   },
   {
     key: 'age',
-    title: "What's your age range?",
+    title: "How old are you?",
     type: 'radio',
     options: [
       { label: "13–17" },
@@ -256,47 +256,51 @@ const quizSteps: QuizStep[] = [
   },
   {
     key: 'platforms',
-    title: "What platform do you use most?",
+    title: "Where do you hang out most online?",
+    subtitle: "(Choose up to 3)",
     type: 'multi',
-    max: 2,
+    max: 3,
     options: [
-      { label: "X" },
-      { label: "LinkedIn" },
-      { label: "TikTok" },
-      { label: "YouTube" },
-      { label: "Instagram" },
-      { label: "Farcaster" },
-      { label: "Other", isOther: true },
+      { label: "X", icon: "𝕏" },
+      { label: "LinkedIn", icon: "in" },
+      { label: "TikTok", icon: "♪" },
+      { label: "YouTube", icon: "▶" },
+      { label: "Instagram", icon: "📸" },
+      { label: "Facebook", icon: "f" },
+      { label: "Substack", icon: "📬" },
+      { label: "Other", icon: "✨", isOther: true },
     ],
   },
   {
     key: 'tasks',
     title: "What do you want AI to help you with?",
-    subtitle: "(Choose up to 3)",
+    subtitle: "(Choose up to 5)",
     type: 'multi',
-    max: 3,
+    max: 5,
     options: [
-      { label: "Business", icon: "📊" },
-      { label: "Projects", icon: "🛠" },
-      { label: "Entertainment", icon: "🍿" },
+      { label: "Business / Analytics", icon: "📊" },
+      { label: "Coding / Dev tools", icon: "🛠" },
+      { label: "Coaching & Wellness", icon: "🧠" },
+      { label: "Crypto/web3", icon: "🍿" },
       { label: "Learning", icon: "📖" },
-      { label: "Art", icon: "🎭" },
-      { label: "Writing", icon: "✍️" },
-      { label: "Marketing", icon: "📢" },
-      { label: "Automation", icon: "⚙️" },
+      { label: "Visual design / Image generation", icon: "🎭" },
+      { label: "Writing/ Content creation", icon: "✍️" },
+      { label: "Marketing/ advertising", icon: "📢" },
+      { label: "Automation/ Productivity", icon: "⚙️" },
       { label: "Other", icon: "🧩", isOther: true },
     ],
   },
   {
     key: 'comfort',
     title: "What's your comfort level with AI?",
+    subtitle: "Let's Personalize Your Profile",
     type: 'single',
     options: [
-      { label: "Newcomer", icon: "✨", desc: "Sparkles" },
-      { label: "Beginner", icon: "🚀", desc: "Rocket" },
-      { label: "Intermediate", icon: "🔨", desc: "Hammer" },
-      { label: "Advanced", icon: "⚡", desc: "Zap" },
-      { label: "Expert Builder", icon: "🧱", desc: "Blocks" },
+      { label: "Newcomer", icon: "✨", desc: "Just getting started" },
+      { label: "Beginner", icon: "🚀", desc: "Curious mind" },
+      { label: "Intermediate", icon: "🔨", desc: "Task tamer" },
+      { label: "Advanced / Pro", icon: "⚡", desc: "Power hustler" },
+      { label: "Builder / Developer", icon: "🧱", desc: "Maker spirit" },
     ],
   },
 ];
@@ -318,7 +322,7 @@ interface QuizStep {
   options: QuizOption[];
 }
 
-export function QuizSection() {
+export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } = {}) {
   const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -410,24 +414,39 @@ export function QuizSection() {
 
   // --- UI for each step ---
   const renderStep = (step: QuizStep, idx: number) => {
-    if (step.type === 'country_grid') {
+    if (step.key === 'location') {
       const value = answers[step.key] || '';
+      const city = answers['city'] || '';
+      const selectedOption = step.options.find(opt => opt.label === value);
+      const tribe = selectedOption?.tribe || '';
+      
       return (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
-            {step.options.map((option: QuizOption) => (
-              <motion.button
-                key={option.label}
-                type="button"
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleCountrySelect(option, step)}
-                className={`p-3 text-left text-gray-700 bg-white border rounded-lg flex items-center justify-center transition-colors font-medium text-sm shadow-sm ${value === option.label ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
-              >
-                <span>{option.label}</span>
-                {value === option.label && <span className="ml-auto text-indigo-600 font-bold">✓</span>}
-              </motion.button>
+          <select
+            className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400 bg-white"
+            value={value}
+            onChange={(e) => {
+              const selected = step.options.find(opt => opt.label === e.target.value);
+              setAnswers({ ...answers, [step.key]: e.target.value });
+              if (selected?.tribe) {
+                setSelectedTribe(selected.tribe);
+              }
+            }}
+          >
+            <option value="" disabled>Select your country</option>
+            {step.options.map((option) => (
+              <option key={option.label} value={option.label}>{option.label}</option>
             ))}
-          </div>
+          </select>
+          
+          <input
+            type="text"
+            className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400"
+            placeholder="Enter your city (optional)"
+            value={city}
+            onChange={(e) => setAnswers({ ...answers, city: e.target.value })}
+          />
+          
           {selectedTribe && value && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -435,7 +454,7 @@ export function QuizSection() {
               className="p-4 bg-green-50 border border-green-200 rounded-xl text-center"
             >
               <p className="text-green-800 font-semibold">
-                Welcome to the {selectedTribe} Proof Tribe! 🎉
+                Welcome to the {selectedTribe} AI Hunter Tribe! 🎉
               </p>
             </motion.div>
           )}
@@ -480,7 +499,6 @@ export function QuizSection() {
               onChange={e => handleOtherInput(e, step)}
             />
           )}
-          <div className="text-xs text-gray-500 mt-1">Select up to {step.max}</div>
         </div>
       );
     }
@@ -591,6 +609,9 @@ export function QuizSection() {
   // --- Validation for next button ---
   const canProceed = () => {
     const step = quizSteps[currentStep];
+    if (step.key === 'location') {
+      return !!answers[step.key] && answers[step.key].trim() !== '';
+    }
     if (step.type === 'multi') {
       const selected: string[] = answers[step.key] || [];
       // All selected must be non-empty
@@ -610,8 +631,7 @@ export function QuizSection() {
   // Next step
   const handleNext = () => {
     if (currentStep === quizSteps.length - 1) {
-      setShowConfetti(true);
-      setTimeout(() => setShowReveal(true), 2000);
+      router.push('/quiz/mint');
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -711,59 +731,83 @@ export function QuizSection() {
           {/* Confetti and Reveal/Minting UI */}
           <AnimatePresence mode="wait">
             {showReveal && (
-              <motion.div
-                key="reveal"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="absolute inset-0 p-6 bg-white rounded-lg shadow-lg text-center space-y-6 flex flex-col items-center justify-center z-20"
-              >
-                <div className="relative w-full aspect-square max-w-[300px] mx-auto">
-                  <Image
-                    src="/madamenft2.jpg"
-                    alt="Your AIcurator Badge"
-                    fill
-                    className="object-cover rounded-lg shadow-xl"
-                    sizes="(max-width: 300px) 100vw, 300px"
-                    priority
-                  />
-                  <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium z-10">
-                    Ready to Mint!
-                  </div>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Congrats! You&apos;re officially a Proof Hunter.
-                </h2>
-                
-                <p className="text-gray-600">
-                  Your unique AIcurator Badge is ready to be minted on World Chain.
-                </p>
-                
-                <p className="text-xs text-gray-500 italic">
-                  Note: Badges, trophies & tokens live in Dashboard
-                </p>
-
-                {mintError && (
-                  <p className="text-sm text-red-600">{mintError}</p>
-                )}
-                <button
-                  onClick={isMinting ? undefined : handleMintNFT}
-                  disabled={isMinting}
-                  className="w-full px-4 py-2 text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold text-lg shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              <>
+                <motion.div
+                  key="reveal"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="absolute inset-0 p-4 sm:p-8 bg-white rounded-lg shadow-lg text-center flex flex-col items-center justify-center z-20 max-w-md mx-auto my-auto space-y-5"
                 >
-                  {isMinting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <motion.span
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
-                      Minting...
-                    </span>
-                  ) : (
-                    'Get my Badge and Join the Hunt'
+                  {/* Headline with confetti */}
+                  <div className="w-full flex flex-col items-center mb-2">
+                    <div className="text-2xl font-bold flex items-center justify-center gap-2">
+                      <span role="img" aria-label="confetti">🎉</span>
+                      Explorer Badge unlocked!
+                      <span role="img" aria-label="confetti">🎉</span>
+                    </div>
+                  </div>
+                  {/* Badge visual */}
+                  <div className="relative w-full aspect-square max-w-[180px] mx-auto mb-2">
+                    <Image
+                      src="/badges/Edge_Badge.png"
+                      alt="Explorer Badge"
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 180px) 100vw, 180px"
+                      priority
+                    />
+                  </div>
+                  {/* Title */}
+                  <h2 className="text-xl font-bold text-gray-900 mt-2 mb-2">
+                    You&apos;re officially in the hunt!
+                  </h2>
+                  {/* Checklist */}
+                  <div className="flex flex-col items-start gap-2 w-full max-w-xs mx-auto text-left mb-2">
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-500 text-lg mt-0.5">✔</span>
+                      <span><b>Mint your badge</b> now to keep forever.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-500 text-lg mt-0.5">✔</span>
+                      <span>You just won <b>50 ProofPoints™</b> and <b>3 free credits</b></span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-500 text-lg mt-0.5">✔</span>
+                      <span>Time to <b>explore AI tools!</b></span>
+                    </div>
+                  </div>
+                  {/* CTA Button */}
+                  {mintError && (
+                    <p className="text-sm text-red-600">{mintError}</p>
                   )}
-                </button>
-              </motion.div>
+                  <button
+                    onClick={isMinting ? undefined : handleMintNFT}
+                    disabled={isMinting}
+                    className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-2"
+                    style={{ minHeight: 56 }}
+                  >
+                    {isMinting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <motion.span
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
+                        Minting...
+                      </span>
+                    ) : (
+                      'Mint Badge & Claim coins ->'
+                    )}
+                  </button>
+                  {/* Confetti celebration animation - only on minting page */}
+                  <Confetti
+                    width={typeof window !== 'undefined' ? window.innerWidth : 300}
+                    height={typeof window !== 'undefined' ? window.innerHeight : 300}
+                    recycle={false}
+                    numberOfPieces={200}
+                  />
+                </motion.div>
+              </>
             )}
           </AnimatePresence>
           {showConfetti && (
@@ -778,8 +822,9 @@ export function QuizSection() {
       </div>
       <style jsx global>{`
         .screen-frame {
-          background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-          padding: 3px;
+          /* Removed purple border for badge reveal */
+          background: none;
+          padding: 0;
           border-radius: 33px;
           box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
         }
