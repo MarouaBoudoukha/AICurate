@@ -213,7 +213,7 @@ export default function ReviewPage() {
       // Verify with World ID
       const verifyPayload: VerifyCommandInput = {
         action: "submit-review",
-        verification_level: VerificationLevel.Device
+        verification_level: VerificationLevel.Orb
       };
 
       const response = await MiniKit.commandsAsync.verify(verifyPayload);
