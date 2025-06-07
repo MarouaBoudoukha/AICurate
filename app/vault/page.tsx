@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 // Country to region mapping (partial, can be extended)
-const countryRegionMap = {
+const countryRegionMap: Record<string, string> = {
   "France": "Europe",
   "Germany": "Europe",
   "United Kingdom": "Europe",
@@ -46,13 +46,13 @@ export default function VaultPage() {
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
 
-  const handleCountryChange = (e) => {
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = e.target.value;
     setCountry(selected);
     setRegion(countryRegionMap[selected] || "World");
   };
 
-  const handleCityChange = (e) => {
+  const handleCityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCity(e.target.value);
   };
 
