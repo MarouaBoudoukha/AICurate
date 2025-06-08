@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Award, Coins, Clock, Gift, Trophy, Star, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface Reward {
   id: string;
@@ -141,9 +142,11 @@ export default function ClaimPage() {
             >
               <div className="flex items-start gap-4">
                 {reward.image && (
-                  <img
+                  <Image
                     src={reward.image}
                     alt={reward.title}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
                 )}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, FlaskConical, Star, Upload, Link, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface Tool {
   id: string;
@@ -115,9 +116,11 @@ export default function TestPage() {
           >
             <div className="flex items-start gap-4">
               {tool.image && (
-                <img
+                <Image
                   src={tool.image}
                   alt={tool.name}
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-lg object-cover"
                 />
               )}

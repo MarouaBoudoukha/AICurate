@@ -225,7 +225,10 @@ export default function EducatePage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Media Files</label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-                <Image className="w-4 h-4" />
+                <Image 
+                  className="w-4 h-4" 
+                  alt="Upload icon"
+                />
                 Upload
                 <input
                   type="file"
@@ -291,7 +294,7 @@ export default function EducatePage() {
           >
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Submit Content</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to submit your {selectedTemplate.type}? You'll earn {selectedTemplate.points} points upon approval.
+              Are you sure you want to submit your {selectedTemplate.type}? You&apos;ll earn {selectedTemplate.points} points upon approval.
             </p>
             <div className="flex gap-3">
               <button

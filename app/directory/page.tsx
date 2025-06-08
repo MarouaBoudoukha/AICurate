@@ -111,9 +111,9 @@ export default function MadameDappai() {
     }
   }, [debouncedSearch])
 
-  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    debouncedSearch(e.target.value)
-  }, [debouncedSearch])
+  const handleSearch = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, []);
 
   // Memoize the featured apps data
   const featuredApps = useMemo(() => [
