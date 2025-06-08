@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { MiniKit, VerifyCommandInput, VerificationLevel } from "@worldcoin/minikit-js";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 
 export function LandingPage() {
   const [username, setUsername] = useState("");

@@ -142,7 +142,7 @@ export default function Support() {
               <button className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-300 transition flex items-center justify-center gap-2">
                 <Send className="w-5 h-5" />
                 Send Message
-              </button>
+          </button>
             </div>
           </motion.div>
         )}
@@ -193,9 +193,9 @@ export default function Support() {
               <p className="text-sm text-gray-600">
                 We accept all major credit cards, PayPal, and cryptocurrency payments.
               </p>
-            </div>
-          </div>
         </div>
+      </div>
+    </div>
       </motion.div>
     </motion.div>
   );

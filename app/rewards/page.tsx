@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { Wallet, Package, Trophy, Bot } from 'lucide-react'
 import { MiniKit, Tokens } from '@worldcoin/minikit-js'
 import { AiConsultation } from '@/components/AiConsultation'
+import Image from 'next/image'
 
 interface Collectible {
   id: string
@@ -389,10 +390,12 @@ export default function RewardsCollectibles() {
             >
               <div className="aspect-[4/3] bg-gray-100 relative">
                 {item.image ? (
-                  <img
+                  <Image
                     src={item.image}
                     alt={item.name}
                     className="w-full h-full object-cover"
+                    width={400}
+                    height={300}
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">

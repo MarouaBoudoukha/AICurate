@@ -1,8 +1,9 @@
 "use client";
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, FileText, Video, Mic, Image, Star, Trophy, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, FileText, Video, Mic, Image as ImageIcon, Star, Trophy, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface ContentTemplate {
   id: string;
@@ -63,7 +64,7 @@ const contentTemplates: ContentTemplate[] = [
     description: 'Create an infographic or visual guide for an AI tool',
     type: 'tutorial',
     points: 120,
-    icon: Image,
+    icon: ImageIcon,
     requirements: [
       'High-quality images',
       'Clear instructions',
@@ -130,6 +131,18 @@ export default function EducatePage() {
       >
         Educate & Write
       </motion.h1>
+
+      <Image 
+        src="/images/educate.png" 
+        alt="Education illustration"
+        width={800}
+        height={400}
+        className="w-full h-auto"
+      />
+
+      <p className="text-gray-600">
+        Let&apos;s explore the fascinating world of AI together!
+      </p>
 
       {/* Content Templates */}
       <motion.div
@@ -225,10 +238,7 @@ export default function EducatePage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Media Files</label>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-                <Image 
-                  className="w-4 h-4" 
-                  alt="Upload icon"
-                />
+                <ImageIcon className="w-4 h-4" />
                 Upload
                 <input
                   type="file"

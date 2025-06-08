@@ -97,6 +97,14 @@ export default function TestPage() {
         Test & Review AI Tools
       </motion.h1>
 
+      <Image 
+        src="/images/test.png" 
+        alt="Test illustration"
+        width={800}
+        height={400}
+        className="w-full h-auto"
+      />
+
       {/* Tools List */}
       <motion.div
         className="space-y-4 mb-8"
@@ -116,11 +124,9 @@ export default function TestPage() {
           >
             <div className="flex items-start gap-4">
               {tool.image && (
-                <Image
+                <img
                   src={tool.image}
                   alt={tool.name}
-                  width={48}
-                  height={48}
                   className="w-12 h-12 rounded-lg object-cover"
                 />
               )}

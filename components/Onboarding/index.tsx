@@ -100,7 +100,13 @@ export function Onboarding() {
                 className="rocket-icon-container"
                 style={{ marginBottom: 18 }}
               >
-                <img src="/logo.png" alt="AICURATE Logo" style={{width: 140, height: 140}} />
+                <Image 
+                  src="/logo.png" 
+                  alt="AICURATE Logo"
+                  width={140}
+                  height={140}
+                  className="w-full h-auto"
+                />
               </motion.div>
             </div>
             {/* Bottom section with button */}
@@ -291,7 +297,13 @@ export function Onboarding() {
                   className="welcome-mascot"
                   style={{ margin: '18px 0 18px 0' }}
                 >
-                  <img src="/onboarding/aicurate_agent.png" alt="AICURATE Agent Icon" style={{width: 120, height: 120}} />
+                  <Image 
+                    src="/onboarding/aicurate_agent.png" 
+                    alt="AICURATE Agent Icon"
+                    width={120}
+                    height={120}
+                    className="w-full h-auto"
+                  />
                 </motion.div>
                 <div className="welcome-subtitle">
                   <b>Start your AI Tool Journey — I will guide you.</b>
@@ -307,7 +319,13 @@ export function Onboarding() {
                   className="rocket-icon-container"
                   style={{ marginBottom: 18 }}
                 >
-                  <img src={iconSrcs[currentSlide - 1]} alt={iconAlts[currentSlide - 1]} style={{width: 140, height: 140}} />
+                  <Image 
+                    src={iconSrcs[currentSlide - 1]} 
+                    alt={iconAlts[currentSlide - 1]}
+                    width={140}
+                    height={140}
+                    className="w-full h-auto"
+                  />
                   {currentSlide === 3 && (
                     <>
                       <span className="coin-effect coin-1" />

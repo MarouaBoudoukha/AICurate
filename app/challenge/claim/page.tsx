@@ -120,6 +120,14 @@ export default function ClaimPage() {
         Claim Your Rewards
       </motion.h1>
 
+      <Image 
+        src="/images/claim.png" 
+        alt="Claim rewards illustration"
+        width={800}
+        height={400}
+        className="w-full h-auto"
+      />
+
       {/* Available Rewards */}
       <motion.div
         className="mb-8"
@@ -142,11 +150,9 @@ export default function ClaimPage() {
             >
               <div className="flex items-start gap-4">
                 {reward.image && (
-                  <Image
+                  <img
                     src={reward.image}
                     alt={reward.title}
-                    width={64}
-                    height={64}
                     className="w-16 h-16 rounded-lg object-cover"
                   />
                 )}

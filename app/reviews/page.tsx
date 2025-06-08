@@ -256,14 +256,6 @@ export default function ReviewPage() {
     }
   };
 
-  const averageRating = useMemo(() => {
-    if (!errors?.ratings) return 0;
-    const ratingValues = Object.values(errors.ratings).map(val => Number(val) || 0);
-    if (ratingValues.length === 0) return 0;
-    const totalSum = ratingValues.reduce((acc, val) => acc + val, 0);
-    return totalSum / ratingValues.length;
-  }, [errors?.ratings]);
-
   return (
     <div className="pb-20">
       <header className="p-4 border-b sticky top-0 bg-white z-10 backdrop-blur-lg bg-white/80">
