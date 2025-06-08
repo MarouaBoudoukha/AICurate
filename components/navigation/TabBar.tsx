@@ -18,9 +18,9 @@ const tabs = [
     color: 'from-indigo-500 to-purple-500',
   },
   {
-    label: 'AI Hunt',
+    label: 'AI Challenge',
     icon: Gift,
-    path: '/hunt',
+    path: '/challenge',
     color: 'from-pink-500 to-yellow-400',
   },
   {

@@ -1,82 +1,202 @@
 "use client";
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, HelpCircle, BookOpen, Search, Send, MessageSquare } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowLeft, HelpCircle, MessageSquare, Mail, Phone, Send } from 'lucide-react';
+
+const supportCategories = [
+  {
+    title: 'Technical Support',
+    description: 'Get help with technical issues',
+    icon: HelpCircle,
+    color: 'text-indigo-500'
+  },
+  {
+    title: 'Account Issues',
+    description: 'Help with your account',
+    icon: MessageSquare,
+    color: 'text-purple-500'
+  },
+  {
+    title: 'Billing Support',
+    description: 'Questions about payments',
+    icon: Mail,
+    color: 'text-pink-500'
+  }
+];
 
 export default function Support() {
   const router = useRouter();
-  const [showChatbot, setShowChatbot] = useState(false);
-  const [selectedOption, setSelectedOption] = useState('');
-
-  const handleChatbotClick = () => {
-    setShowChatbot(true);
-  };
-
-  const handleOptionSelect = (option: string) => {
-    setSelectedOption(option);
-  };
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
 
   return (
-    <div className="p-4 space-y-4 max-w-md mx-auto">
-      <div className="flex items-center gap-2 mb-2">
-        <button className="text-gray-500 hover:text-indigo-500" onClick={() => router.back()}>
-          <span className="text-2xl">&larr;</span>
-        </button>
-        <h2 className="text-lg font-bold flex-1 text-center">Support & Help Center</h2>
-      </div>
-      <div className="bg-white rounded-2xl shadow p-4 sm:p-6 space-y-6">
-        {/* Search Bar */}
-        <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-2">
-          <Search className="w-5 h-5 text-gray-500" />
-          <input type="text" placeholder="Search for help..." className="flex-1 bg-transparent border-none outline-none" />
-        </div>
-        {/* FAQ Section */}
+    <motion.div
+      className="p-4 max-w-2xl mx-auto"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+    >
+      <motion.button
+        onClick={() => router.back()}
+        className="mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 rounded hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-400 transition flex items-center gap-2"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.05, duration: 0.4 }}
+      >
+        <ArrowLeft className="w-5 h-5" /> Go Back
+      </motion.button>
+
+      <motion.h1
+        className="text-2xl font-bold mb-2 text-indigo-700"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+      >
+        Support & Help
+      </motion.h1>
+
+      {/* Stats Widget */}
+      <motion.div
+        className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow px-5 py-4 mb-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
         <div className="flex items-center gap-3">
-          <HelpCircle className="w-5 h-5 text-blue-500" />
+          <HelpCircle className="w-7 h-7 text-indigo-500" />
           <div>
-            <div className="font-semibold text-gray-700">FAQ</div>
-            <span className="text-gray-400">[FAQ Placeholder]</span>
+            <div className="text-xs text-gray-500">Response Time</div>
+            <div className="text-xl font-bold text-indigo-700">24h</div>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <MessageSquare className="w-7 h-7 text-purple-500" />
+          <div>
+            <div className="text-xs text-gray-500">Open Tickets</div>
+            <div className="text-xl font-bold text-purple-700">2</div>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.div
+        className="space-y-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        {/* Support Categories */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">How can we help you?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {supportCategories.map((category, index) => (
+              <motion.button
+                key={category.title}
+                className={`p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-left ${
+                  selectedCategory === category.title ? 'ring-2 ring-indigo-500' : ''
+                }`}
+                onClick={() => setSelectedCategory(category.title)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index, duration: 0.3 }}
+              >
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center ${category.color} mb-3`}>
+                  <category.icon className="w-5 h-5" />
+                </div>
+                <div className="font-medium text-gray-900">{category.title}</div>
+                <div className="text-sm text-gray-500">{category.description}</div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
         {/* Contact Form */}
-        <div className="flex items-center gap-3">
-          <Mail className="w-5 h-5 text-indigo-500" />
-          <div>
-            <div className="font-semibold text-gray-700">Contact</div>
-            <span className="text-indigo-500">support@aicurate.com</span>
-          </div>
-        </div>
-        {/* Submit a Request Section */}
-        <div className="flex items-center gap-3">
-          <Send className="w-5 h-5 text-green-600" />
-          <div>
-            <div className="font-semibold text-gray-700">Submit a Request</div>
-            <span className="text-gray-400">Click on the link below to open the request form.</span>
-          </div>
-        </div>
-        {/* Chatbot Widget */}
-        <div className="relative">
-          <button className="absolute top-0 right-0 p-2 bg-indigo-500 text-white rounded-full" onClick={handleChatbotClick}>
-            <MessageSquare className="w-5 h-5" />
-          </button>
-          {showChatbot && (
-            <div className="mt-2 p-4 bg-gray-50 rounded-lg">
-              <p className="text-gray-700">Thank you for reaching out to AIcurate Support!</p>
-              <p className="text-gray-700">🤖 We&apos;re currently experiencing a high volume of inquiries. For the fastest resolution, always check our Help Center first 📚🔍</p>
-              <p className="text-gray-700">🤖✨ Please follow the bot&apos;s guidance carefully. It&apos;s designed to help you reach the right support quickly—think of it as your helpful guide, not a hurdle! 🚀</p>
-              <p className="text-gray-700">🤖Select the most relevant option below, and I&apos;ll do my best to assist you.</p>
-              <div className="mt-2 space-y-2">
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Account related issues')}>Account related issues</button>
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Privacy issue')}>Privacy issue</button>
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Claim Airdrop')}>Claim Airdrop</button>
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Report Scams or Abuse')}>Report Scams or Abuse</button>
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Invites & Referral rewards')}>Invites & Referral rewards</button>
-                <button className="w-full px-3 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-full text-xs font-semibold transition" onClick={() => handleOptionSelect('Wallet and Proofpoints')}>Wallet and Proofpoints</button>
+        {selectedCategory && (
+          <motion.div
+            className="bg-white rounded-xl shadow-lg p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <h3 className="font-semibold text-gray-900 mb-4">Contact Support</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="font-medium text-gray-900">{selectedCategory}</div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Message
+                </label>
+                <textarea
+                  className="w-full p-3 border border-gray-200 rounded-lg focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition"
+                  rows={4}
+                  placeholder="Describe your issue..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                />
+              </div>
+              <button className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-300 transition flex items-center justify-center gap-2">
+                <Send className="w-5 h-5" />
+                Send Message
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Contact Information */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Other Ways to Reach Us</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-indigo-500" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Email Support</div>
+                <div className="text-sm text-gray-500">support@aicurate.com</div>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                <Phone className="w-5 h-5 text-indigo-500" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Phone Support</div>
+                <div className="text-sm text-gray-500">+1 (555) 123-4567</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* FAQ Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-900 mb-2">How do I reset my password?</div>
+              <p className="text-sm text-gray-600">
+                You can reset your password by clicking on the &quot;Forgot Password&quot; link on the login page.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-900 mb-2">How do I update my subscription?</div>
+              <p className="text-sm text-gray-600">
+                You can update your subscription plan in the Subscription section of your settings.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="font-medium text-gray-900 mb-2">What payment methods do you accept?</div>
+              <p className="text-sm text-gray-600">
+                We accept all major credit cards, PayPal, and cryptocurrency payments.
+              </p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 } 
