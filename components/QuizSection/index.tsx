@@ -732,10 +732,10 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
           <AnimatePresence mode="wait">
             {showReveal && (
               <>
-                <motion.div
-                  key="reveal"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
+              <motion.div
+                key="reveal"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                   className="absolute inset-0 p-4 sm:p-8 bg-white rounded-lg shadow-lg text-center flex flex-col items-center justify-center z-20 max-w-md mx-auto my-auto space-y-5"
                 >
                   {/* Headline with confetti */}
@@ -748,14 +748,14 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                   </div>
                   {/* Badge visual */}
                   <div className="relative w-full aspect-square max-w-[180px] mx-auto mb-2">
-                    <Image
+                  <Image
                       src="/badges/Edge_Badge.png"
                       alt="Explorer Badge"
-                      fill
+                    fill
                       className="object-contain"
                       sizes="(max-width: 180px) 100vw, 180px"
-                      priority
-                    />
+                    priority
+                  />
                   </div>
                   {/* Title */}
                   <h2 className="text-xl font-bold text-gray-900 mt-2 mb-2">
@@ -774,31 +774,31 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                     <div className="flex items-start gap-2">
                       <span className="text-green-500 text-lg mt-0.5">✔</span>
                       <span>Time to <b>explore AI tools!</b></span>
-                    </div>
                   </div>
+                </div>
                   {/* CTA Button */}
-                  {mintError && (
-                    <p className="text-sm text-red-600">{mintError}</p>
-                  )}
-                  <button
-                    onClick={isMinting ? undefined : handleMintNFT}
-                    disabled={isMinting}
+                {mintError && (
+                  <p className="text-sm text-red-600">{mintError}</p>
+                )}
+                <button
+                  onClick={isMinting ? undefined : handleMintNFT}
+                  disabled={isMinting}
                     className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-2"
                     style={{ minHeight: 56 }}
-                  >
-                    {isMinting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <motion.span
-                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        />
-                        Minting...
-                      </span>
-                    ) : (
+                >
+                  {isMinting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <motion.span
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                      Minting...
+                    </span>
+                  ) : (
                       'Mint Badge & Claim coins ->'
-                    )}
-                  </button>
+                  )}
+                </button>
                   {/* Confetti celebration animation - only on minting page */}
                   <Confetti
                     width={typeof window !== 'undefined' ? window.innerWidth : 300}
@@ -806,7 +806,7 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                     recycle={false}
                     numberOfPieces={200}
                   />
-                </motion.div>
+              </motion.div>
               </>
             )}
           </AnimatePresence>

@@ -1,6 +1,7 @@
 "use client";
 import { motion } from 'framer-motion';
 import { User, CreditCard, Vault, Bell, HelpCircle, Shield, LogOut, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 
 const settingsOptions = [
   {
@@ -42,45 +43,40 @@ const settingsOptions = [
 
 export default function SettingsPage() {
   return (
-    <motion.div
-      className="p-4 max-w-md mx-auto"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: 'easeOut' }}
-    >
-      <motion.h1
-        className="text-2xl font-bold mb-6 text-indigo-700"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.5 }}
-      >
-        Settings
-      </motion.h1>
-      <motion.div
-        className="space-y-4"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: {},
-          visible: { transition: { staggerChildren: 0.08 } }
-        }}
-      >
-        {settingsOptions.map((option, i) => (
-          <motion.button
-            key={option.label}
-            className="w-full flex items-center justify-between bg-white rounded-xl shadow-lg px-4 py-4 hover:bg-indigo-50 focus:ring-2 focus:ring-indigo-300 transition group"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + i * 0.08, duration: 0.4 }}
-          >
-            <div className="flex items-center gap-4">
-              <option.icon className={`w-6 h-6 ${option.color} group-hover:scale-110 transition-transform`} />
-              <span className="font-medium text-gray-900 text-base">{option.label}</span>
-            </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition" />
-          </motion.button>
-        ))}
-      </motion.div>
-    </motion.div>
+    <div className="p-4 space-y-4">
+      <div className="bg-white rounded-xl shadow p-4">
+        <h2 className="text-lg font-bold mb-4">Settings</h2>
+        <div className="flex flex-col gap-2">
+          <Link href="/settings/profile" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <User className="w-5 h-5 text-indigo-500" />
+            <span className="flex-1">Profile Info</span>
+          </Link>
+          <Link href="/settings/subscription" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <CreditCard className="w-5 h-5 text-purple-500" />
+            <span className="flex-1">Subscription Plan</span>
+          </Link>
+          <Link href="/settings/wallet" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Vault className="w-5 h-5 text-yellow-500" />
+            <span className="flex-1">Wallet</span>
+          </Link>
+          <Link href="/settings/notifications" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Bell className="w-5 h-5 text-pink-500" />
+            <span className="flex-1">Notifications</span>
+          </Link>
+          <Link href="/settings/support" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <HelpCircle className="w-5 h-5 text-blue-500" />
+            <span className="flex-1">Support</span>
+          </Link>
+          <Link href="/settings/legal" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <Shield className="w-5 h-5 text-green-600" />
+            <span className="flex-1">Legal / Privacy</span>
+          </Link>
+          <Link href="/settings/logout" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+            <LogOut className="w-5 h-5 text-red-500" />
+            <span className="flex-1">Log Out</span>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 } 
