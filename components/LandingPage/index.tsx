@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MiniKit, VerifyCommandInput, VerificationLevel } from "@worldcoin/minikit-js";
+import { MiniKit } from "@worldcoin/minikit-js";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 
@@ -12,41 +12,98 @@ export function LandingPage() {
   const router = useRouter();
 
   const handleVerify = async () => {
-    if (!username.trim()) {
-      alert("Please enter a username");
-      return;
-    }
     setIsVerifying(true);
     try {
       if (!MiniKit.isInstalled()) {
         alert("Please install World App to continue");
         return;
       }
-      const verifyPayload: VerifyCommandInput = {
-        action: "verify",
-        verification_level: VerificationLevel.Device,
+      
+      console.log("Starting wallet authentication process...");
+      console.log("MiniKit version and capabilities:", {
+        isInstalled: MiniKit.isInstalled(),
+        commandsAsync: Object.keys(MiniKit.commandsAsync || {}),
+        user: MiniKit.user,
+      });
+      
+      // STEP 1: Get nonce from backend
+      console.log("Step 1: Getting nonce...");
+      const nonceRes = await fetch('/api/nonce');
+      if (!nonceRes.ok) {
+        throw new Error('Failed to get nonce');
+      }
+      const { nonce } = await nonceRes.json();
+      console.log("Nonce received:", nonce);
+
+      // STEP 2: Wallet authentication (SIWE)
+      console.log("Step 2: Starting wallet authentication...");
+      
+      // Check if walletAuth is available
+      if (!MiniKit.commandsAsync?.walletAuth) {
+        console.error('Available MiniKit commands:', Object.keys(MiniKit.commandsAsync || {}));
+        throw new Error('Wallet authentication is not supported in this MiniKit version. Available commands: ' + Object.keys(MiniKit.commandsAsync || {}).join(', '));
+      }
+      
+      // Try with minimal required parameters first
+      const walletAuthInput = {
+        nonce,
+        statement: 'Sign in to AICurate',
       };
-      const response = await MiniKit.commandsAsync.verify(verifyPayload);
-      if (!response || !response.finalPayload) {
-        throw new Error("Invalid response from World App");
+      
+      console.log("Wallet auth input (minimal):", walletAuthInput);
+      
+      const result = await MiniKit.commandsAsync.walletAuth(walletAuthInput);
+      console.log("Raw wallet auth result:", result);
+      
+      const { commandPayload, finalPayload } = result;
+
+      console.log("Wallet auth result:", finalPayload);
+
+      if (finalPayload.status === 'error') {
+        console.error('Wallet auth failed:', finalPayload);
+        throw new Error('Wallet authentication failed');
       }
-      const { finalPayload } = response;
-      if (finalPayload.status === "error") {
-        throw new Error("Verification failed");
-      }
-      // Verify the proof in the backend
-      const verifyResponse = await fetch("/api/verify", {
+
+      // STEP 3: Verify on backend
+      console.log("Step 3: Verifying with backend...");
+      const verifyResponse = await fetch("/api/complete-siwe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload: finalPayload, action: "verify", username }),
+        body: JSON.stringify({ 
+          payload: finalPayload, 
+          nonce,
+          username: username || undefined // Pass username if provided
+        }),
       });
+      
       if (!verifyResponse.ok) {
-        throw new Error("Backend verification failed");
+        const errorData = await verifyResponse.json();
+        throw new Error(errorData.message || "Backend verification failed");
       }
+      
+      const verifyResult = await verifyResponse.json();
+      console.log("Verification successful:", verifyResult);
+      
+      // STEP 4: Store user data in localStorage for session persistence
+      localStorage.setItem('worldIdUser', JSON.stringify({
+        id: verifyResult.user.id,
+        name: verifyResult.user.name,
+        isVerified: verifyResult.user.isVerified,
+        walletAddress: finalPayload.address
+      }));
+      
+      // Store individual keys for consistency with your session hook
+      localStorage.setItem('worldcoin_user_id', verifyResult.user.id);
+      localStorage.setItem('worldcoin_username', verifyResult.user.name || username);
+      
+      // STEP 5: Access wallet info from MiniKit
+      console.log("Wallet address from payload:", finalPayload.address);
+      console.log("Username from MiniKit:", MiniKit.user?.username);
+      
       router.push("/quiz");
     } catch (error) {
-      console.error("Verification failed:", error);
-      alert(error instanceof Error ? error.message : "Verification failed");
+      console.error("Wallet authentication failed:", error);
+      alert(error instanceof Error ? error.message : "Wallet authentication failed");
     } finally {
       setIsVerifying(false);
     }
@@ -80,7 +137,7 @@ export function LandingPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
+                placeholder="Username (optional)"
                 className="username-input"
               />
             </div>
@@ -94,8 +151,9 @@ export function LandingPage() {
                 disabled={isVerifying}
                 className="sign-in-button"
               >
-                Sign in with World ID
+                {isVerifying ? 'Connecting...' : 'Sign in with Wallet'}
               </motion.button>
+              {/* Temporarily removed guest signup option
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => router.push("/quiz")}
@@ -103,6 +161,7 @@ export function LandingPage() {
               >
                 Continue as Guest
               </motion.button>
+              */}
             </div>
           </div>
         </div>

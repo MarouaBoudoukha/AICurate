@@ -1,4 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -26,6 +29,16 @@ const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
+      if (!user?.id) return false;
+      const existing = await prisma.user.findUnique({ where: { id: user.id } });
+      if (!existing) {
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            name: user.name,
+          }
+        });
+      }
       return true;
     },
   },

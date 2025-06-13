@@ -26,7 +26,7 @@ const tabs = [
   {
     label: 'AI Guide',
     icon: Bot,
-    path: '/directory',
+    path: '/guide',
     color: 'from-blue-500 to-indigo-400',
   },
   {
@@ -50,7 +50,7 @@ export function TabBar({ onNavigate, className }: TabBarProps = {}) {
   if (
     pathname === '/' ||
     pathname === '/landing' ||
-    (pathname.startsWith('/quiz') && pathname !== '/quiz/mint')
+    pathname === '/quiz'
   ) return null;
 
   const handleClick = (path: string) => {

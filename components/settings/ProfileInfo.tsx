@@ -1,37 +1,96 @@
 "use client";
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { ArrowLeft, CheckCircle, XCircle, Twitter, Linkedin, User, MapPin, Globe } from 'lucide-react';
+import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 
-const initialUser = {
-  name: "Jane Doe",
-  username: "janedoe",
-  avatar: "/avatars/default.png",
-  worldId: true,
-  tribe: "European",
-  badge: "Edge Esmeralda",
-  badgeImg: "/badges/Edge_Badge.png",
-  language: "English",
-  location: "France",
-  socials: { twitter: "@janedoe", linkedin: "@janedoe" }
-};
+interface UserProfile {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar: string | null;
+  isVerified: boolean;
+  worldcoinId: string | null;
+  region: string | null;
+  bio: string | null;
+  interests: string[];
+  experienceLevel: string;
+  preferences: {
+    language?: string;
+    socials?: {
+      twitter?: string;
+      linkedin?: string;
+    };
+  } | null;
+}
 
 export default function ProfileInfo() {
   const router = useRouter();
-  const [user, setUser] = useState(initialUser);
+  const unifiedSession = useUnifiedSession();
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [edit, setEdit] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState(user.avatar);
-  const [form, setForm] = useState(user);
+  const [avatarPreview, setAvatarPreview] = useState<string>('/avatars/default.png');
+  const [form, setForm] = useState<Partial<UserProfile>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userId = unifiedSession.user?.id;
+        if (!userId) {
+          console.error('No user ID found');
+          return;
+        }
+
+        const response = await fetch(`/api/user/${userId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+        setUser(userData);
+        setForm(userData);
+        setAvatarPreview(userData.avatar || '/avatars/default.png');
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (unifiedSession.status === 'authenticated') {
+      fetchUserData();
+    }
+  }, [unifiedSession]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name.startsWith('socials.')) {
-      setForm({ ...form, socials: { ...form.socials, [name.split('.')[1]]: value } });
+    if (name.startsWith('preferences.socials.')) {
+      const social = name.split('.')[2];
+      setForm(prev => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          socials: {
+            ...prev.preferences?.socials,
+            [social]: value
+          }
+        }
+      }));
+    } else if (name.startsWith('preferences.')) {
+      const pref = name.split('.')[1];
+      setForm(prev => ({
+        ...prev,
+        preferences: {
+          ...prev.preferences,
+          [pref]: value
+        }
+      }));
     } else {
-      setForm({ ...form, [name]: value });
+      setForm(prev => ({ ...prev, [name]: value }));
     }
   };
 
@@ -39,19 +98,62 @@ export default function ProfileInfo() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setAvatarPreview(URL.createObjectURL(file));
+      // TODO: Implement avatar upload
     }
   };
 
   const handleEdit = () => setEdit(true);
   const handleCancel = () => {
     setEdit(false);
-    setForm(user);
-    setAvatarPreview(user.avatar);
+    setForm(user || {});
+    setAvatarPreview(user?.avatar || '/avatars/default.png');
   };
-  const handleSave = () => {
-    setUser({ ...form, avatar: avatarPreview });
+
+  const handleSave = async () => {
+    try {
+      const userId = unifiedSession.user?.id;
+      if (!userId) {
+        throw new Error('No user ID found');
+      }
+
+      const response = await fetch(`/api/user/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const updatedUser = await response.json();
+      setUser(updatedUser);
     setEdit(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      // TODO: Show error message to user
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-4 text-center">
+        <p className="text-red-500">Failed to load user data</p>
+      </div>
+    );
+  }
+
   const isChanged = JSON.stringify(form) !== JSON.stringify(user) || avatarPreview !== user.avatar;
 
   return (
@@ -98,7 +200,7 @@ export default function ProfileInfo() {
           <Globe className="w-7 h-7 text-purple-500" />
           <div>
             <div className="text-xs text-gray-500">Language</div>
-            <div className="text-xl font-bold text-purple-700">{user.language}</div>
+            <div className="text-xl font-bold text-purple-700">{user.preferences?.language || 'English'}</div>
           </div>
         </div>
       </motion.div>
@@ -141,22 +243,22 @@ export default function ProfileInfo() {
               <input
                 className="font-semibold text-lg text-center border border-gray-200 focus:border-indigo-400 outline-none mb-1 rounded-lg px-3 py-1 bg-gray-50 transition"
                 name="name"
-                value={form.name}
+                value={form.name || ''}
                 onChange={handleChange}
                 placeholder="Name"
               />
               <input
                 className="text-gray-500 text-sm text-center border border-gray-200 focus:border-indigo-400 outline-none rounded-lg px-3 py-1 bg-gray-50 transition"
                 name="username"
-                value={form.username}
+                value={form.username || ''}
                 onChange={handleChange}
                 placeholder="Username"
               />
             </>
           ) : (
             <>
-              <div className="font-semibold text-lg">{user.name}</div>
-              <div className="text-gray-500 text-sm">@{user.username}</div>
+              <div className="font-semibold text-lg">{user.name || 'Anonymous'}</div>
+              <div className="text-gray-500 text-sm">@{user.username || 'user'}</div>
             </>
           )}
         </div>
@@ -164,7 +266,7 @@ export default function ProfileInfo() {
         {/* Verification & Badge Section */}
         <div className="border-t pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
           <div className="flex items-center gap-2">
-            {user.worldId ? (
+            {user.isVerified ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                 <CheckCircle className="w-4 h-4" /> Verified World ID
               </span>
@@ -176,10 +278,9 @@ export default function ProfileInfo() {
           </div>
           <div className="flex items-center gap-2 mt-2 sm:mt-0">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
-              {user.tribe}
+              {user.region || 'Global'}
             </span>
-            <Image src={user.badgeImg} alt="Badge" width={32} height={32} className="rounded-full border" />
-            <span className="font-semibold text-xs">{user.badge}</span>
+            <span className="font-semibold text-xs">{user.experienceLevel}</span>
           </div>
         </div>
 
@@ -194,13 +295,13 @@ export default function ProfileInfo() {
                 {edit ? (
                   <input
                     className="w-full font-semibold border border-gray-200 focus:border-indigo-400 outline-none rounded-lg px-3 py-1 bg-white transition"
-                    name="language"
-                    value={form.language}
+                    name="preferences.language"
+                    value={form.preferences?.language || ''}
                     onChange={handleChange}
                     placeholder="Language"
                   />
                 ) : (
-                  <div className="font-semibold">{user.language}</div>
+                  <div className="font-semibold">{user.preferences?.language || 'English'}</div>
                 )}
               </div>
             </div>
@@ -211,13 +312,13 @@ export default function ProfileInfo() {
                 {edit ? (
                   <input
                     className="w-full font-semibold border border-gray-200 focus:border-indigo-400 outline-none rounded-lg px-3 py-1 bg-white transition"
-                    name="location"
-                    value={form.location}
+                    name="region"
+                    value={form.region || ''}
                     onChange={handleChange}
                     placeholder="Location"
                   />
                 ) : (
-                  <div className="font-semibold">{user.location}</div>
+                  <div className="font-semibold">{user.region || 'Not set'}</div>
                 )}
               </div>
             </div>
@@ -235,13 +336,13 @@ export default function ProfileInfo() {
                 {edit ? (
                   <input
                     className="w-full font-semibold border border-gray-200 focus:border-indigo-400 outline-none rounded-lg px-3 py-1 bg-white transition"
-                    name="socials.twitter"
-                    value={form.socials.twitter}
+                    name="preferences.socials.twitter"
+                    value={form.preferences?.socials?.twitter || ''}
                     onChange={handleChange}
                     placeholder="Twitter handle"
                   />
                 ) : (
-                  <div className="font-semibold">{user.socials.twitter}</div>
+                  <div className="font-semibold">{user.preferences?.socials?.twitter || 'Not set'}</div>
                 )}
               </div>
             </div>
@@ -252,13 +353,13 @@ export default function ProfileInfo() {
                 {edit ? (
                   <input
                     className="w-full font-semibold border border-gray-200 focus:border-indigo-400 outline-none rounded-lg px-3 py-1 bg-white transition"
-                    name="socials.linkedin"
-                    value={form.socials.linkedin}
+                    name="preferences.socials.linkedin"
+                    value={form.preferences?.socials?.linkedin || ''}
                     onChange={handleChange}
                     placeholder="LinkedIn handle"
                   />
                 ) : (
-                  <div className="font-semibold">{user.socials.linkedin}</div>
+                  <div className="font-semibold">{user.preferences?.socials?.linkedin || 'Not set'}</div>
                 )}
               </div>
             </div>

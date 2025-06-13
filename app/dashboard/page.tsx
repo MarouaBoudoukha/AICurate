@@ -2,16 +2,36 @@
 import { useRouter } from 'next/navigation';
 import { UserCircle, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 
 // ProofProfile Home Screen (formerly Dashboard)
 export default function ProofProfile() {
   const router = useRouter();
-  // Mock user data
-  const username = 'Explorer';
-  const proofPoints = 1250;
-  const credits = 3;
+  const unifiedSession = useUnifiedSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Redirect to landing if not authenticated
+  useEffect(() => {
+    if (unifiedSession.status === 'unauthenticated') {
+      router.push('/landing');
+    }
+  }, [unifiedSession.status, router]);
+
+  // Show loading state
+  if (unifiedSession.status === 'loading') {
+    return (
+      <div className="h-full flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  // Get user data from session or use defaults
+  const username = unifiedSession.user?.name || 'Explorer';
+  const proofPoints = 1250; // TODO: Get from API
+  const credits = 3; // TODO: Get from API
 
   // Avatar upload handler (placeholder, no upload logic)
   const handleAvatarClick = () => {

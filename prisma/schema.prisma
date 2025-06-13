@@ -1,0 +1,1090 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/schema.prisma - Production Ready Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// =====================================================
+// CORE USER MANAGEMENT
+// =====================================================
+
+model User {
+  id                String            @id @default(cuid())
+  worldcoinId       String?           @unique
+  email             String?           @unique
+  name              String?
+  username          String?           @unique
+  isVerified        Boolean           @default(false)
+  userType          UserType          @default(INDIVIDUAL)
+  
+  // Profile Information
+  experienceLevel   ExperienceLevel   @default(BEGINNER)
+  interests         String[]
+  region            String?
+  avatar            String?
+  bio               String?
+  preferences       Json?
+  onboardingCompleted Boolean         @default(false)
+  
+  // Gamification
+  proofPoints       Int               @default(0)
+  level             Int               @default(1)
+  badges            String[]
+  streak            Int               @default(0)
+  
+  // Subscription & Payments
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  subscriptionEndDate DateTime?
+  trialUsed         Boolean           @default(false)
+  
+  // Timestamps
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  lastActiveAt      DateTime          @default(now())
+  lastLoginAt       DateTime?
+  
+  // Relations
+  agentSessions     AgentSession[]
+  toolReviews       ToolReview[]
+  userVault         UserVault[]
+  userChallenges    UserChallenge[]
+  userTrophies      UserTrophy[]
+  userQuizResults   UserQuizResult[]
+  userHunts         UserHunt[]
+  userActivities    UserActivity[]
+  subscriptions     Subscription[]
+  payments          Payment[]
+  teamMemberships   TeamMember[]
+  collections       Collection[]
+  reviewVotes       ReviewVote[]
+  referrals         Referral[]        @relation("ReferrerUser")
+  referredBy        Referral[]        @relation("ReferredUser")
+  notifications     Notification[]
+  toolUsages        ToolUsage[]
+  
+  @@map("users")
+  @@index([email])
+  @@index([username])
+  @@index([worldcoinId])
+  @@index([userType])
+  @@index([level])
+  @@index([subscriptionStatus])
+  @@index([createdAt])
+}
+
+// =====================================================
+// AI TOOLS DATABASE
+// =====================================================
+
+model AITool {
+  id              String      @id @default(cuid())
+  name            String      @unique
+  slug            String      @unique
+  description     String
+  longDescription String?
+  category        String
+  subcategory     String?
+  
+  // Pricing Information
+  pricingModel    PricingModel
+  pricingDetails  String
+  freeTier        Boolean     @default(false)
+  startingPrice   Float?
+  
+  // Features & Metadata
+  features        String[]
+  useCases        String[]
+  complexity      Complexity
+  targetAudience  String[]
+  
+  // Integration & Technical
+  integrations    String[]
+  apiAvailable    Boolean     @default(false)
+  mobileApp       Boolean     @default(false)
+  browserExtension Boolean    @default(false)
+  
+  // Compliance & Security
+  compliance      String[]
+  security        Json?
+  dataRetention   String?
+  
+  // Performance Metrics
+  rating          Float?
+  reviewCount     Int         @default(0)
+  popularity      Int         @default(0)
+  monthlyUsers    Int?
+  
+  // URLs & Links
+  website         String
+  signupUrl       String?
+  demoUrl         String?
+  documentationUrl String?
+  supportUrl      String?
+  
+  // Media
+  logo            String?
+  screenshots     String[]
+  videoUrl        String?
+  
+  // Curation Status
+  isVerified      Boolean     @default(false)
+  isTrending      Boolean     @default(false)
+  isRegionSpecific String?
+  isFeatured      Boolean     @default(false)
+  
+  // Launch & Updates
+  launchDate      DateTime?
+  lastUpdate      DateTime?
+  
+  // Admin
+  addedBy         String?
+  verifiedBy      String?
+  status          ToolStatus  @default(ACTIVE)
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  reviews         ToolReview[]
+  userVault       UserVault[]
+  recommendations ToolRecommendation[]
+  hunts           Hunt[]
+  challenges      Challenge[]
+  trendingEntries TrendingTool[]
+  usageMetrics    ToolUsage[]
+  
+  @@map("ai_tools")
+  @@index([category])
+  @@index([complexity])
+  @@index([pricingModel])
+  @@index([rating])
+  @@index([popularity])
+  @@index([isVerified])
+  @@index([isTrending])
+  @@index([status])
+  @@index([name])
+  @@index([slug])
+}
+
+// =====================================================
+// AGENT SESSIONS & TASKS FRAMEWORK
+// =====================================================
+
+model AgentSession {
+  id              String      @id @default(cuid())
+  userId          String
+  teamId          String?
+  
+  // Session State
+  currentStep     TasksStep   @default(TARGET)
+  userType        UserType?
+  
+  // Context Data
+  userGoal        String?
+  refinedGoal     String?
+  constraints     Json?
+  recommendationsData Json?  // Renamed from recommendations to avoid conflict
+  finalPick       String?
+  
+  // Metrics
+  proofPointsEarned Int       @default(0)
+  completionTime    Int?
+  completed         Boolean   @default(false)
+  satisfaction      Int?
+  
+  // Corporate-specific
+  department        String?
+  objectives        String[]
+  budgetRange       String?
+  integrationNeeds  String[]
+  complianceReqs    String[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+  
+  // Relations
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team            Team? @relation(fields: [teamId], references: [id])
+  messages        SessionMessage[]
+  recommendations ToolRecommendation[]
+  
+  @@map("agent_sessions")
+  @@index([userId])
+  @@index([currentStep])
+  @@index([completed])
+  @@index([createdAt])
+}
+
+model SessionMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      MessageRole
+  content   String
+  step      TasksStep?
+  metadata  Json?
+  
+  createdAt DateTime @default(now())
+  
+  session   AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@map("session_messages")
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model ToolRecommendation {
+  id              String   @id @default(cuid())
+  sessionId       String
+  toolId          String
+  
+  compatibilityScore Int
+  reasoning          String
+  rank              Int
+  
+  // Corporate-specific scores
+  enterpriseScore   Int?
+  securityScore     Int?
+  scalabilityScore  Int?
+  roiProjection     String?
+  
+  wasSelected       Boolean @default(false)
+  userFeedback      String?
+  
+  createdAt       DateTime @default(now())
+  
+  session         AgentSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  tool            AITool @relation(fields: [toolId], references: [id])
+  
+  @@unique([sessionId, toolId])
+  @@map("tool_recommendations")
+}
+
+// =====================================================
+// REVIEWS & RATINGS
+// =====================================================
+
+model ToolReview {
+  id       String @id @default(cuid())
+  userId   String
+  toolId   String
+  
+  rating   Int
+  title    String?
+  content  String?
+  
+  // Detailed ratings
+  easeOfUse     Int?
+  features      Int?
+  valueForMoney Int?
+  support       Int?
+  documentation Int?
+  
+  // Verification & Moderation
+  isVerified    Boolean @default(false)
+  verifiedAt    DateTime?
+  isModerated   Boolean @default(false)
+  moderatedAt   DateTime?
+  moderationReason String?
+  
+  // Engagement
+  helpfulVotes  Int     @default(0)
+  reportCount   Int     @default(0)
+  
+  // Usage context
+  usageDuration String?
+  useCase       String?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool         AITool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  votes        ReviewVote[]
+  
+  @@unique([userId, toolId])
+  @@map("tool_reviews")
+  @@index([toolId])
+  @@index([rating])
+  @@index([isVerified])
+  @@index([createdAt])
+}
+
+model ReviewVote {
+  id       String    @id @default(cuid())
+  userId   String
+  reviewId String
+  isHelpful Boolean
+  
+  createdAt DateTime @default(now())
+  
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review   ToolReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, reviewId])
+  @@map("review_votes")
+}
+
+// =====================================================
+// GAMIFICATION SYSTEM
+// =====================================================
+
+model Challenge {
+  id              String             @id @default(cuid())
+  title           String
+  description     String
+  shortDescription String?
+  type            ChallengeType
+  difficulty      ChallengeDifficulty
+  
+  // Requirements & Rules
+  requirements    Json
+  rules           Json?
+  
+  // Rewards
+  proofPoints     Int
+  badgeId         String?
+  additionalRewards Json?
+  
+  // Tool-specific challenges
+  toolId          String?
+  category        String?
+  
+  // Timing
+  startDate       DateTime?
+  endDate         DateTime?
+  duration        Int?
+  
+  // Participation
+  maxParticipants Int?
+  currentParticipants Int           @default(0)
+  
+  // Status
+  isActive        Boolean            @default(true)
+  isFeatured      Boolean            @default(false)
+  
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  // Relations
+  tool            AITool?            @relation(fields: [toolId], references: [id])
+  userChallenges  UserChallenge[]
+  
+  @@map("challenges")
+  @@index([type])
+  @@index([difficulty])
+  @@index([isActive])
+  @@index([startDate])
+  @@index([toolId])
+}
+
+model UserChallenge {
+  id            String            @id @default(cuid())
+  userId        String
+  challengeId   String
+  
+  status        ChallengeStatus   @default(IN_PROGRESS)
+  progress      Json
+  completionPercentage Float     @default(0)
+  
+  startedAt     DateTime          @default(now())
+  completedAt   DateTime?
+  lastProgressAt DateTime         @default(now())
+  
+  // Rewards received
+  proofPointsEarned Int           @default(0)
+  badgeEarned   String?
+  
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge     Challenge         @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, challengeId])
+  @@map("user_challenges")
+  @@index([status])
+  @@index([completedAt])
+}
+
+// =====================================================
+// QUIZ & ONBOARDING
+// =====================================================
+
+model QuizQuestion {
+  id          String         @id @default(cuid())
+  question    String
+  type        QuestionType
+  options     Json?
+  category    String
+  subcategory String?
+  order       Int
+  
+  // Metadata
+  isRequired  Boolean        @default(true)
+  isActive    Boolean        @default(true)
+  helpText    String?
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  // Relations
+  userAnswers UserQuizResult[]
+  
+  @@map("quiz_questions")
+  @@index([category])
+  @@index([order])
+  @@index([isActive])
+}
+
+model UserQuizResult {
+  id         String      @id @default(cuid())
+  userId     String
+  questionId String
+  
+  answer     Json
+  score      Int?
+  
+  answeredAt DateTime    @default(now())
+  
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question   QuizQuestion @relation(fields: [questionId], references: [id])
+  
+  @@unique([userId, questionId])
+  @@map("user_quiz_results")
+}
+
+// =====================================================
+// VAULT & COLLECTIONS
+// =====================================================
+
+model UserVault {
+  id          String      @id @default(cuid())
+  userId      String
+  toolId      String
+  
+  // Organization
+  collectionId String?
+  tags        String[]
+  notes       String?
+  priority    Priority    @default(MEDIUM)
+  
+  // Usage tracking
+  status      VaultStatus @default(SAVED)
+  lastUsed    DateTime?
+  usageCount  Int         @default(0)
+  
+  // Social
+  isPublic    Boolean     @default(false)
+  sharedAt    DateTime?
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tool        AITool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  collection  Collection? @relation(fields: [collectionId], references: [id])
+  
+  @@unique([userId, toolId])
+  @@map("user_vault")
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+}
+
+model Collection {
+  id          String      @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  color       String?
+  icon        String?
+  
+  // Privacy
+  isPublic    Boolean     @default(false)
+  isShared    Boolean     @default(false)
+  
+  // Organization
+  order       Int         @default(0)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vaultItems  UserVault[]
+  
+  @@map("collections")
+  @@index([userId])
+  @@index([isPublic])
+}
+
+// =====================================================
+// ANALYTICS & TRACKING
+// =====================================================
+
+model UserActivity {
+  id            String       @id @default(cuid())
+  userId        String
+  activityType  ActivityType
+  description   String
+  metadata      Json?
+  
+  // Context
+  toolId        String?
+  sessionId     String?
+  challengeId   String?
+  huntId        String?
+  
+  // Metrics
+  proofPointsEarned Int       @default(0)
+  duration      Int?
+  
+  createdAt     DateTime     @default(now())
+  
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_activities")
+  @@index([userId])
+  @@index([activityType])
+  @@index([createdAt])
+  @@index([toolId])
+}
+
+model ToolUsage {
+  id            String   @id @default(cuid())
+  toolId        String
+  userId        String?
+  
+  // Usage metrics
+  views         Int      @default(0)
+  clicks        Int      @default(0)
+  signups       Int      @default(0)
+  conversions   Int      @default(0)
+  
+  // Time tracking
+  date          DateTime
+  week          Int
+  month         Int
+  year          Int
+  
+  // Context
+  source        String?
+  userAgent     String?
+  country       String?
+  
+  tool          AITool   @relation(fields: [toolId], references: [id])
+  user          User?    @relation(fields: [userId], references: [id])
+  
+  @@unique([toolId, date, userId])
+  @@map("tool_usage")
+  @@index([toolId])
+  @@index([date])
+  @@index([userId])
+}
+
+// =====================================================
+// TRENDING SYSTEM
+// =====================================================
+
+model TrendingTool {
+  id            String   @id @default(cuid())
+  toolId        String
+  
+  // Trending metrics
+  score         Float
+  rank          Int
+  previousRank  Int?
+  category      String
+  
+  // Time period
+  period        TrendingPeriod
+  date          DateTime
+  
+  // Factors
+  viewsGrowth   Float    @default(0)
+  reviewsGrowth Float    @default(0)
+  savesGrowth   Float    @default(0)
+  
+  tool          AITool   @relation(fields: [toolId], references: [id])
+  
+  @@unique([toolId, period, date])
+  @@map("trending_tools")
+  @@index([period, rank])
+  @@index([category])
+  @@index([score])
+}
+
+// =====================================================
+// HUNT SYSTEM
+// =====================================================
+
+model Hunt {
+  id              String      @id @default(cuid())
+  title           String
+  description     String
+  type            HuntType
+  difficulty      HuntDifficulty
+  
+  // Hunt Configuration
+  toolId          String?
+  category        String?
+  objectives      Json
+  hints           Json?
+  
+  // Rewards
+  proofPoints     Int
+  badgeId         String?
+  
+  // Timing
+  timeLimit       Int?
+  startDate       DateTime?
+  endDate         DateTime?
+  
+  // Status
+  isActive        Boolean     @default(true)
+  isFeatured      Boolean     @default(false)
+  
+  // Stats
+  participantCount Int        @default(0)
+  completionRate  Float?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  tool            AITool?     @relation(fields: [toolId], references: [id])
+  userHunts       UserHunt[]
+  
+  @@map("hunts")
+  @@index([type])
+  @@index([difficulty])
+  @@index([isActive])
+  @@index([toolId])
+  @@index([category])
+}
+
+model UserHunt {
+  id            String      @id @default(cuid())
+  userId        String
+  huntId        String
+  
+  status        HuntStatus  @default(IN_PROGRESS)
+  progress      Json
+  completionTime Int?
+  hintsUsed     Int         @default(0)
+  
+  startedAt     DateTime    @default(now())
+  completedAt   DateTime?
+  
+  // Rewards received
+  proofPointsEarned Int     @default(0)
+  badgeEarned   String?
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hunt          Hunt        @relation(fields: [huntId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, huntId])
+  @@map("user_hunts")
+  @@index([status])
+  @@index([completedAt])
+}
+
+// =====================================================
+// TEAM MANAGEMENT
+// =====================================================
+
+model Team {
+  id            String        @id @default(cuid())
+  name          String
+  companyName   String
+  department    String?
+  industry      String?
+  teamSize      TeamSize?
+  budget        String?
+  description   String?
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  members       TeamMember[]
+  agentSessions AgentSession[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  userId   String
+  teamId   String
+  role     TeamRole @default(MEMBER)
+  invitedAt DateTime @default(now())
+  joinedAt DateTime?
+  
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+// =====================================================
+// PAYMENTS & SUBSCRIPTIONS
+// =====================================================
+
+model Subscription {
+  id            String             @id @default(cuid())
+  userId        String
+  
+  // Subscription details
+  plan          SubscriptionPlan
+  status        SubscriptionStatus
+  billingCycle  BillingCycle
+  
+  // Pricing
+  amount        Float
+  currency      String             @default("USD")
+  
+  // Dates
+  startDate     DateTime           @default(now())
+  endDate       DateTime?
+  renewalDate   DateTime?
+  canceledAt    DateTime?
+  
+  // Provider
+  provider      String
+  providerId    String
+  
+  // Features
+  features      Json
+  
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+  
+  @@map("subscriptions")
+  @@index([userId])
+  @@index([status])
+  @@index([renewalDate])
+}
+
+model Payment {
+  id              String          @id @default(cuid())
+  userId          String
+  subscriptionId  String?
+  
+  // Payment details
+  amount          Float
+  currency        String          @default("USD")
+  status          PaymentStatus
+  
+  // Provider
+  provider        String
+  providerId      String
+  paymentMethod   String?
+  
+  // Metadata
+  description     String?
+  metadata        Json?
+  
+  // Dates
+  paidAt          DateTime?
+  refundedAt      DateTime?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription    Subscription?   @relation(fields: [subscriptionId], references: [id])
+  
+  @@map("payments")
+  @@index([userId])
+  @@index([status])
+  @@index([providerId])
+}
+
+// =====================================================
+// NOTIFICATIONS & COMMUNICATIONS
+// =====================================================
+
+model Notification {
+  id          String            @id @default(cuid())
+  userId      String
+  
+  type        NotificationType
+  title       String
+  message     String
+  
+  // Context
+  actionUrl   String?
+  metadata    Json?
+  
+  // Status
+  isRead      Boolean           @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime          @default(now())
+  
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model Referral {
+  id              String   @id @default(cuid())
+  referrerId      String
+  referredUserId  String?
+  
+  // Referral tracking
+  code            String   @unique
+  email           String?
+  
+  // Status
+  status          ReferralStatus @default(PENDING)
+  completedAt     DateTime?
+  
+  // Rewards
+  referrerReward  Int      @default(0)
+  referredReward  Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  
+  referrer        User     @relation("ReferrerUser", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser    User?    @relation("ReferredUser", fields: [referredUserId], references: [id])
+  
+  @@map("referrals")
+  @@index([code])
+  @@index([referrerId])
+  @@index([status])
+}
+
+// =====================================================
+// ENUMS
+// =====================================================
+
+enum UserType {
+  INDIVIDUAL
+  BUSINESS
+  ENTERPRISE
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
+enum TeamSize {
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+enum TeamRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum PricingModel {
+  FREE
+  FREEMIUM
+  SUBSCRIPTION
+  PAY_PER_USE
+  ENTERPRISE
+  ONE_TIME
+}
+
+enum Complexity {
+  SIMPLE
+  MODERATE
+  ADVANCED
+}
+
+enum ToolStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_REVIEW
+  REJECTED
+  DISCONTINUED
+}
+
+enum TasksStep {
+  TARGET
+  ASSESS
+  SAMPLE
+  KNOWLEDGE
+  SELECT
+  COMPLETED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum ChallengeType {
+  DISCOVERY
+  REVIEW
+  USAGE
+  SOCIAL
+  LEARNING
+  SPECIAL_EVENT
+}
+
+enum ChallengeDifficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum ChallengeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  EXPIRED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TEXT
+  BOOLEAN
+  SCALE
+  MULTI_SELECT
+}
+
+enum HuntType {
+  TOOL_DISCOVERY
+  CATEGORY_EXPLORATION
+  FEATURE_HUNT
+  CHALLENGE_HUNT
+}
+
+enum HuntDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum HuntStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum VaultStatus {
+  SAVED
+  TRYING
+  USING
+  COMPLETED
+  DISCONTINUED
+}
+
+enum ActivityType {
+  TOOL_VIEW
+  TOOL_SAVE
+  TOOL_REVIEW
+  CHALLENGE_START
+  CHALLENGE_COMPLETE
+  HUNT_START
+  HUNT_COMPLETE
+  SESSION_START
+  SESSION_COMPLETE
+  QUIZ_COMPLETE
+  LOGIN
+  SIGNUP
+  UPGRADE
+}
+
+enum TrendingPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SubscriptionStatus {
+  FREE
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum SubscriptionPlan {
+  FREE
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELED
+}
+
+enum NotificationType {
+  WELCOME
+  CHALLENGE_COMPLETE
+  HUNT_COMPLETE
+  TROPHY_EARNED
+  LEVEL_UP
+  REVIEW_LIKE
+  TOOL_TRENDING
+  SUBSCRIPTION_RENEWAL
+  PAYMENT_FAILED
+  FEATURE_UPDATE
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+}
+
+// Add the missing UserTrophy model
+model UserTrophy {
+  id          String    @id @default(cuid())
+  userId      String
+  trophyName  String
+  description String?
+  earnedAt    DateTime  @default(now())
+  
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_trophies")
+  @@index([userId])
+  @@index([trophyName])
+}

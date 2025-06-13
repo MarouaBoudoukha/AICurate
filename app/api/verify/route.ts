@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyCloudProof, IVerifyResponse } from "@worldcoin/minikit-js";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -9,10 +10,12 @@ export async function POST(req: Request) {
     const headers = Object.fromEntries(req.headers.entries());
     console.log("Request headers:", headers);
 
-    const { payload, action } = await req.json();
+    const { payload, action, walletAuthPayload, walletUsername } = await req.json();
     console.log("Request body:", {
       payload: JSON.stringify(payload, null, 2),
-      action
+      action,
+      walletAuthPayload: walletAuthPayload ? JSON.stringify(walletAuthPayload, null, 2) : null,
+      walletUsername
     });
 
     // Log environment variables
@@ -72,9 +75,92 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("Verification successful!");
+    console.log("Verification successful! Creating/updating user...");
+    
+    // Extract nullifier_hash as the unique identifier
+    const worldcoinId = payload.nullifier_hash;
+    
+    if (!worldcoinId) {
+      console.error("No nullifier_hash found in payload");
+      return NextResponse.json(
+        { error: "Invalid World ID payload" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { worldcoinId }
+    });
+
+    let user;
+    if (!existingUser) {
+      // Extract user information from wallet auth if available
+      let userName = `User_${worldcoinId.slice(0, 6)}`;
+      
+      if (walletUsername) {
+        // Use the actual username from MiniKit
+        userName = walletUsername;
+      } else if (walletAuthPayload && walletAuthPayload.status === 'success') {
+        // Fallback to wallet address format
+        userName = `${walletAuthPayload.address.slice(0, 6)}...${walletAuthPayload.address.slice(-4)}`;
+      }
+      
+      // Create new user with extracted information
+      user = await prisma.user.create({
+        data: {
+          worldcoinId,
+          name: userName,
+          username: userName,
+          isVerified: true,
+          userType: "INDIVIDUAL",
+          experienceLevel: "BEGINNER",
+          interests: [],
+          proofPoints: 0,
+          level: 1,
+          badges: [],
+          streak: 0,
+          subscriptionStatus: "FREE",
+          trialUsed: false,
+          onboardingCompleted: false,
+        }
+      });
+      console.log("User created:", user.id, "with name:", userName);
+    } else {
+      // Update existing user with new information if available
+      let updateData: any = {
+        lastLoginAt: new Date(),
+        lastActiveAt: new Date(),
+      };
+      
+      if (walletUsername) {
+        // Use the actual username from MiniKit
+        updateData.name = walletUsername;
+        updateData.username = walletUsername;
+      } else if (walletAuthPayload && walletAuthPayload.status === 'success') {
+        // Fallback to wallet address format
+        const walletUsernameFormat = `${walletAuthPayload.address.slice(0, 6)}...${walletAuthPayload.address.slice(-4)}`;
+        updateData.name = walletUsernameFormat;
+        updateData.username = walletUsernameFormat;
+      }
+      
+      user = await prisma.user.update({
+        where: { worldcoinId },
+        data: updateData
+      });
+      console.log("User updated:", user.id);
+    }
+
     return NextResponse.json(
-      { status: 200, message: "Verification successful" },
+      { 
+        status: 200, 
+        message: "Verification successful",
+        user: {
+          id: user.id,
+          name: user.name,
+          isVerified: user.isVerified
+        }
+      },
       { status: 200 }
     );
   } catch (error: any) {

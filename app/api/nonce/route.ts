@@ -5,11 +5,12 @@ export function GET(req: NextRequest) {
   // Generate nonce (at least 8 alphanumeric characters)
   const nonce = crypto.randomUUID().replace(/-/g, "");
 
-  // Store nonce in cookies
-  cookies().set("siwe", nonce, { 
-    secure: true,
+  // Store nonce in cookies with proper expiration
+  cookies().set("siwe", nonce, {
+    secure: process.env.NODE_ENV === 'production', // Only secure in production
     httpOnly: true,
-    sameSite: 'strict'
+    sameSite: 'strict',
+    maxAge: 60 * 15 // 15 minutes expiration - ADDED THIS
   });
 
   return NextResponse.json({ nonce });

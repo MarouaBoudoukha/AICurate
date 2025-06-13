@@ -6,7 +6,7 @@ import Confetti from "react-confetti";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { MiniKit } from '@worldcoin/minikit-js';
-import { useSession, signIn } from 'next-auth/react';
+import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 
 // Quiz step definitions
 const quizSteps: QuizStep[] = [
@@ -31,214 +31,202 @@ const quizSteps: QuizStep[] = [
     title: "Where do you live?",
     type: 'dropdown',
     options: [
-      // Africa
+      // Sort all countries alphabetically
+      { label: "Afghanistan", tribe: "Asian" },
+      { label: "Albania", tribe: "European" },
       { label: "Algeria", tribe: "African" },
+      { label: "Andorra", tribe: "European" },
       { label: "Angola", tribe: "African" },
+      { label: "Antigua and Barbuda", tribe: "North American" },
+      { label: "Argentina", tribe: "LATAM" },
+      { label: "Armenia", tribe: "European" },
+      { label: "Australia", tribe: "Oceanic" },
+      { label: "Austria", tribe: "European" },
+      { label: "Azerbaijan", tribe: "European" },
+      { label: "Bahamas", tribe: "North American" },
+      { label: "Bahrain", tribe: "Middle Eastern" },
+      { label: "Bangladesh", tribe: "Asian" },
+      { label: "Barbados", tribe: "North American" },
+      { label: "Belarus", tribe: "European" },
+      { label: "Belgium", tribe: "European" },
+      { label: "Belize", tribe: "North American" },
       { label: "Benin", tribe: "African" },
+      { label: "Bhutan", tribe: "Asian" },
+      { label: "Bolivia", tribe: "LATAM" },
+      { label: "Bosnia and Herzegovina", tribe: "European" },
       { label: "Botswana", tribe: "African" },
+      { label: "Brazil", tribe: "LATAM" },
+      { label: "Brunei", tribe: "Asian" },
+      { label: "Bulgaria", tribe: "European" },
       { label: "Burkina Faso", tribe: "African" },
       { label: "Burundi", tribe: "African" },
       { label: "Cabo Verde", tribe: "African" },
+      { label: "Cambodia", tribe: "Asian" },
       { label: "Cameroon", tribe: "African" },
+      { label: "Canada", tribe: "North American" },
       { label: "Central African Republic", tribe: "African" },
       { label: "Chad", tribe: "African" },
+      { label: "Chile", tribe: "LATAM" },
+      { label: "China", tribe: "Asian" },
+      { label: "Colombia", tribe: "LATAM" },
       { label: "Comoros", tribe: "African" },
       { label: "Congo", tribe: "African" },
+      { label: "Costa Rica", tribe: "North American" },
+      { label: "Croatia", tribe: "European" },
+      { label: "Cuba", tribe: "North American" },
+      { label: "Cyprus", tribe: "European" },
+      { label: "Czech Republic", tribe: "European" },
       { label: "Democratic Republic of the Congo", tribe: "African" },
+      { label: "Denmark", tribe: "European" },
       { label: "Djibouti", tribe: "African" },
+      { label: "Dominica", tribe: "North American" },
+      { label: "Dominican Republic", tribe: "North American" },
+      { label: "Ecuador", tribe: "LATAM" },
       { label: "Egypt", tribe: "African" },
+      { label: "El Salvador", tribe: "North American" },
       { label: "Equatorial Guinea", tribe: "African" },
       { label: "Eritrea", tribe: "African" },
+      { label: "Estonia", tribe: "European" },
       { label: "Eswatini", tribe: "African" },
       { label: "Ethiopia", tribe: "African" },
+      { label: "Fiji", tribe: "Oceanic" },
+      { label: "Finland", tribe: "European" },
+      { label: "France", tribe: "European" },
       { label: "Gabon", tribe: "African" },
       { label: "Gambia", tribe: "African" },
+      { label: "Georgia", tribe: "European" },
+      { label: "Germany", tribe: "European" },
       { label: "Ghana", tribe: "African" },
+      { label: "Greece", tribe: "European" },
+      { label: "Grenada", tribe: "North American" },
+      { label: "Guatemala", tribe: "North American" },
       { label: "Guinea", tribe: "African" },
       { label: "Guinea-Bissau", tribe: "African" },
+      { label: "Guyana", tribe: "LATAM" },
+      { label: "Haiti", tribe: "North American" },
+      { label: "Honduras", tribe: "North American" },
+      { label: "Hungary", tribe: "European" },
+      { label: "Iceland", tribe: "European" },
+      { label: "India", tribe: "Asian" },
+      { label: "Indonesia", tribe: "Asian" },
+      { label: "Iran", tribe: "Middle Eastern" },
+      { label: "Iraq", tribe: "Middle Eastern" },
+      { label: "Ireland", tribe: "European" },
+      { label: "Israel", tribe: "Middle Eastern" },
+      { label: "Italy", tribe: "European" },
       { label: "Ivory Coast", tribe: "African" },
+      { label: "Jamaica", tribe: "North American" },
+      { label: "Japan", tribe: "Asian" },
+      { label: "Jordan", tribe: "Middle Eastern" },
+      { label: "Kazakhstan", tribe: "Asian" },
       { label: "Kenya", tribe: "African" },
+      { label: "Kiribati", tribe: "Oceanic" },
+      { label: "Kuwait", tribe: "Middle Eastern" },
+      { label: "Kyrgyzstan", tribe: "Asian" },
+      { label: "Laos", tribe: "Asian" },
+      { label: "Latvia", tribe: "European" },
+      { label: "Lebanon", tribe: "Middle Eastern" },
       { label: "Lesotho", tribe: "African" },
       { label: "Liberia", tribe: "African" },
       { label: "Libya", tribe: "African" },
-      { label: "Madagascar", tribe: "African" },
-      { label: "Malawi", tribe: "African" },
-      { label: "Mali", tribe: "African" },
-      { label: "Mauritania", tribe: "African" },
-      { label: "Mauritius", tribe: "African" },
-      { label: "Morocco", tribe: "African" },
-      { label: "Mozambique", tribe: "African" },
-      { label: "Namibia", tribe: "African" },
-      { label: "Niger", tribe: "African" },
-      { label: "Nigeria", tribe: "African" },
-      { label: "Rwanda", tribe: "African" },
-      { label: "São Tomé and Príncipe", tribe: "African" },
-      { label: "Senegal", tribe: "African" },
-      { label: "Seychelles", tribe: "African" },
-      { label: "Sierra Leone", tribe: "African" },
-      { label: "Somalia", tribe: "African" },
-      { label: "South Africa", tribe: "African" },
-      { label: "South Sudan", tribe: "African" },
-      { label: "Sudan", tribe: "African" },
-      { label: "Tanzania", tribe: "African" },
-      { label: "Togo", tribe: "African" },
-      { label: "Tunisia", tribe: "African" },
-      { label: "Uganda", tribe: "African" },
-      { label: "Zambia", tribe: "African" },
-      { label: "Zimbabwe", tribe: "African" },
-      
-      // Europe
-      { label: "Albania", tribe: "European" },
-      { label: "Andorra", tribe: "European" },
-      { label: "Armenia", tribe: "European" },
-      { label: "Austria", tribe: "European" },
-      { label: "Azerbaijan", tribe: "European" },
-      { label: "Belarus", tribe: "European" },
-      { label: "Belgium", tribe: "European" },
-      { label: "Bosnia and Herzegovina", tribe: "European" },
-      { label: "Bulgaria", tribe: "European" },
-      { label: "Croatia", tribe: "European" },
-      { label: "Cyprus", tribe: "European" },
-      { label: "Czech Republic", tribe: "European" },
-      { label: "Denmark", tribe: "European" },
-      { label: "Estonia", tribe: "European" },
-      { label: "Finland", tribe: "European" },
-      { label: "France", tribe: "European" },
-      { label: "Georgia", tribe: "European" },
-      { label: "Germany", tribe: "European" },
-      { label: "Greece", tribe: "European" },
-      { label: "Hungary", tribe: "European" },
-      { label: "Iceland", tribe: "European" },
-      { label: "Ireland", tribe: "European" },
-      { label: "Italy", tribe: "European" },
-      { label: "Latvia", tribe: "European" },
       { label: "Liechtenstein", tribe: "European" },
       { label: "Lithuania", tribe: "European" },
       { label: "Luxembourg", tribe: "European" },
+      { label: "Madagascar", tribe: "African" },
+      { label: "Malawi", tribe: "African" },
+      { label: "Malaysia", tribe: "Asian" },
+      { label: "Maldives", tribe: "Asian" },
+      { label: "Mali", tribe: "African" },
       { label: "Malta", tribe: "European" },
+      { label: "Marshall Islands", tribe: "Oceanic" },
+      { label: "Mauritania", tribe: "African" },
+      { label: "Mauritius", tribe: "African" },
+      { label: "Mexico", tribe: "North American" },
+      { label: "Micronesia", tribe: "Oceanic" },
       { label: "Moldova", tribe: "European" },
       { label: "Monaco", tribe: "European" },
+      { label: "Mongolia", tribe: "Asian" },
       { label: "Montenegro", tribe: "European" },
+      { label: "Morocco", tribe: "African" },
+      { label: "Mozambique", tribe: "African" },
+      { label: "Myanmar", tribe: "Asian" },
+      { label: "Namibia", tribe: "African" },
+      { label: "Nauru", tribe: "Oceanic" },
+      { label: "Nepal", tribe: "Asian" },
       { label: "Netherlands", tribe: "European" },
+      { label: "New Zealand", tribe: "Oceanic" },
+      { label: "Nicaragua", tribe: "North American" },
+      { label: "Niger", tribe: "African" },
+      { label: "Nigeria", tribe: "African" },
+      { label: "North Korea", tribe: "Asian" },
       { label: "North Macedonia", tribe: "European" },
       { label: "Norway", tribe: "European" },
+      { label: "Oman", tribe: "Middle Eastern" },
+      { label: "Pakistan", tribe: "Asian" },
+      { label: "Palau", tribe: "Oceanic" },
+      { label: "Palestine", tribe: "Middle Eastern" },
+      { label: "Panama", tribe: "North American" },
+      { label: "Papua New Guinea", tribe: "Oceanic" },
+      { label: "Paraguay", tribe: "LATAM" },
+      { label: "Peru", tribe: "LATAM" },
+      { label: "Philippines", tribe: "Asian" },
       { label: "Poland", tribe: "European" },
       { label: "Portugal", tribe: "European" },
+      { label: "Qatar", tribe: "Middle Eastern" },
       { label: "Romania", tribe: "European" },
       { label: "Russia", tribe: "European" },
-      { label: "San Marino", tribe: "European" },
-      { label: "Serbia", tribe: "European" },
-      { label: "Slovakia", tribe: "European" },
-      { label: "Slovenia", tribe: "European" },
-      { label: "Spain", tribe: "European" },
-      { label: "Sweden", tribe: "European" },
-      { label: "Switzerland", tribe: "European" },
-      { label: "Turkey", tribe: "European" },
-      { label: "Ukraine", tribe: "European" },
-      { label: "United Kingdom", tribe: "European" },
-      { label: "Vatican City", tribe: "European" },
-      
-      // North America
-      { label: "Antigua and Barbuda", tribe: "North American" },
-      { label: "Bahamas", tribe: "North American" },
-      { label: "Barbados", tribe: "North American" },
-      { label: "Belize", tribe: "North American" },
-      { label: "Canada", tribe: "North American" },
-      { label: "Costa Rica", tribe: "North American" },
-      { label: "Cuba", tribe: "North American" },
-      { label: "Dominica", tribe: "North American" },
-      { label: "Dominican Republic", tribe: "North American" },
-      { label: "El Salvador", tribe: "North American" },
-      { label: "Grenada", tribe: "North American" },
-      { label: "Guatemala", tribe: "North American" },
-      { label: "Haiti", tribe: "North American" },
-      { label: "Honduras", tribe: "North American" },
-      { label: "Jamaica", tribe: "North American" },
-      { label: "Mexico", tribe: "North American" },
-      { label: "Nicaragua", tribe: "North American" },
-      { label: "Panama", tribe: "North American" },
+      { label: "Rwanda", tribe: "African" },
       { label: "Saint Kitts and Nevis", tribe: "North American" },
       { label: "Saint Lucia", tribe: "North American" },
       { label: "Saint Vincent and the Grenadines", tribe: "North American" },
-      { label: "Trinidad and Tobago", tribe: "North American" },
-      { label: "United States", tribe: "North American" },
-      
-      // South America
-      { label: "Argentina", tribe: "LATAM" },
-      { label: "Bolivia", tribe: "LATAM" },
-      { label: "Brazil", tribe: "LATAM" },
-      { label: "Chile", tribe: "LATAM" },
-      { label: "Colombia", tribe: "LATAM" },
-      { label: "Ecuador", tribe: "LATAM" },
-      { label: "Guyana", tribe: "LATAM" },
-      { label: "Paraguay", tribe: "LATAM" },
-      { label: "Peru", tribe: "LATAM" },
-      { label: "Suriname", tribe: "LATAM" },
-      { label: "Uruguay", tribe: "LATAM" },
-      { label: "Venezuela", tribe: "LATAM" },
-      
-      // Asia
-      { label: "Afghanistan", tribe: "Asian" },
-      { label: "Bangladesh", tribe: "Asian" },
-      { label: "Bhutan", tribe: "Asian" },
-      { label: "Brunei", tribe: "Asian" },
-      { label: "Cambodia", tribe: "Asian" },
-      { label: "China", tribe: "Asian" },
-      { label: "India", tribe: "Asian" },
-      { label: "Indonesia", tribe: "Asian" },
-      { label: "Japan", tribe: "Asian" },
-      { label: "Kazakhstan", tribe: "Asian" },
-      { label: "Kyrgyzstan", tribe: "Asian" },
-      { label: "Laos", tribe: "Asian" },
-      { label: "Malaysia", tribe: "Asian" },
-      { label: "Maldives", tribe: "Asian" },
-      { label: "Mongolia", tribe: "Asian" },
-      { label: "Myanmar", tribe: "Asian" },
-      { label: "Nepal", tribe: "Asian" },
-      { label: "North Korea", tribe: "Asian" },
-      { label: "Pakistan", tribe: "Asian" },
-      { label: "Philippines", tribe: "Asian" },
+      { label: "Samoa", tribe: "Oceanic" },
+      { label: "San Marino", tribe: "European" },
+      { label: "São Tomé and Príncipe", tribe: "African" },
+      { label: "Saudi Arabia", tribe: "Middle Eastern" },
+      { label: "Senegal", tribe: "African" },
+      { label: "Serbia", tribe: "European" },
+      { label: "Seychelles", tribe: "African" },
+      { label: "Sierra Leone", tribe: "African" },
       { label: "Singapore", tribe: "Asian" },
+      { label: "Slovakia", tribe: "European" },
+      { label: "Slovenia", tribe: "European" },
+      { label: "Solomon Islands", tribe: "Oceanic" },
+      { label: "Somalia", tribe: "African" },
+      { label: "South Africa", tribe: "African" },
       { label: "South Korea", tribe: "Asian" },
+      { label: "South Sudan", tribe: "African" },
+      { label: "Spain", tribe: "European" },
       { label: "Sri Lanka", tribe: "Asian" },
+      { label: "Sudan", tribe: "African" },
+      { label: "Suriname", tribe: "LATAM" },
+      { label: "Sweden", tribe: "European" },
+      { label: "Switzerland", tribe: "European" },
+      { label: "Syria", tribe: "Middle Eastern" },
       { label: "Tajikistan", tribe: "Asian" },
+      { label: "Tanzania", tribe: "African" },
       { label: "Thailand", tribe: "Asian" },
       { label: "Timor-Leste", tribe: "Asian" },
-      { label: "Turkmenistan", tribe: "Asian" },
-      { label: "Uzbekistan", tribe: "Asian" },
-      { label: "Vietnam", tribe: "SEA" },
-      
-      // Oceania
-      { label: "Australia", tribe: "Oceanic" },
-      { label: "Fiji", tribe: "Oceanic" },
-      { label: "Kiribati", tribe: "Oceanic" },
-      { label: "Marshall Islands", tribe: "Oceanic" },
-      { label: "Micronesia", tribe: "Oceanic" },
-      { label: "Nauru", tribe: "Oceanic" },
-      { label: "New Zealand", tribe: "Oceanic" },
-      { label: "Palau", tribe: "Oceanic" },
-      { label: "Papua New Guinea", tribe: "Oceanic" },
-      { label: "Samoa", tribe: "Oceanic" },
-      { label: "Solomon Islands", tribe: "Oceanic" },
+      { label: "Togo", tribe: "African" },
       { label: "Tonga", tribe: "Oceanic" },
+      { label: "Trinidad and Tobago", tribe: "North American" },
+      { label: "Tunisia", tribe: "African" },
+      { label: "Turkey", tribe: "European" },
+      { label: "Turkmenistan", tribe: "Asian" },
       { label: "Tuvalu", tribe: "Oceanic" },
-      { label: "Vanuatu", tribe: "Oceanic" },
-      
-      // Middle East
-      { label: "Bahrain", tribe: "Middle Eastern" },
-      { label: "Iran", tribe: "Middle Eastern" },
-      { label: "Iraq", tribe: "Middle Eastern" },
-      { label: "Israel", tribe: "Middle Eastern" },
-      { label: "Jordan", tribe: "Middle Eastern" },
-      { label: "Kuwait", tribe: "Middle Eastern" },
-      { label: "Lebanon", tribe: "Middle Eastern" },
-      { label: "Oman", tribe: "Middle Eastern" },
-      { label: "Palestine", tribe: "Middle Eastern" },
-      { label: "Qatar", tribe: "Middle Eastern" },
-      { label: "Saudi Arabia", tribe: "Middle Eastern" },
-      { label: "Syria", tribe: "Middle Eastern" },
+      { label: "Uganda", tribe: "African" },
+      { label: "Ukraine", tribe: "European" },
       { label: "United Arab Emirates", tribe: "Middle Eastern" },
+      { label: "United Kingdom", tribe: "European" },
+      { label: "United States", tribe: "North American" },
+      { label: "Uruguay", tribe: "LATAM" },
+      { label: "Uzbekistan", tribe: "Asian" },
+      { label: "Vanuatu", tribe: "Oceanic" },
+      { label: "Vatican City", tribe: "European" },
+      { label: "Venezuela", tribe: "LATAM" },
+      { label: "Vietnam", tribe: "SEA" },
       { label: "Yemen", tribe: "Middle Eastern" },
+      { label: "Zambia", tribe: "African" },
+      { label: "Zimbabwe", tribe: "African" },
     ],
   },
   {
@@ -323,7 +311,7 @@ interface QuizStep {
 }
 
 export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } = {}) {
-  const { data: session } = useSession();
+  const unifiedSession = useUnifiedSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [otherInputs, setOtherInputs] = useState<Record<string, any>>({});
@@ -334,6 +322,16 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   const [mintError, setMintError] = useState<string | null>(null);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const router = useRouter();
+
+  // Get user ID from session or localStorage
+  const getUserId = () => {
+    const userId = unifiedSession.user?.id || localStorage.getItem('worldcoin_user_id');
+    if (!userId) {
+      console.error('No user ID found');
+      return null;
+    }
+    return userId;
+  };
 
   // Country grid selection handler
   const handleCountrySelect = (option: QuizOption, step: QuizStep) => {
@@ -442,12 +440,12 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
           <input
             type="text"
             className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400"
-            placeholder="Enter your city (optional)"
+            placeholder="Enter your city"
             value={city}
             onChange={(e) => setAnswers({ ...answers, city: e.target.value })}
           />
           
-          {selectedTribe && value && (
+          {selectedTribe && value && city && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -465,20 +463,20 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       const selected: string[] = answers[step.key] || [];
       const isDisabled = step.max !== undefined ? (selected.length >= step.max) : false;
       const otherSelected = selected.includes('Other') || selected.some(v => v === otherInputs[step.key]);
-      return (
-        <div className="space-y-2">
+        return (
+          <div className="space-y-2">
           {step.options.map((option: QuizOption) => (
-            <motion.button
+              <motion.button
               key={option.label}
-              type="button"
-              whileTap={{ scale: 0.97 }}
+                type="button"
+                whileTap={{ scale: 0.97 }}
               onClick={() => handleMultiSelect(option, step)}
               className={`w-full p-4 text-left text-gray-700 bg-white border rounded-xl transition-colors font-semibold text-lg shadow-sm ${selected.includes(option.label) || (option.isOther && otherSelected) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
               disabled={isDisabled && !selected.includes(option.label) && !option.isOther}
               style={{ cursor: isDisabled && !selected.includes(option.label) && !option.isOther ? 'not-allowed' : 'pointer' }}
-            >
+              >
               <div className="flex items-center gap-3">
-                {option.icon && <span className="text-2xl">{option.icon}</span>}
+                  {option.icon && <span className="text-2xl">{option.icon}</span>}
                 <div className="flex-1">
                   <span>{option.label}</span>
                   {option.desc && <div className="text-xs text-gray-500 mt-1">{option.desc}</div>}
@@ -492,9 +490,9 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
             <motion.input
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              type="text"
+                    type="text"
               className="w-full mt-2 p-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-400 text-lg"
-              placeholder="Please specify..."
+                    placeholder="Please specify..."
               value={otherInputs[step.key] || ''}
               onChange={e => handleOtherInput(e, step)}
             />
@@ -529,21 +527,21 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
               onChange={e => handleOtherInput(e, step)}
             />
           )}
-        </div>
-      );
-    }
+          </div>
+        );
+      }
     if (step.type === 'radio') {
       const value = answers[step.key] || '';
       const otherSelected = value === 'Other' || value === otherInputs[step.key];
-      return (
-        <div className="space-y-2">
+        return (
+          <div className="space-y-2">
           {step.options.map((option: QuizOption) => (
             <motion.label
               key={option.label}
-              whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.97 }}
               className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer text-lg font-semibold transition-colors ${value === option.label || (option.isOther && otherSelected) ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'}`}
-            >
-              <input
+              >
+                  <input
                 type="radio"
                 name={step.key}
                 value={option.label}
@@ -559,20 +557,20 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
             <motion.input
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              type="text"
+                    type="text"
               className="w-full mt-2 p-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-400 text-lg"
-              placeholder="Please specify..."
+                    placeholder="Please specify..."
               value={otherInputs[step.key] || ''}
               onChange={e => handleOtherInput(e, step)}
-            />
-          )}
-        </div>
-      );
-    }
+                  />
+                )}
+          </div>
+        );
+      }
     if (step.type === 'single') {
       const value = answers[step.key] || '';
       const otherSelected = value === 'Other' || value === otherInputs[step.key];
-      return (
+        return (
         <div className="space-y-2">
           {step.options.map((option: QuizOption) => (
             <motion.button
@@ -591,47 +589,101 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
           {/* Show input if 'Other' is selected */}
           {otherSelected && (
             <motion.input
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
               type="text"
               className="w-full mt-2 p-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-400 text-lg"
               placeholder="Please specify..."
               value={otherInputs[step.key] || ''}
               onChange={e => handleOtherInput(e, step)}
             />
-          )}
-        </div>
-      );
-    }
-    return null;
+            )}
+          </div>
+        );
+      }
+        return null;
   };
 
   // --- Validation for next button ---
   const canProceed = () => {
     const step = quizSteps[currentStep];
-    if (step.key === 'location') {
-      return !!answers[step.key] && answers[step.key].trim() !== '';
+    const currentAnswers = answers[step.key];
+
+    if (!currentAnswers) return false;
+
+    switch (step.type) {
+      case 'multi':
+        return currentAnswers.length > 0;
+      case 'dropdown':
+        // Make city required for location step
+        if (step.key === 'location') {
+          return currentAnswers && answers.city && currentAnswers.trim() !== '' && answers.city.trim() !== '';
+        }
+        return currentAnswers;
+      case 'radio':
+      case 'single':
+        return currentAnswers.length > 0;
+      default:
+        return false;
     }
-    if (step.type === 'multi') {
-      const selected: string[] = answers[step.key] || [];
-      // All selected must be non-empty
-      return (
-        selected.length > 0 &&
-        selected.length <= (step.max || 1) &&
-        selected.every(v => v && v.trim() !== '')
-      );
-    }
-    if (step.type === 'dropdown' || step.type === 'radio' || step.type === 'single' || step.type === 'country_grid') {
-      const value = answers[step.key];
-      return !!value && value.trim() !== '';
-    }
-    return false;
   };
 
   // Next step
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === quizSteps.length - 1) {
-      router.push('/quiz/mint');
+      // Save quiz answers to database before proceeding
+      try {
+        const userId = getUserId();
+        if (!userId) {
+          console.error('No user ID found');
+          return;
+        }
+
+        // Format answers for database
+        const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+          questionId,
+          answer,
+          score: 1 // Default score for now
+        }));
+
+        // Save to database
+        const response = await fetch('/api/quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            answers: formattedAnswers
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save quiz answers');
+        }
+
+        // Update user's onboarding status
+        const updateResponse = await fetch(`/api/user/${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            onboardingCompleted: true
+          }),
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error('Failed to update onboarding status');
+        }
+
+        // Proceed to mint page
+        router.push('/quiz/mint');
+      } catch (error) {
+        console.error('Error saving quiz:', error);
+        // Still proceed to mint page even if save fails
+        router.push('/quiz/mint');
+      }
     } else {
       setCurrentStep(currentStep + 1);
     }

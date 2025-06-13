@@ -8,14 +8,31 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 const slides = [
+  // {
+  //   id: 1,
+  //   title: "",
+  //   subtitle: "",
+  //   image: "/onboarding/welcome.png"
+  // },
   {
     id: 1,
-    title: "",
-    subtitle: "",
-    image: "/onboarding/welcome.png"
+    title: "Welcome to AICURATE",
+    subtitle: "Start your AI Tool Journey — I will guide you.",
+    image: "/onboarding/aicurate_agent.png"
   },
   {
     id: 2,
+    title: "Launch Your AI Journey in minutes",
+    subtitle: "From overwhelmed to empowered",
+    image: "/onboarding/launch.jpg",
+    checklist: [
+      "Too many AI tools? We'll match you with the best one,based on your goals",
+      "Earn rewards for testing and giving feedback",
+      "Join top AI explorers and shape AI's future"
+    ]
+  },
+  {
+    id: 3,
     title: "Meet Your AI Guide",
     subtitle: "Got a goal? We've got the right AI for You",
     image: "/onboarding/guide.png",
@@ -23,17 +40,6 @@ const slides = [
       "Share what you want to do — we'll find the best AI for You! Simple!",
       "No fluff. No hype. No DIY. Just Proof",
       "If you have a task — we have an AI for you"
-    ]
-  },
-  {
-    id: 3,
-    title: "Learn and Share as a Curator",
-    subtitle: "Curate. Elevate. Earn influence.",
-    image: "/onboarding/curator.png",
-    checklist: [
-      "Learn from verified AI experts",
-      "Earn rewards as you level up",
-      "Gain influence by sharing insights"
     ]
   },
   {
@@ -46,13 +52,8 @@ const slides = [
       "Use your credits to unlock exclusive hunts and special features",
       "Join the Proof Revolution"
     ]
-  },
-  {
-    id: 5,
-    title: "Welcome to AICURATE",
-    subtitle: "Start your AI Tool Journey — I will guide you.",
-    image: "/onboarding/aicurate_agent.png"
   }
+
 ];
 
 export function Onboarding() {
@@ -72,192 +73,18 @@ export function Onboarding() {
 
   const slide = slides[currentSlide];
 
-  // Only render the first screen for now
-  if (currentSlide === 0) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa] pt-safe pb-safe">
-        <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
-          <div className="screen-1-content flex flex-col items-center justify-between">
-            {/* Carousel dots at the top */}
-            <div className="w-full flex flex-col items-center mb-8">
-              <div className="flex flex-row items-center justify-center gap-2">
-                {[...Array(slides.length)].map((_, idx) => (
-                  <span
-                    key={idx}
-                    className={
-                      "carousel-dot" + (idx === currentSlide ? " active" : "")
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-            {/* Logo/Image area with consistent height */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, type: 'spring' }}
-                className="rocket-icon-container"
-                style={{ marginBottom: 18 }}
-              >
-                <Image 
-                  src="/logo.png" 
-                  alt="AICURATE Logo"
-                  width={140}
-                  height={140}
-                  className="w-full h-auto"
-                />
-              </motion.div>
-            </div>
-            {/* Bottom section with button */}
-            <div className="w-full flex flex-col items-center">
-              <button
-                onClick={handleNext}
-                className="plain-cta-btn"
-              >
-                Next →
-              </button>
-            </div>
-          </div>
-        </div>
-        <style jsx>{`
-          .screen-1-container {
-            width: 100%;
-            max-width: 400px;
-            background: #f8fafc;
-            border-radius: 30px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-          }
-          .screen-1-content {
-            min-height: 600px;
-            padding: 40px 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-          .rocket-icon-container {
-            width: 140px;
-            height: 140px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
-            position: relative;
-            animation: float 3s ease-in-out infinite;
-          }
-          .carousel-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #d1d5db;
-            display: inline-block;
-            transition: background 0.2s;
-          }
-          .carousel-dot.active {
-            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
-          }
-          .plain-cta-btn {
-            width: 100%;
-            max-width: 350px;
-            height: 56px;
-            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
-            transition: background 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            text-align: center;
-            letter-spacing: 0.01em;
-            margin-top: 0;
-          }
-          .plain-cta-btn:active {
-            background: #a78bfa;
-            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
-          }
-          .welcome-cta-btn {
-            width: 100%;
-            max-width: 350px;
-            height: 56px;
-            background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
-            color: #fff;
-            font-size: 1.5rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
-            transition: background 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-            text-align: center;
-            letter-spacing: 0.01em;
-            margin-top: 0;
-          }
-          .welcome-cta-btn:active {
-            background: #a78bfa;
-            box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
-          }
-          @media (max-width: 480px) {
-            .screen-1-container {
-              max-width: 350px;
-              width: 100%;
-              border-radius: 22px;
-            }
-            .screen-1-content {
-              min-height: 500px;
-              padding: 32px 20px;
-            }
-            .rocket-icon-container {
-              width: 100px;
-              height: 100px;
-            }
-            .plain-cta-btn {
-              font-size: 1.1rem;
-              height: 48px;
-              border-radius: 14px;
-            }
-            .welcome-cta-btn {
-              font-size: 1.1rem;
-              height: 48px;
-              border-radius: 14px;
-            }
-          }
-          /* Safe area utility classes */
-          :global(.pt-safe) {
-            padding-top: env(safe-area-inset-top, 24px);
-          }
-          :global(.pb-safe) {
-            padding-bottom: env(safe-area-inset-bottom, 24px);
-          }
-          @media (max-width: 600px) {
-            :global(.pt-safe) {
-              padding-top: 48px !important;
-            }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  // Screens 2-5
   // Use SVGs for icons
   const iconSrcs = [
-    '/onboarding/guide.png',
-    '/onboarding/curator.png',
-    '/onboarding/hunt.png',
     '/onboarding/aicurate_agent.png',
+    '/onboarding/launch.png',
+    '/onboarding/guide.png',
+    '/onboarding/hunt.png',
   ];
   const iconAlts = [
-    'AI Guide Icon',
-    'Curator Icon',
-    'Hunt Icon',
     'AICURATE Agent Icon',
+    'Launch Icon',
+    'Guide Icon',
+    'Hunt Icon',
   ];
   const iconClassNames = [
     'rocket-icon-container',
@@ -320,8 +147,8 @@ export function Onboarding() {
                   style={{ marginBottom: 18 }}
                 >
                   <Image 
-                    src={iconSrcs[currentSlide - 1]} 
-                    alt={iconAlts[currentSlide - 1]}
+                    src={slide.image} 
+                    alt={iconAlts[currentSlide]}
                     width={140}
                     height={140}
                     className="w-full h-auto"
@@ -359,10 +186,7 @@ export function Onboarding() {
               onClick={handleNext}
               className={currentSlide === 4 ? "welcome-cta-btn" : "plain-cta-btn"}
             >
-              {currentSlide === slides.length - 1 ? 'Let\'s Go! →' : 
-               currentSlide === slides.length - 2 ? 'Start Earning Now →' :
-               currentSlide === slides.length - 3 ? 'Continue →' :
-               'Next →'}
+              {currentSlide === 0 ? 'Let\'s go →' : 'Next →'}
             </button>
           </div>
         </div>
@@ -564,6 +388,48 @@ export function Onboarding() {
           :global(.pt-safe) {
             padding-top: 48px !important;
           }
+        }
+        .plain-cta-btn {
+          width: 100%;
+          max-width: 350px;
+          height: 56px;
+          background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+          color: #fff;
+          font-size: 1.5rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 18px;
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
+          transition: background 0.2s, box-shadow 0.2s;
+          cursor: pointer;
+          text-align: center;
+          letter-spacing: 0.01em;
+          margin-top: 0;
+        }
+        .plain-cta-btn:active {
+          background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%);
+          box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
+        }
+        .welcome-cta-btn {
+          width: 100%;
+          max-width: 350px;
+          height: 56px;
+          background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%);
+          color: #fff;
+          font-size: 1.5rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 18px;
+          box-shadow: 0 2px 8px rgba(139, 92, 246, 0.10);
+          transition: background 0.2s, box-shadow 0.2s;
+          cursor: pointer;
+          text-align: center;
+          letter-spacing: 0.01em;
+          margin-top: 0;
+        }
+        .welcome-cta-btn:active {
+          background: linear-gradient(90deg, #7c3aed 0%, #8b5cf6 100%);
+          box-shadow: 0 1px 4px rgba(139, 92, 246, 0.08);
         }
       `}</style>
     </div>
