@@ -6,8 +6,14 @@ export const ProofPointsDisplay: React.FC<{
   userProfile: UserProfile;
   recentEarnings?: number;
 }> = ({ userProfile, recentEarnings }) => {
-  const nextLevelAt = userProfile.level * 1000;
-  const currentLevelPoints = userProfile.proofPoints - ((userProfile.level - 1) * 1000);
+  // Safely access properties with defaults
+  const level = (userProfile as any).level || 1;
+  const proofPoints = (userProfile as any).proofPoints || 0;
+  const badges = (userProfile as any).badges || [];
+  const completedTasks = (userProfile as any).completedTasks || [];
+  
+  const nextLevelAt = level * 1000;
+  const currentLevelPoints = proofPoints - ((level - 1) * 1000);
   const progress = (currentLevelPoints / 1000) * 100;
 
   return (
@@ -15,12 +21,12 @@ export const ProofPointsDisplay: React.FC<{
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold">ProofPoints™</h3>
-          <p className="text-purple-200">Level {userProfile.level} Curator</p>
+          <p className="text-purple-200">Level {level} Curator</p>
         </div>
         
         <div className="text-right">
           <div className="text-2xl font-bold">
-            {userProfile.proofPoints.toLocaleString()}
+            {proofPoints.toLocaleString()}
           </div>
           {recentEarnings && (
             <motion.div
@@ -36,7 +42,7 @@ export const ProofPointsDisplay: React.FC<{
       
       <div className="mb-2">
         <div className="flex justify-between text-sm mb-1">
-          <span>Progress to Level {userProfile.level + 1}</span>
+          <span>Progress to Level {level + 1}</span>
           <span>{currentLevelPoints}/1000</span>
         </div>
         <div className="w-full bg-purple-400 rounded-full h-2">
@@ -50,8 +56,8 @@ export const ProofPointsDisplay: React.FC<{
       </div>
       
       <div className="flex justify-between text-sm text-purple-200">
-        <span>🏆 {userProfile.badges.length} badges earned</span>
-        <span>📈 {userProfile.completedTasks.length} tasks completed</span>
+        <span>🏆 {badges.length} badges earned</span>
+        <span>📈 {completedTasks.length} tasks completed</span>
       </div>
     </div>
   );
