@@ -47,7 +47,7 @@ export class AgentAICurate {
 User Profile:
 - Name: ${this.userProfile.name}
 - Experience: ${this.userProfile.experienceLevel}
-- Interests: ${this.userProfile.interests.join(', ')}
+- Interests: ${(this.userProfile as any).interests?.join?.(', ') || 'Not specified'}
 - Use Case: ${this.userProfile.preferences.useCase}
 
 User Input: "${input}"

@@ -25,8 +25,8 @@ const sendPayment = async () => {
           token_amount: tokenToDecimals(0.5, Tokens.WLD).toString(),
         },
         {
-          symbol: Tokens.USDCE,
-          token_amount: tokenToDecimals(0.1, Tokens.USDCE).toString(),
+          symbol: Tokens.USDC,
+          token_amount: tokenToDecimals(0.1, Tokens.USDC).toString(),
         },
       ],
       description: "Watch this is a test",

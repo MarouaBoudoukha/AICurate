@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, QuestionType } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -10,7 +10,7 @@ async function main() {
     {
       id: 'interests',
       question: 'What are you passionate about?',
-      type: 'MULTI_SELECT',
+      type: 'MULTI_SELECT' as QuestionType,
       options: [
         'AI & Tech',
         'Gaming',
@@ -27,7 +27,7 @@ async function main() {
     {
       id: 'location',
       question: 'Where do you live?',
-      type: 'MULTIPLE_CHOICE',
+      type: 'MULTIPLE_CHOICE' as QuestionType,
       options: [
         // Sample of countries - in real app this would be the full list
         'United States',
@@ -49,7 +49,7 @@ async function main() {
     {
       id: 'age',
       question: 'How old are you?',
-      type: 'MULTIPLE_CHOICE',
+      type: 'MULTIPLE_CHOICE' as QuestionType,
       options: [
         '13–17',
         '18–24',
@@ -65,7 +65,7 @@ async function main() {
     {
       id: 'platforms',
       question: 'Where do you hang out most online?',
-      type: 'MULTI_SELECT',
+      type: 'MULTI_SELECT' as QuestionType,
       options: [
         'X',
         'LinkedIn',
@@ -83,7 +83,7 @@ async function main() {
     {
       id: 'tasks',
       question: 'What do you want AI to help you with?',
-      type: 'MULTI_SELECT',
+      type: 'MULTI_SELECT' as QuestionType,
       options: [
         'Business / Analytics',
         'Coding / Dev tools',
@@ -103,7 +103,7 @@ async function main() {
     {
       id: 'comfort',
       question: "What's your comfort level with AI?",
-      type: 'MULTIPLE_CHOICE',
+      type: 'MULTIPLE_CHOICE' as QuestionType,
       options: [
         'Newcomer',
         'Beginner',

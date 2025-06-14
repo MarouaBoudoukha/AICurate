@@ -53,7 +53,7 @@ export default function MintBadgePage() {
       const nonceResponse = await fetch('/api/nonce');
       if (!nonceResponse.ok) throw new Error('Failed to get nonce');
       const { nonce } = await nonceResponse.json();
-      if (!MiniKit.walletAddress) {
+      if (!(MiniKit as any).walletAddress) {
         const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
           nonce,
           statement: 'Connect your wallet to mint your NFT',
@@ -74,7 +74,7 @@ export default function MintBadgePage() {
           address: NFT_CONTRACT_ADDRESS,
           abi: NFT_ABI,
           functionName: 'safeMint',
-          args: [MiniKit.walletAddress as string, 'ipfs://QmdStFxJS9SNNEvxAk4U8jiwsEbRoStffQJUDyghxvgcvj/0']
+          args: [(MiniKit as any).walletAddress as string, 'ipfs://QmdStFxJS9SNNEvxAk4U8jiwsEbRoStffQJUDyghxvgcvj/0']
         }]
       });
       if (!response?.finalPayload || response.finalPayload.status === 'error') throw new Error('Failed to mint NFT');

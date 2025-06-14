@@ -46,8 +46,8 @@ export default function RewardsCollectibles() {
     }
 
     // Get wallet address if already connected
-    if (MiniKit.isInstalled() && MiniKit.walletAddress) {
-      setWalletAddress(MiniKit.walletAddress)
+    if (MiniKit.isInstalled() && (MiniKit as any).walletAddress) {
+      setWalletAddress((MiniKit as any).walletAddress)
     }
   }, [])
 
@@ -174,7 +174,7 @@ export default function RewardsCollectibles() {
       const { nonce } = await nonceResponse.json()
 
       // Connect wallet if not connected
-      if (!MiniKit.walletAddress) {
+      if (!(MiniKit as any).walletAddress) {
         const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
           nonce,
           statement: 'Connect your wallet to purchase items',
@@ -222,7 +222,7 @@ export default function RewardsCollectibles() {
       const response = await MiniKit.commandsAsync.pay({
         to: process.env.NEXT_PUBLIC_WLD_APP_ID as string,
         tokens: [{
-          symbol: item.type === 'NFT' ? Tokens.WLD : Tokens.USDCE,
+          symbol: item.type === 'NFT' ? Tokens.WLD : Tokens.USDC,
           token_amount: item.price?.toString() || '0'
         }],
         reference,

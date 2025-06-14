@@ -41,7 +41,7 @@ export function useUnifiedSession(): UnifiedSession {
           setMinikitUser({
             id: userData.id,
             name: userData.name,
-            isVerified: userData.isVerified,
+            isVerified: userData.isVerified || true,
             worldcoinId: userData.worldcoinId,
             authMethod: 'minikit'
           });
@@ -62,11 +62,11 @@ export function useUnifiedSession(): UnifiedSession {
   if (nextAuthSession?.user) {
     return {
       user: {
-        id: nextAuthSession.user.id || (nextAuthSession.user as any).sub,
+        id: (nextAuthSession.user as any).id || (nextAuthSession.user as any).sub || 'unknown',
         name: nextAuthSession.user.name,
         email: nextAuthSession.user.email,
         image: nextAuthSession.user.image,
-        isVerified: (nextAuthSession.user as any).isVerified,
+        isVerified: (nextAuthSession.user as any).isVerified || false,
         authMethod: 'nextauth'
       },
       status: 'authenticated'
