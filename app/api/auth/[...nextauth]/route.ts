@@ -1,7 +1,5 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
