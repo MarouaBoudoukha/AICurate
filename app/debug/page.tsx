@@ -130,7 +130,7 @@ export default function DebugPage() {
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 className="font-semibold text-yellow-800 mb-2">Debug Instructions</h3>
           <ol className="list-decimal list-inside space-y-1 text-yellow-700">
-            <li>Open your browser's Developer Tools (F12)</li>
+            <li>Open your browser&apos;s Developer Tools (F12)</li>
             <li>Go to the Console tab</li>
             <li>Navigate to the quiz page and check for any debug logs</li>
             <li>Look for errors or warnings in the console</li>
