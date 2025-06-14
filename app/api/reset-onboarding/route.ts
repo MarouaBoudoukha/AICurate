@@ -16,8 +16,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.update({
       where: { id: userId },
       data: {
-        onboardingCompleted: false,
-        preferences: null
+        onboardingCompleted: false
       }
     });
 
