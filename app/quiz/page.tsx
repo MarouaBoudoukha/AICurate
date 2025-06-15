@@ -5,12 +5,6 @@ import { useUnifiedSession } from "@/hooks/useUnifiedSession";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#4F46E5'
-};
-
 export default function QuizPage() {
   const unifiedSession = useUnifiedSession();
   const router = useRouter();

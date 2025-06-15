@@ -26,20 +26,20 @@ const slides = [
     subtitle: "From overwhelmed to empowered",
     image: "/onboarding/launch.jpg",
     checklist: [
-      "Too many AI tools? We'll match you with the best one,based on your goals",
-      "Earn rewards for testing and giving feedback",
-      "Join top AI explorers and shape AI's future"
+      "Too many AI tools? We''ll match you with the best ones — curated just for you.",
+      "We recommend only what truly works for your task, budget, and skill level.",
+      "Plus, you earn rewards for testing and giving feedback"
     ]
   },
   {
     id: 3,
     title: "Meet Your AI Guide",
-    subtitle: "Got a goal? We've got the right AI for You",
+    subtitle: "Got a task ? We've got the right AI for You",
     image: "/onboarding/guide.png",
     checklist: [
-      "Share what you want to do — we'll find the best AI for You! Simple!",
-      "No fluff. No hype. No DIY. Just Proof",
-      "If you have a task — we have an AI for you"
+      "Share what you want to do — we'll find the best AI tool for it. Simple!",
+      "No overwhelm. No endless lists. Just one expert recommendation.",
+      "You'll get Your AIcurate Pick™ — trusted, scored, and personalized."
     ]
   },
   {
@@ -48,7 +48,7 @@ const slides = [
     subtitle: "Earn rewards by completing AI challenges",
     image: "/onboarding/hunt.png",
     checklist: [
-      "Complete fun tasks and fill your vault with tokens & credits",
+      "Complete fun tasks and fill your vault with ProofPoints™ & credits",
       "Use your credits to unlock exclusive hunts and special features",
       "Join the Proof Revolution"
     ]

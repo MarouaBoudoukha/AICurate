@@ -16,7 +16,8 @@ const subpageMap: Record<string, React.ReactNode> = {
   logout: <Logout />,
 };
 
-export default function SettingsSubpage({ params }: { params: { subpage: string } }) {
-  const content = subpageMap[params.subpage] || <div className="p-4">Not found</div>;
+export default async function SettingsSubpage({ params }: { params: Promise<{ subpage: string }> }) {
+  const { subpage } = await params;
+  const content = subpageMap[subpage] || <div className="p-4">Not found</div>;
   return content;
 } 

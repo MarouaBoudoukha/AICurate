@@ -21,7 +21,8 @@ export const POST = async (req: NextRequest) => {
       username 
     });
     
-    const storedNonce = cookies().get('siwe')?.value
+    const cookieStore = await cookies()
+    const storedNonce = cookieStore.get('siwe')?.value
     if (nonce !== storedNonce) {
       console.error("Nonce mismatch:", { received: nonce, stored: storedNonce });
       return NextResponse.json({
@@ -44,7 +45,7 @@ export const POST = async (req: NextRequest) => {
       }
 
       // Clear the nonce cookie after successful verification
-      cookies().delete('siwe');
+      cookieStore.delete('siwe');
 
       // Create or update user in database with wallet address
       const walletAddress = payload.address.toLowerCase()

@@ -580,8 +580,7 @@ export default function AgentGuideScreen() {
           </p>
         </div>
 
-        {/* Progress Bar */}
-        <StepProgress currentStep={currentStep} sessionTime={sessionTime} />
+
 
         {/* Chat Container */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 h-[600px] flex flex-col">
@@ -591,7 +590,7 @@ export default function AgentGuideScreen() {
               <div className="space-y-6">
                 <div className="text-center">
                   <p className="text-xl text-gray-800 dark:text-gray-200 mb-2">
-                    I'm AICURATE. What do you need to build or accomplish?
+                    I&apos;m AICURATE. What do you need to build or accomplish?
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Choose a quick start or describe your specific need

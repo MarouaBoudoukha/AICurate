@@ -754,6 +754,10 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       <div className="screen-frame flex items-center justify-center">
         <div className="screen-1-container flex flex-col relative" style={{ position: 'relative', width: 400, minHeight: 600 }}>
           <div className="screen-1-content flex flex-col items-center justify-between w-full h-full" style={{ padding: '40px 24px 32px' }}>
+            {/* Header for all quiz screens */}
+            <h1 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+              Customize your AI journey
+            </h1>
             {renderProgress()}
             <motion.div
               className="w-full"
@@ -777,7 +781,7 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
               onClick={handleNext}
               disabled={!canProceed()}
             >
-              {currentStep === quizSteps.length - 1 ? 'Continue → Launch First AI Hunt' : 'Next →'}
+              {currentStep === quizSteps.length - 1 ? 'Continue' : 'Next →'}
             </motion.button>
           </div>
           {/* Confetti and Reveal/Minting UI */}

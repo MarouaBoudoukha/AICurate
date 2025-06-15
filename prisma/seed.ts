@@ -216,14 +216,26 @@ async function main() {
         update: {
           ...tool,
           pricingModel: tool.pricingModel as PricingModel,
-          complexity: tool.complexity as Complexity,
-          status: tool.status as ToolStatus
+          complexity: 'SIMPLE' as Complexity,
+          status: tool.status as ToolStatus,
+          pricingDetails: 'See website for pricing details',
+          useCases: [],
+          targetAudience: ['General'],
+          integrations: [],
+          compliance: [],
+          screenshots: []
         },
         create: {
           ...tool,
           pricingModel: tool.pricingModel as PricingModel,
-          complexity: tool.complexity as Complexity,
-          status: tool.status as ToolStatus
+          complexity: 'SIMPLE' as Complexity,
+          status: tool.status as ToolStatus,
+          pricingDetails: 'See website for pricing details',
+          useCases: [],
+          targetAudience: ['General'],
+          integrations: [],
+          compliance: [],
+          screenshots: []
         }
       });
       toolsCreated++;

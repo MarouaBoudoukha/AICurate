@@ -148,7 +148,7 @@ export function LandingPage() {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email (optional)"
+                placeholder="Email"
                 className="username-input"
               />
             </div>

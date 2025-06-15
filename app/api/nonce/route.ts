@@ -1,12 +1,13 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Generate nonce (at least 8 alphanumeric characters)
   const nonce = crypto.randomUUID().replace(/-/g, "");
 
   // Store nonce in cookies with proper expiration
-  cookies().set("siwe", nonce, { 
+  const cookieStore = await cookies()
+  cookieStore.set("siwe", nonce, { 
     secure: process.env.NODE_ENV === 'production', // Only secure in production
     httpOnly: true,
     sameSite: 'strict',

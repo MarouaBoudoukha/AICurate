@@ -1,7 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
+import { ReactNode } from "react";
 
+// Dynamically import components that need client-side features
 const MiniKitProvider = dynamic(() => import("@/components/minikit-provider"), {
   ssr: false,
 });
@@ -20,15 +22,19 @@ const ErrorBoundary = dynamic(
   { ssr: false }
 );
 
-export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+interface ClientProvidersProps {
+  children: ReactNode;
+}
+
+export function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <ErrorBoundary>
       <NextAuthProvider>
-        <MiniKitProvider>
-          <ErudaProvider>
+        <ErudaProvider>
+          <MiniKitProvider>
             {children}
-          </ErudaProvider>
-        </MiniKitProvider>
+          </MiniKitProvider>
+        </ErudaProvider>
       </NextAuthProvider>
     </ErrorBoundary>
   );

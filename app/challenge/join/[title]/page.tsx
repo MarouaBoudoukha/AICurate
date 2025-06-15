@@ -2,18 +2,27 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface JoinChallengePageProps {
-  params: {
+  params: Promise<{
     title: string;
-  };
+  }>;
 }
 
 export default function JoinChallengePage({ params }: JoinChallengePageProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const decodedTitle = decodeURIComponent(params.title);
+  const [title, setTitle] = useState<string>('');
+
+  // Handle async params
+  useEffect(() => {
+    params.then(resolvedParams => {
+      setTitle(decodeURIComponent(resolvedParams.title));
+    });
+  }, [params]);
+
+  const decodedTitle = title;
 
   // Mock challenge data - in a real app, this would come from an API
   const challenge = {
