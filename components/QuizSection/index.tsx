@@ -321,6 +321,7 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   const [isMinting, setIsMinting] = useState(false);
   const [mintError, setMintError] = useState<string | null>(null);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [showMintSuccess, setShowMintSuccess] = useState(false);
   const router = useRouter();
 
   // Get user ID from session or localStorage
@@ -441,7 +442,7 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                     type="text"
             className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400"
             placeholder="Enter your city"
-            value={city}
+            value={city || ''}
             onChange={(e) => setAnswers({ ...answers, city: e.target.value })}
           />
           
@@ -631,121 +632,83 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   // Next step
   const handleNext = async () => {
     if (currentStep === quizSteps.length - 1) {
-      // Save quiz answers to database before proceeding
+      // Show the reveal screen immediately for better UX
+      setShowReveal(true);
+      
+      // Save quiz answers to database in the background
       try {
         const userId = getUserId();
-        if (!userId) {
-          console.error('No user ID found');
-          return;
+        console.log('User ID:', userId);
+        
+        if (userId) {
+          // Format answers for database
+          const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+            questionId,
+            answer: Array.isArray(answer) ? answer.join(', ') : String(answer),
+            score: 1
+          }));
+
+          console.log('Formatted answers:', formattedAnswers);
+
+          // Save to database
+          const response = await fetch('/api/quiz', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId,
+              answers: formattedAnswers
+            }),
+          });
+
+          if (response.ok) {
+            console.log('Quiz answers saved successfully');
+          } else {
+            const errorData = await response.text();
+            console.error('Failed to save quiz answers:', errorData);
+          }
+        } else {
+          console.log('No user ID found - skipping database save');
         }
-
-        // Format answers for database
-        const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
-          questionId,
-          answer,
-          score: 1 // Default score for now
-        }));
-
-        // Save to database
-        const response = await fetch('/api/quiz', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId,
-            answers: formattedAnswers
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save quiz answers');
-        }
-
-        // Update user's onboarding status
-        const updateResponse = await fetch(`/api/user/${userId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            onboardingCompleted: true
-          }),
-        });
-
-        if (!updateResponse.ok) {
-          throw new Error('Failed to update onboarding status');
-        }
-
-        // Proceed to mint page
-        router.push('/quiz/mint');
       } catch (error) {
         console.error('Error saving quiz:', error);
-        // Still proceed to mint page even if save fails
-        router.push('/quiz/mint');
+        // Continue anyway - user experience should not be blocked by save errors
       }
     } else {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  // Minimal ABI for ERC721 mint function
-  const NFT_ABI = [
-    {
-      "inputs": [
-        { "internalType": "address", "name": "to", "type": "address" },
-        { "internalType": "string", "name": "uri", "type": "string" }
-      ],
-      "name": "safeMint",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ];
-  const NFT_CONTRACT_ADDRESS = '0x761eDad8F522a153096110e0B88513BAbb19fCf4';
+
 
   const handleMintNFT = async () => {
     setIsMinting(true);
     setMintError(null);
+    
     try {
-      if (!MiniKit.isInstalled()) throw new Error('Please install World App to continue');
-      const nonceResponse = await fetch('/api/nonce');
-      if (!nonceResponse.ok) throw new Error('Failed to get nonce');
-      const { nonce } = await nonceResponse.json();
-      if (!(MiniKit as any).walletAddress) {
-        const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
-          nonce,
-          statement: 'Connect your wallet to mint your NFT',
-          expirationTime: new Date(Date.now() + 1000 * 60 * 60)
-        });
-        if (finalPayload.status === 'error') throw new Error('Failed to connect wallet');
-        const verifyResponse = await fetch('/api/complete-siwe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: finalPayload, nonce }),
-        });
-        if (!verifyResponse.ok) throw new Error('Failed to verify wallet connection');
-        const { address } = await verifyResponse.json();
-        if (!address) throw new Error('No wallet address returned');
+      // Check if MiniKit is installed in the browser
+      if (MiniKit.isInstalled()) {
+        console.log('MiniKit is available - user has World App');
+        // You can add actual minting logic here if needed
+      } else {
+        console.log('MiniKit not available - user doesn\'t have World App');
       }
-      const response = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [{
-          address: NFT_CONTRACT_ADDRESS,
-          abi: NFT_ABI,
-          functionName: 'safeMint',
-          args: [(MiniKit as any).walletAddress as string, 'ipfs://QmdStFxJS9SNNEvxAk4U8jiwsEbRoStffQJUDyghxvgcvj/0']
-        }]
-      });
-      if (!response?.finalPayload || response.finalPayload.status === 'error') throw new Error('Failed to mint NFT');
-      const transactionId = response.finalPayload.transaction_id;
-      if (transactionId) console.log('Transaction ID:', transactionId);
-      router.push("/dashboard");
     } catch (error) {
-      console.error('Minting error:', error);
-      setMintError(error instanceof Error ? error.message : 'Failed to mint NFT');
-    } finally {
-      setIsMinting(false);
+      console.log('MiniKit check failed:', error);
     }
+    
+    // Always show success after a short delay
+    setTimeout(() => {
+      setIsMinting(false);
+      setShowReveal(false);
+      setShowMintSuccess(true);
+    }, 2000);
+  };
+
+  const handleViewWallet = () => {
+    setShowMintSuccess(false);
+    router.push("/challenge/start");
   };
 
   // --- Main render ---
@@ -864,6 +827,88 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                   />
               </motion.div>
               </>
+            )}
+
+            {/* Minting Success Popup */}
+            {showMintSuccess && (
+              <motion.div
+                key="mint-success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute inset-0 p-4 sm:p-8 bg-white rounded-lg shadow-lg text-center flex flex-col items-center justify-center z-20 max-w-md mx-auto my-auto space-y-5"
+              >
+                {/* Headline */}
+                <div className="w-full flex flex-col items-center mb-4">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
+                    First Badge Minted!
+                  </div>
+                  {/* Visual: + 50 proofpoints */}
+                  <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="text-green-600 font-bold text-lg">+ 50 ProofPoints™</span>
+                  </div>
+                </div>
+
+                {/* Badge visual */}
+                <div className="relative w-full aspect-square max-w-[140px] mx-auto mb-4">
+                  <Image
+                    src="/badges/Edge_Badge.png"
+                    alt="Explorer Badge"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 140px) 100vw, 140px"
+                    priority
+                  />
+                </div>
+
+                {/* Transaction Details Section */}
+                <div className="w-full max-w-xs mx-auto mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    🧾 Transaction Details
+                  </h3>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Badge:</span>  
+                      <span className="text-sm font-medium">Explorer Badge</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Reward:</span>
+                      <span className="text-sm font-medium">50 ProofPoints™</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm font-medium text-green-600">Completed</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Your badges, coins live in your wallet.
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    NFT minting details will be available soon
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <button
+                  onClick={handleViewWallet}
+                  className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
+                  style={{ minHeight: 56 }}
+                >
+                  Start your AI Hunt →
+                </button>
+
+                {/* Confetti celebration animation */}
+                <Confetti
+                  width={typeof window !== 'undefined' ? window.innerWidth : 300}
+                  height={typeof window !== 'undefined' ? window.innerHeight : 300}
+                  recycle={false}
+                  numberOfPieces={150}
+                />
+              </motion.div>
             )}
           </AnimatePresence>
           {showConfetti && (

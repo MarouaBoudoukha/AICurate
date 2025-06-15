@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Clock } from "lucide-react";
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
+import Image from "next/image";
 
 // Step icons for TASKS framework
 const stepIcons: Record<string, string> = {
@@ -589,8 +590,17 @@ export default function AgentGuideScreen() {
             {messages.length === 0 ? (
               <div className="space-y-6">
                 <div className="text-center">
+                  <div className="mb-4 flex justify-center">
+                    <Image
+                      src="/onboarding/aicurate_agent.png"
+                      alt="AICurate Agent"
+                      width={120}
+                      height={120}
+                      className="rounded-full"
+                    />
+                  </div>
                   <p className="text-xl text-gray-800 dark:text-gray-200 mb-2">
-                    I&apos;m AICURATE. What do you need to build or accomplish?
+                    I&apos;m Accurate — your personal AI-powered curator. I help you find the best AI tools to get things done.
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Choose a quick start or describe your specific need
