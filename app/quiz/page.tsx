@@ -11,17 +11,14 @@ export default function QuizPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
+    // Allow both authenticated users and guests to access the quiz
     if (unifiedSession.status === "loading") {
       return;
     }
     
-    if (!unifiedSession.user) {
-      router.push('/login');
-    } else {
-      setIsLoading(false);
-    }
-  }, [unifiedSession.status, unifiedSession.user, router]);
+    // Always allow access to quiz (both authenticated users and guests)
+    setIsLoading(false);
+  }, [unifiedSession.status, router]);
 
   if (isLoading) {
     return (

@@ -324,12 +324,14 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   const [showMintSuccess, setShowMintSuccess] = useState(false);
   const router = useRouter();
 
-  // Get user ID from session or localStorage
+  // Get user ID from session, localStorage, or generate guest ID
   const getUserId = () => {
     const userId = unifiedSession.user?.id || localStorage.getItem('worldcoin_user_id');
     if (!userId) {
-      console.error('No user ID found');
-      return null;
+      // Generate a guest ID for users who continue as guest
+      const guestId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      console.log('Generated guest ID:', guestId);
+      return guestId;
     }
     return userId;
   };
