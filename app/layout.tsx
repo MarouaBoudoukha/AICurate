@@ -4,6 +4,7 @@ import "./globals.css";
 import dynamic from "next/dynamic";
 import { TabBar } from "@/components/navigation/TabBar";
 import { cn } from "@/lib/utils";
+import ClientProviders from "./ClientProviders";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,9 +47,9 @@ const ErrorBoundary = dynamic(
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className="overscroll-none">
       <head>
@@ -62,20 +63,22 @@ export default function RootLayout({
           "flex flex-col min-h-[100dvh] overscroll-none touch-pan-y bg-background antialiased"
         )}
       >
-        <ErrorBoundary>
-          <NextAuthProvider>
-            <ErudaProvider>
-              <MiniKitProvider>
-                <div className="flex-1 flex flex-col w-full max-w-screen-sm mx-auto bg-white relative">
-                  <main className="flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] overscroll-none">
-                    {children}
-                  </main>
-                  <TabBar className="fixed bottom-0 left-0 right-0 z-50" />
-                </div>
-              </MiniKitProvider>
-            </ErudaProvider>
-          </NextAuthProvider>
-        </ErrorBoundary>
+        <ClientProviders>
+          <ErrorBoundary>
+            <NextAuthProvider>
+              <ErudaProvider>
+                <MiniKitProvider>
+                  <div className="flex-1 flex flex-col w-full max-w-screen-sm mx-auto bg-white relative">
+                    <main className="flex-1 overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] overscroll-none">
+                      {children}
+                    </main>
+                    <TabBar className="fixed bottom-0 left-0 right-0 z-50" />
+                  </div>
+                </MiniKitProvider>
+              </ErudaProvider>
+            </NextAuthProvider>
+          </ErrorBoundary>
+        </ClientProviders>
       </body>
     </html>
   );

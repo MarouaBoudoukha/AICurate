@@ -128,27 +128,41 @@ For SELECT step: { "message": "final recommendation", "currentStep": "select", "
   private getStepPrompt(): string {
     const stepPrompts: Record<string, string> = {
       intro: `Current Step: Intro
-Be direct and engaging. Ask what they want to accomplish.
+Be direct and engaging. Use conversation starters in the format "I need an AI to [task]". For example:
+- "I need an AI to build a DAPP"
+- "I need an AI to create a website"
+- "I need an AI to write content"
+- "I need an AI to analyze data"
+
 JSON schema: { message, currentStep }`,
       
       target: `Current Step: Target  
-Ask 2-3 specific follow-up questions about their goal to understand their exact needs. Don't repeat what they said.
+Ask ONE specific follow-up question at a time about their goal to understand their exact needs. Don't repeat what they said.
 
-When possible, provide response options for common scenarios to improve user experience.
+Based on the user's task, generate relevant follow-up questions and response options. For example:
+- For technical tasks: Ask about specific functionality, platform preferences, and technical requirements
+- For creative tasks: Ask about style preferences, output format, and specific features needed
+- For business tasks: Ask about scale, integration needs, and specific use cases
+- For personal tasks: Ask about preferences, constraints, and specific goals
 
-For DAPP/blockchain projects, ask about:
-- What specific functionality they need (smart contracts, NFT minting, frontend integration, etc.)
-- What blockchain/platform they're targeting
-- What programming languages/frameworks they're using
-- Any specific challenges they're facing
+Always provide response options that are relevant to the user's specific task and needs.
 
-For cooking/recipe needs, provide options like:
+Example response options for different scenarios:
+
+For DAPP/blockchain projects:
+- Smart contract development
+- NFT minting and marketplace
+- Frontend integration
+- DeFi functionality
+- Web3 authentication
+
+For cooking/recipe needs:
 - Recipe discovery based on ingredients
 - Cooking technique improvement
 - Meal planning and prep
 - Dietary restrictions consideration
 
-For fitness/diet planning, provide options like:
+For fitness/diet planning:
 - Weight loss
 - Muscle gain
 - Endurance training
@@ -166,41 +180,49 @@ JSON schema: { message, currentStep, responseOptions?: ["Option 1", "Option 2", 
       sample: `Current Step: Sample
 You MUST present ONE specific AI tool using this EXACT format. Do not deviate from this format:
 
-✅ Recommended AI Tool: [Tool Name from Available Tools]
+Your AIcurate Pick™ – Final Recommendation Output Format:
+
+1: Primary AI Tool Recommendation
+
+✅ Your Pick: [Tool Name]
 🌟 AIcurate Compatibility Score™: [Score between 85-98]/100
-📌 Why this tool?
-[Tool Name] is perfect for your [specific need] because it's [reason based on their constraints: free, beginner-friendly, platform preference]. It handles [specific features they need] and is trusted by [reviews]+ developers.
-🚀 Try [Tool Name] Free → — ⭐ [Rating] | 👥 [Reviews]+ human-verified reviews
-💰 You earned +50 ProofPoints™ for this pick! Keep exploring to level up.
+📌 Why this Pick: [Tool Name] matches your [specific need] with [key benefit] and [key feature].
+🚀 Claim your [discount] →
 
-Use the tool data from Available Tools section. Match their need: smart contract deployment + NFT minting + frontend integration.
-IMPORTANT: Return ONLY this formatted message, no additional text.
-JSON schema: { message, currentStep }`,
-      
-      knowledge: `Current Step: Knowledge
-Explain why this specific tool is perfect for their exact situation.
-Reference their constraints and how the tool addresses each one.
-JSON schema: { message, currentStep }`,
-      
-      select: `Current Step: Select
-Deliver final recommendation using this exact format:
+⸻
 
-🧠 Your AIcurate Pick™
-Task: [Rephrased version of user request]
-
-👉 Your AIcurate Pick™
-✅ Tool: [Tool Name]
-🌟 AIcurate Compatibility Score™: [Score]/100
-📌 Why this Pick: [Detailed explanation referencing their specific needs, constraints, and why this tool is perfect]
-🚀 Try [Tool Name] Free → — ⭐ [Rating] | 👥 [Reviews]+ reviews | 💎 Human-Verified
+2: Alternative Option (Empowers Choice)
 
 🔄 Alternative Pick: [Alternative Tool Name]
-🌟 Score: [Score]/100
-📌 Note: [Brief note about alternative]
-🚀 Explore [Alternative Tool] → — 🆓 Free Trial | 🧩 [Brief benefit]
+🌟 Compatibility Score™: [Score]/100
+📌 Why consider this? [Alternative Tool Name] offers [key benefit]—perfect if you prefer [specific feature].
+🚀 Try it free for [trial period] →
 
-Thank the user and remind them to return for updated recommendations.
-JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning, nextSteps, compatibilityScore, rating, reviews, curationTags, referralLink, proofPoints } }`
+⸻
+
+3: Incentive to Act
+
+🎁 Bonus:
+Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
+
+⸻
+
+Do you need anything else?
+
+Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
+
+For business users, add:
+I can also set up quarterly check-ins to keep your AI stack sharp.
+
+Use the tool data from Available Tools section. Match their specific needs and constraints.
+IMPORTANT: Return ONLY this formatted message, no additional text.
+JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning, nextSteps, compatibilityScore, rating, reviews, curationTags, referralLink } }`,
+      
+      knowledge: `Current Step: Knowledge
+This step is now combined with Sample and Select steps.`,
+      
+      select: `Current Step: Select
+This step is now combined with Sample and Knowledge steps.`
     };
 
     return stepPrompts[this.currentStep] || stepPrompts['intro'];
@@ -221,21 +243,146 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
       console.log('Extracted user need:', userNeed);
       const tools = await this.findMatchingTools(userNeed);
       if (tools.length > 0) {
-        const tool = tools[0];
-        const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, input);
-        const formattedMessage = this.createSampleStepRecommendation(tool, userNeed, compatibilityScore);
-        this.messages.push({ role: 'assistant', content: formattedMessage, step: 'sample' });
+        // Let the LLM generate the recommendation
+        const systemPrompt = `You are an AI tool recommendation expert. Based on the user's needs and preferences, recommend the most suitable AI tool from the available options. Your response MUST follow this EXACT format:
+
+        {
+          "message": "Your AIcurate Pick™ – Final Recommendation Output Format:
+
+1: Primary AI Tool Recommendation
+
+✅ Your Pick: [Tool Name]
+🌟 AIcurate Compatibility Score™: [Score]/100
+📌 Why this Pick: [2-3 sentences explaining why this tool is perfect for their needs]
+🚀 [Clear call to action] →
+
+⸻
+
+2: Alternative Option (Empowers Choice)
+
+🔄 Alternative Pick: [Alternative Tool Name]
+🌟 Compatibility Score™: [Score]/100
+📌 Why consider this? [2-3 sentences explaining why this is a good alternative]
+🚀 [Clear call to action] →
+
+⸻
+
+3: Incentive to Act
+
+🎁 Bonus:
+[Incentive message with specific action and reward]
+
+⸻
+
+Do you need anything else?
+
+Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
+
+[I need another AI tool] [Save to Vault]",
+          "currentStep": "select",
+          "data": {
+            "proofPointsEarned": 50,
+            "tool": "The recommended tool object",
+            "responseOptions": ["I need another AI tool", "Save to Vault"]
+          },
+          "sessionComplete": true,
+          "buttons": ["I need another AI tool", "Save to Vault"]
+        }
+
+        Requirements for the message:
+        1. MUST follow the exact format shown above with all sections and emojis
+        2. MUST include all three main sections: Primary AI Tool Recommendation, Alternative Option, and Incentive to Act
+        3. MUST use the exact emojis and formatting shown (✅, 🌟, 📌, 🚀, 🔄, 🎁)
+        4. MUST include compatibility scores for both primary and alternative tools
+        5. MUST use the "⸻" separator between sections
+        6. MUST include clear calls to action with "→" arrows
+        7. MUST be concise but informative
+        8. MUST maintain a professional yet friendly tone
+        9. MUST highlight free features, trial periods, or special offers in the Bonus section
+        10. MUST explain why the alternative tool is a good backup option
+        11. MUST include the exact responseOptions: ["I need another AI tool", "Save to Vault"]
+        12. MUST handle the conversation flow naturally, including:
+            - When user clicks "I need another AI tool", continue the conversation to find a better match
+            - When user clicks "Save to Vault", show a "Coming Soon" popup message
+        13. MUST recommend the most suitable AI tool based on the user's specific task and requirements
+        14. MUST ensure the recommendation is highly relevant to the user's stated needs
+        15. MUST end the message with "Do you need anything else?" and the closing message about future help
+        16. MUST include the responseOptions buttons ["I need another AI tool", "Save to Vault"] in the UI after the message
+        17. MUST include the buttons in both the message and the response data
+        18. MUST format the buttons as [Button Text] in the message
+        19. MUST analyze the user's responses and conversation history to determine the most suitable AI tool, without relying on any static list or database
+        20. MUST consider the following factors from user responses when making the recommendation:
+            - Specific task requirements
+            - Experience level
+            - Budget constraints
+            - Platform preferences
+            - Any other relevant preferences or constraints mentioned
+        21. MUST provide a unique, personalized recommendation based on the user's specific needs and responses
+        22. MUST explain why the recommended tool is the best match for the user's specific use case
+
+        Example of a good recommendation:
+        Your AIcurate Pick™ – Final Recommendation Output Format:
+
+        1: Primary AI Tool Recommendation
+
+        ✅ Your Pick: MindEase AI
+        🌟 AIcurate Compatibility Score™: 93/100
+        📌 Why this Pick: MindEase AI matches your stress-reduction goal with intuitive emotional support and a clean, beginner-friendly interface.
+        🚀 Claim your 20% discount →
+
+        ⸻
+
+        2: Alternative Option (Empowers Choice)
+
+        🔄 Alternative Pick: ZenAI Coach
+        🌟 Compatibility Score™: 89/100
+        📌 Why consider this? ZenAI Coach offers guided meditations and structure—perfect if you prefer daily routine support.
+        🚀 Try it free for 30 days →
+
+        ⸻
+
+        3: Incentive to Act
+
+        🎁 Bonus:
+        Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
+
+        ⸻
+
+        Do you need anything else?
+
+        Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
+
+        [I need another AI tool] [Save to Vault]
+
+        The message should be engaging and encourage the user to take action while providing all necessary information to make an informed decision.`;
+
+        const userPrompt = `User Need: ${userNeed}
+        Platform Preference: ${input}
+        Available Tools: ${JSON.stringify(tools)}
         
-        // STAY in SAMPLE step - don't auto-advance
-        return {
-          message: formattedMessage,
-          currentStep: 'sample',
-          data: { 
-            proofPointsEarned: 50,
-            tool: tool,
-            responseOptions: ['Continue to Details', 'Save to Vault']
-          }
-        };
+        Please provide a recommendation based on this information, following the EXACT format specified.`;
+
+        const completion = await this.openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 1200
+        });
+
+        let response;
+        try {
+          response = JSON.parse(completion.choices[0].message.content || '{}');
+          console.log('LLM generated recommendation:', response);
+        } catch (err) {
+          console.error('LLM returned invalid JSON:', completion.choices[0].message.content);
+          return await this.getFallbackResponse();
+        }
+
+        this.messages.push({ role: 'assistant', content: response.message, step: 'select' });
+        return response;
       }
     }
 
@@ -247,7 +394,6 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
     // Get matching tools for sample/select steps
     let matchingTools = [];
     if (this.currentStep === 'sample' || this.currentStep === 'select') {
-      // Extract user need from conversation history
       const userNeed = this.extractUserNeed();
       console.log('Current step:', this.currentStep, 'User need:', userNeed);
       matchingTools = await this.findMatchingTools(userNeed);
@@ -279,28 +425,11 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
         console.log('Parsed response:', response);
       } catch (err) {
         console.error('OpenAI returned invalid JSON:', completion.choices[0].message.content);
-        
-        // For SAMPLE step, create a formatted response if JSON parsing fails
-        if (this.currentStep === 'sample') {
-          const userNeed = this.extractUserNeed();
-          const tools = await this.findMatchingTools(userNeed);
-          if (tools.length > 0) {
-            const tool = tools[0];
-            const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
-            const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
-            return {
-              message: formattedMessage,
-              currentStep: 'knowledge',
-              data: { proofPointsEarned: 50 }
-            };
-          }
-        }
-        
         return await this.getFallbackResponse();
       }
 
       // Special handling for SAMPLE step - ensure we have a proper tool recommendation
-      if (this.currentStep === 'sample' && (!response.message || !response.message.includes('✅ Recommended AI Tool:'))) {
+      if (this.currentStep === 'sample' && (!response.message || !response.message.includes('Your AIcurate Pick™'))) {
         console.log('SAMPLE step fallback triggered - no proper tool recommendation found');
         console.log('Current response message:', response.message);
         const userNeed = this.extractUserNeed();
@@ -308,31 +437,154 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
         const tools = await this.findMatchingTools(userNeed);
         console.log('Tools found for fallback:', tools.map(t => t.name));
         if (tools.length > 0) {
-          const tool = tools[0];
-          const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
-          const formattedMessage = this.createSampleStepRecommendation(tool, userNeed, compatibilityScore);
-          console.log('Generated fallback message:', formattedMessage);
-          this.messages.push({ role: 'assistant', content: formattedMessage, step: 'sample' });
-          this.currentStep = 'sample';
-          this.session.currentStep = 'sample';
-          return {
-            message: formattedMessage,
-            currentStep: 'sample',
-            data: { 
-              proofPointsEarned: 50,
-              tool: tool,
-              responseOptions: ['Continue to Details', 'Save to Vault']
-            }
-          };
+          // Let the LLM generate the recommendation
+          const systemPrompt = `You are an AI tool recommendation expert. Based on the user's needs and preferences, recommend the most suitable AI tool from the available options. Your response MUST follow this EXACT format:
+
+          {
+            "message": "Your AIcurate Pick™ – Final Recommendation Output Format:
+
+1: Primary AI Tool Recommendation
+
+✅ Your Pick: [Tool Name]
+🌟 AIcurate Compatibility Score™: [Score]/100
+📌 Why this Pick: [2-3 sentences explaining why this tool is perfect for their needs]
+🚀 [Clear call to action] →
+
+⸻
+
+2: Alternative Option (Empowers Choice)
+
+🔄 Alternative Pick: [Alternative Tool Name]
+🌟 Compatibility Score™: [Score]/100
+📌 Why consider this? [2-3 sentences explaining why this is a good alternative]
+🚀 [Clear call to action] →
+
+⸻
+
+3: Incentive to Act
+
+🎁 Bonus:
+[Incentive message with specific action and reward]
+
+⸻
+
+Do you need anything else?
+
+Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
+
+[I need another AI tool] [Save to Vault]",
+            "currentStep": "select",
+            "data": {
+              "proofPointsEarned": 50,
+              "tool": "The recommended tool object",
+              "responseOptions": ["I need another AI tool", "Save to Vault"]
+            },
+            "sessionComplete": true,
+            "buttons": ["I need another AI tool", "Save to Vault"]
+          }
+
+          Requirements for the message:
+          1. MUST follow the exact format shown above with all sections and emojis
+          2. MUST include all three main sections: Primary AI Tool Recommendation, Alternative Option, and Incentive to Act
+          3. MUST use the exact emojis and formatting shown (✅, 🌟, 📌, 🚀, 🔄, 🎁)
+          4. MUST include compatibility scores for both primary and alternative tools
+          5. MUST use the "⸻" separator between sections
+          6. MUST include clear calls to action with "→" arrows
+          7. MUST be concise but informative
+          8. MUST maintain a professional yet friendly tone
+          9. MUST highlight free features, trial periods, or special offers in the Bonus section
+          10. MUST explain why the alternative tool is a good backup option
+          11. MUST include the exact responseOptions: ["I need another AI tool", "Save to Vault"]
+          12. MUST handle the conversation flow naturally, including:
+              - When user clicks "I need another AI tool", continue the conversation to find a better match
+              - When user clicks "Save to Vault", show a "Coming Soon" popup message
+          13. MUST recommend the most suitable AI tool based on the user's specific task and requirements
+          14. MUST ensure the recommendation is highly relevant to the user's stated needs
+          15. MUST end the message with "Do you need anything else?" and the closing message about future help
+          16. MUST include the responseOptions buttons ["I need another AI tool", "Save to Vault"] in the UI after the message
+          17. MUST include the buttons in both the message and the response data
+          18. MUST format the buttons as [Button Text] in the message
+          19. MUST analyze the user's responses and conversation history to determine the most suitable AI tool, without relying on any static list or database
+          20. MUST consider the following factors from user responses when making the recommendation:
+              - Specific task requirements
+              - Experience level
+              - Budget constraints
+              - Platform preferences
+              - Any other relevant preferences or constraints mentioned
+          21. MUST provide a unique, personalized recommendation based on the user's specific needs and responses
+          22. MUST explain why the recommended tool is the best match for the user's specific use case
+
+          Example of a good recommendation:
+          Your AIcurate Pick™ – Final Recommendation Output Format:
+
+          1: Primary AI Tool Recommendation
+
+          ✅ Your Pick: MindEase AI
+          🌟 AIcurate Compatibility Score™: 93/100
+          📌 Why this Pick: MindEase AI matches your stress-reduction goal with intuitive emotional support and a clean, beginner-friendly interface.
+          🚀 Claim your 20% discount →
+
+          ⸻
+
+          2: Alternative Option (Empowers Choice)
+
+          🔄 Alternative Pick: ZenAI Coach
+          🌟 Compatibility Score™: 89/100
+          📌 Why consider this? ZenAI Coach offers guided meditations and structure—perfect if you prefer daily routine support.
+          🚀 Try it free for 30 days →
+
+          ⸻
+
+          3: Incentive to Act
+
+          🎁 Bonus:
+          Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
+
+          ⸻
+
+          Do you need anything else?
+
+          Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
+
+          [I need another AI tool] [Save to Vault]
+
+          The message should be engaging and encourage the user to take action while providing all necessary information to make an informed decision.`;
+
+          const userPrompt = `User Need: ${userNeed}
+          Available Tools: ${JSON.stringify(tools)}
+          
+          Please provide a recommendation based on this information, following the EXACT format specified.`;
+
+          const completion = await this.openai.chat.completions.create({
+            model: 'gpt-4',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 1200
+          });
+
+          let response;
+          try {
+            response = JSON.parse(completion.choices[0].message.content || '{}');
+            console.log('LLM generated fallback recommendation:', response);
+          } catch (err) {
+            console.error('LLM returned invalid JSON:', completion.choices[0].message.content);
+            return await this.getFallbackResponse();
+          }
+
+          this.messages.push({ role: 'assistant', content: response.message, step: 'select' });
+          return response;
         }
       }
 
       // Determine next step based on current step and response
       let nextStep = this.currentStep;
       
-      // If we're in SAMPLE step and got a valid response, move to knowledge
-      if (this.currentStep === 'sample' && response.message && response.message.includes('✅ Recommended AI Tool:')) {
-        nextStep = 'knowledge';
+      // If we're in SAMPLE step and got a valid response, move to select
+      if (this.currentStep === 'sample' && response.message && response.message.includes('Your AIcurate Pick™')) {
+        nextStep = 'select';
       } else if (response.currentStep) {
         // Use the step specified in the response
         nextStep = response.currentStep;
@@ -343,29 +595,6 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
       
       this.currentStep = nextStep;
 
-      // CRITICAL: If we're in SAMPLE step, we MUST provide a tool recommendation
-      if (this.currentStep === 'sample') {
-        console.log('SAMPLE step detected - forcing tool recommendation');
-        const userNeed = this.extractUserNeed();
-        console.log('User need for SAMPLE step:', userNeed);
-        const tools = await this.findMatchingTools(userNeed);
-        console.log('Tools found for SAMPLE step:', tools.map(t => t.name));
-        if (tools.length > 0) {
-          const tool = tools[0];
-          const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
-          const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
-          console.log('Forcing SAMPLE step tool recommendation:', formattedMessage);
-          this.messages.push({ role: 'assistant', content: formattedMessage, step: 'knowledge' });
-          this.currentStep = 'knowledge';
-          this.session.currentStep = 'knowledge';
-          return {
-            message: formattedMessage,
-            currentStep: 'knowledge',
-            data: { proofPointsEarned: 50 }
-          };
-        }
-      }
-
       // Add assistant message to conversation history
       this.messages.push({ role: 'assistant', content: response.message, step: this.currentStep });
 
@@ -373,74 +602,6 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
       this.session.currentStep = this.currentStep;
       if (this.currentStep === 'select') {
         this.session.completed = true;
-      }
-
-      // Handle button-based progression for SAMPLE → KNOWLEDGE → SELECT
-      if (this.currentStep === 'sample' && (input.toLowerCase().includes('continue to details') || input.toLowerCase().includes('learn more') || input.toLowerCase().includes('tell me why') || input.toLowerCase().includes('next') || input.toLowerCase().includes('continue'))) {
-        console.log('✅ User clicked "Continue to Details" in SAMPLE step, moving to KNOWLEDGE');
-        this.currentStep = 'knowledge';
-        
-        const userNeed = this.extractUserNeed();
-        const tools = await this.findMatchingTools(userNeed);
-        if (tools.length > 0) {
-          const tool = tools[0];
-          const knowledgeMessage = this.createKnowledgeStepMessage(tool, userNeed);
-          this.messages.push({ role: 'assistant', content: knowledgeMessage, step: 'knowledge' });
-          return {
-            message: knowledgeMessage,
-            currentStep: 'knowledge',
-            data: { 
-              tool: tool,
-              responseOptions: ['Add to Vault']
-            }
-          };
-        }
-      }
-
-      // Handle direct SAMPLE → SELECT progression
-      if (this.currentStep === 'sample' && (input.toLowerCase().includes('save to vault') || input.toLowerCase().includes('add to vault'))) {
-        console.log('✅ User clicked "Save to Vault" in SAMPLE step, moving directly to SELECT');
-        this.currentStep = 'select';
-        
-        const userNeed = this.extractUserNeed();
-        const tools = await this.findMatchingTools(userNeed);
-        if (tools.length > 0) {
-          const tool = tools[0];
-          const selectMessage = this.createSelectStepMessage(tool, userNeed);
-          this.messages.push({ role: 'assistant', content: selectMessage, step: 'select' });
-          return {
-            message: selectMessage,
-            currentStep: 'select',
-            data: { 
-              proofPointsEarned: 100,
-              tool: tool
-            },
-            sessionComplete: true
-          };
-        }
-      }
-
-      // Handle KNOWLEDGE → SELECT progression
-      if (this.currentStep === 'knowledge' && (input.toLowerCase().includes('add to vault') || input.toLowerCase().includes('save this tool') || input.toLowerCase().includes('select') || input.toLowerCase().includes('save'))) {
-        console.log('✅ User clicked "Add to Vault" in KNOWLEDGE step, moving to SELECT');
-        this.currentStep = 'select';
-        
-        const userNeed = this.extractUserNeed();
-        const tools = await this.findMatchingTools(userNeed);
-        if (tools.length > 0) {
-          const tool = tools[0];
-          const selectMessage = this.createSelectStepMessage(tool, userNeed);
-          this.messages.push({ role: 'assistant', content: selectMessage, step: 'select' });
-          return {
-            message: selectMessage,
-            currentStep: 'select',
-            data: { 
-              proofPointsEarned: 100,
-              tool: tool
-            },
-            sessionComplete: true
-          };
-        }
       }
 
       return {
@@ -465,9 +626,9 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
       intro: 'target',
       target: 'assess',
       assess: 'sample',
-      sample: 'knowledge',
+      sample: 'select',
       knowledge: 'select',
-      select: 'select' // Stay on select as final step
+      select: 'select'
     };
     return stepFlow[currentStep as keyof typeof stepFlow] || 'target';
   }
@@ -480,10 +641,10 @@ JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning
       if (tools.length > 0) {
         const tool = tools[0];
         const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
-        const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+        const formattedMessage = this.createSampleStepRecommendation(tool, userNeed, compatibilityScore);
         return {
           message: formattedMessage,
-          currentStep: 'knowledge',
+          currentStep: 'select',
           data: { proofPointsEarned: 50 }
         };
       }
@@ -862,27 +1023,59 @@ Return ONLY the JSON object, no other text.`;
   }
 
   private createSampleStepRecommendation(tool: any, userNeed: string, compatibilityScore?: number): string {
-    const score = compatibilityScore || Math.floor(Math.random() * (98 - 85 + 1)) + 85;
-    
-    // Create a more specific description based on the user need
-    let specificUse = 'blockchain development';
-    if (userNeed.toLowerCase().includes('smart contract') && userNeed.toLowerCase().includes('nft')) {
-      specificUse = 'smart contract deployment and NFT minting';
-    } else if (userNeed.toLowerCase().includes('smart contract')) {
-      specificUse = 'smart contract development and deployment';
-    } else if (userNeed.toLowerCase().includes('nft')) {
-      specificUse = 'NFT creation and minting';
-    } else if (userNeed.toLowerCase().includes('frontend') || userNeed.toLowerCase().includes('integrate')) {
-      specificUse = 'blockchain frontend integration';
+    const score = compatibilityScore || this.calculateCompatibilityScore(tool, userNeed, 'any platform');
+    const alternativeTool = this.findAlternativeTool(tool, userNeed);
+    const alternativeScore = this.calculateCompatibilityScore(alternativeTool, userNeed, 'any platform');
+
+    // Get key features safely
+    const primaryFeatures = tool.features || tool.keyFeatures || ['AI-powered assistance', 'Smart contract support'];
+    const alternativeFeatures = alternativeTool.features || alternativeTool.keyFeatures || ['Alternative features', 'Additional support'];
+
+    return `Your AIcurate Pick™ – Final Recommendation Output Format:
+
+1: Primary AI Tool Recommendation
+
+✅ Your Pick: ${tool.name}
+🌟 AIcurate Compatibility Score™: ${score}/100
+📌 Why this Pick: ${tool.name} matches your ${userNeed} with ${primaryFeatures[0]} and ${primaryFeatures[1]}.
+🚀 Claim your ${tool.pricing?.details || '20% discount'} →
+
+⸻
+
+2: Alternative Option (Empowers Choice)
+
+🔄 Alternative Pick: ${alternativeTool.name}
+🌟 Compatibility Score™: ${alternativeScore}/100
+📌 Why consider this? ${alternativeTool.name} offers ${alternativeFeatures[0]}—perfect if you prefer ${alternativeFeatures[1]}.
+🚀 Try it free for ${alternativeTool.pricing?.details || '30 days'} →
+
+⸻
+
+3: Incentive to Act
+
+🎁 Bonus:
+Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
+
+⸻
+
+Do you need anything else?
+
+Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.${this.userProfile.userType === 'BUSINESS' ? '\n\nI can also set up quarterly check-ins to keep your AI stack sharp.' : ''}`;
+  }
+
+  private findAlternativeTool(primaryTool: any, userNeed: string): any {
+    // Find a different tool that could be a good alternative
+    const tools = this.getMockToolsForNeed(userNeed);
+    const alternative = tools.find(t => t.name !== primaryTool.name);
+    if (!alternative) {
+      // If no alternative found, create a fallback alternative
+      return {
+        name: 'Alternative AI Tool',
+        features: ['Alternative features', 'Additional support'],
+        pricing: { details: '30 days free trial' }
+      };
     }
-    
-    return `🎯 **Your Perfect AI Match**
-
-**${tool.name}** • Score: ${score}/100 ⭐
-Perfect for: ${specificUse}
-💰 ${tool.pricing.model === 'FREE' ? 'Free' : 'Affordable'} • 🎓 ${tool.complexity === 'SIMPLE' ? 'Beginner-friendly' : 'Intermediate'}
-
-🚀 [Try ${tool.name} →](${tool.url}) | ⭐ ${tool.rating} | 👥 ${tool.reviews}+ reviews`;
+    return alternative;
   }
 
   private createFormattedToolRecommendation(tool: any, userNeed: string, compatibilityScore?: number): string {

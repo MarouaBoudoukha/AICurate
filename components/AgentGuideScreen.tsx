@@ -16,20 +16,22 @@ const stepIcons: Record<string, string> = {
   completed: '📸'
 };
 
-// Steps definition for TASKS framework (3 steps)
+// Steps definition for TASKS framework (5 steps)
 const steps = [
   { id: 'target', label: 'Target', icon: '🎯' },
   { id: 'assess', label: 'Assess', icon: '🔍' },
+  { id: 'sample', label: 'Sample', icon: '🧪' },
+  { id: 'knowledge', label: 'Knowledge', icon: '🧠' },
   { id: 'select', label: 'Select', icon: '⭐' },
 ];
 
 const conversationStarters = [
-  "I need an AI to build a DAPP",
-  "I need an AI to help me cook",
-  "I need an AI to plan my trip",
-  "I need an AI to create social media content",
-  "I need an AI to analyze data",
-  "I need an AI to automate my business"
+  "I'm building a DAPP",
+  "I'm cooking a traditional dish",
+  "I'm planning a roadtrip",
+  "I'm creating content for social media",
+  "I'm analyzing data for insights",
+  "I'm automating my business workflow"
 ];
 
 interface Message {
@@ -289,11 +291,13 @@ export default function AgentGuideScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState('target');
-  const [showEmailInput, setShowEmailInput] = useState(false);
-  const [showRecommendation, setShowRecommendation] = useState(false);
-  const [recommendation, setRecommendation] = useState<any>(null);
-  const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
+  const [currentStep, setCurrentStep] = useState<string>('intro');
+  const [sessionTime, setSessionTime] = useState<number>(0);
+  const [showEmailInput, setShowEmailInput] = useState<boolean>(false);
+  const [isPremiumPrompt, setIsPremiumPrompt] = useState<boolean>(false);
+  const [showRecommendation, setShowRecommendation] = useState<boolean>(false);
+  const [recommendation, setRecommendation] = useState<AIToolRecommendation | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
@@ -306,7 +310,7 @@ export default function AgentGuideScreen() {
   // Start session timer
   useEffect(() => {
     timerInterval.current = setInterval(() => {
-      // Timer logic would go here
+      setSessionTime(prev => prev + 1);
     }, 1000);
     
     return () => {
@@ -322,23 +326,57 @@ export default function AgentGuideScreen() {
     scrollToBottom();
   }, [messages]);
 
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
     // Handle premium subscription prompt
-    if (input.toLowerCase().includes('yes')) {
-      setMessages(prev => [...prev, 
-        { role: 'user', content: input, step: currentStep },
-        { role: 'assistant', content: "Great! To upgrade to premium and save all your AI tool recommendations, please visit our subscription page. With premium, you'll get unlimited access to your personal AI tool vault and deeper insights.", step: currentStep }
-      ]);
-      setShowEmailInput(false);
-    } else {
-      setMessages(prev => [...prev, 
-        { role: 'user', content: input, step: currentStep },
-        { role: 'assistant', content: "No problem! Your AI tool recommendation is still available in this session. Would you like to start a new tool search?", step: currentStep }
-      ]);
-      setShowEmailInput(false);
+    if (isPremiumPrompt) {
+      if (input.toLowerCase().includes('yes')) {
+        setMessages(prev => [...prev, 
+          { role: 'user', content: input, step: currentStep },
+          { role: 'assistant', content: "Great! To upgrade to premium and save all your AI tool recommendations, please visit our subscription page. With premium, you'll get unlimited access to your personal AI tool vault and deeper insights.", step: currentStep }
+        ]);
+        setIsPremiumPrompt(false);
+      } else {
+        setMessages(prev => [...prev, 
+          { role: 'user', content: input, step: currentStep },
+          { role: 'assistant', content: "No problem! Your AI tool recommendation is still available in this session. Would you like to start a new tool search?", step: currentStep }
+        ]);
+        setIsPremiumPrompt(false);
+      }
+      setInput('');
+      return;
     }
+    
+    // Handle email input
+    if (showEmailInput) {
+      if (input.includes('@')) {
+        setMessages(prev => [...prev, 
+          { role: 'user', content: input, step: currentStep },
+          { role: 'assistant', content: `Perfect! I've sent your AI tool recommendation to ${input}. Would you like to save this recommendation for future reference? (Premium feature)`, step: currentStep }
+        ]);
+        setShowEmailInput(false);
+        setIsPremiumPrompt(true);
+      } else {
+        setMessages(prev => [...prev, 
+          { role: 'user', content: input, step: currentStep },
+          { role: 'assistant', content: "That doesn't appear to be a valid email address. Would you like to try again or continue without sending an email?", step: currentStep }
+        ]);
+        setShowEmailInput(false);
+      }
+      setInput('');
+      return;
+    }
+
+    const userMessage: Message = { role: 'user', content: input, step: currentStep };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
@@ -351,8 +389,9 @@ export default function AgentGuideScreen() {
         body: JSON.stringify({
           input,
           userId,
+          sessionId,
           currentStep,
-          messages: [...messages, { role: 'user', content: input, step: currentStep }],
+          messages: [...messages, userMessage],
         }),
       });
 
@@ -365,10 +404,21 @@ export default function AgentGuideScreen() {
         // Try to detect step from message content
         setCurrentStep(detectStepFromContent(data.message));
       }
+
+      // Update session ID
+      if (data.sessionId) {
+        setSessionId(data.sessionId);
+      }
       
       // Check if this is a prompt for email
       if (data.message.includes('Would you like a copy sent to your email')) {
         setShowEmailInput(true);
+      }
+      
+      // Check if this is a premium feature prompt
+      if (data.message.includes('save this recommendation') && 
+          data.message.includes('Premium')) {
+        setIsPremiumPrompt(true);
       }
       
       // Check if this is an AI Tool Recommendation
@@ -401,7 +451,11 @@ export default function AgentGuideScreen() {
       return 'target';
     } else if (content.includes('🔍') || content.includes('Assess') || content.includes('experience') || content.includes('budget')) {
       return 'assess';
-    } else if (content.includes('⭐') || content.includes('Select') || content.includes('recommendation') || content.includes('Your AIcurate Pick™')) {
+    } else if (content.includes('🧪') || content.includes('Sample') || content.includes('perfect AI tool')) {
+      return 'sample';
+    } else if (content.includes('🧠') || content.includes('Knowledge') || content.includes('why this tool')) {
+      return 'knowledge';
+    } else if (content.includes('⭐') || content.includes('Select') || content.includes('recommendation')) {
       return 'select';
     }
     return currentStep; // Keep current step if no clear indicator
@@ -422,6 +476,7 @@ export default function AgentGuideScreen() {
         body: JSON.stringify({
           input: starter,
           userId,
+          sessionId,
           currentStep,
           messages: [...messages, userMessage],
         }),
@@ -436,10 +491,21 @@ export default function AgentGuideScreen() {
         // Try to detect step from message content
         setCurrentStep(detectStepFromContent(data.message));
       }
+
+      // Update session ID
+      if (data.sessionId) {
+        setSessionId(data.sessionId);
+      }
       
       // Check if this is a prompt for email
       if (data.message.includes('Would you like a copy sent to your email')) {
         setShowEmailInput(true);
+      }
+      
+      // Check if this is a premium feature prompt
+      if (data.message.includes('save this recommendation') && 
+          data.message.includes('Premium')) {
+        setIsPremiumPrompt(true);
       }
       
       // Check if this is an AI Tool Recommendation
@@ -469,75 +535,17 @@ export default function AgentGuideScreen() {
   // Reset conversation
   const handleNewSession = () => {
     setMessages([]);
-    setCurrentStep('target');
+    setCurrentStep('intro');
+    setSessionTime(0);
     setShowEmailInput(false);
+    setIsPremiumPrompt(false);
     setShowRecommendation(false);
+    setSessionId(null);
   };
 
   const handleSaveRecommendation = () => {
     // Implement recommendation saving logic
     alert('Recommendation saved! (Premium feature)');
-  };
-
-  // Handle bonus button click
-  const handleBonusClick = () => {
-    setShowComingSoonPopup(true);
-  };
-
-  // Handle response options
-  const handleResponseOption = async (option: string) => {
-    if (option === "Leave a review on AICURATE") {
-      handleBonusClick();
-      return;
-    }
-
-    const userMessage: Message = { role: 'user', content: option, step: currentStep };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('/api/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input: option,
-          userId,
-          currentStep,
-          messages: [...messages, userMessage],
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.currentStep) setCurrentStep(data.currentStep);
-      
-      // Check if this is a prompt for email
-      if (data.message.includes("Would you like me to notify you when new tools match your needs?")) {
-        setShowEmailInput(true);
-      }
-      
-      // Check if this is an AI Tool Recommendation
-      if (data.data?.recommendation && currentStep === 'select') {
-        setRecommendation(data.data.recommendation);
-        setShowRecommendation(true);
-      }
-      
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: data.message,
-        step: data.currentStep || detectStepFromContent(data.message),
-        responseOptions: data.data?.responseOptions || data.responseOptions
-      }]);
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'I apologize, but I encountered an error. Please try again.',
-        step: currentStep
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -572,9 +580,8 @@ export default function AgentGuideScreen() {
           </p>
         </div>
 
-        {/* Progress Bar - Temporarily disabled
+        {/* Progress Bar */}
         <StepProgress currentStep={currentStep} sessionTime={sessionTime} />
-        */}
 
         {/* Chat Container */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 h-[600px] flex flex-col">
@@ -631,17 +638,62 @@ export default function AgentGuideScreen() {
                     
                     {/* Response options as buttons */}
                     {message.role === 'assistant' && message.responseOptions && message.responseOptions.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="mt-3 space-y-2">
                         {message.responseOptions.map((option, optionIndex) => (
-                          <Button
+                          <button
                             key={optionIndex}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleResponseOption(option)}
-                            className="text-xs"
+                            onClick={() => {
+                              setInput(option);
+                              // Auto-send the response option
+                              setTimeout(() => {
+                                const userMessage: Message = { role: 'user', content: option, step: currentStep };
+                                setMessages(prev => [...prev, userMessage]);
+                                setInput('');
+                                setIsLoading(true);
+                                
+                                fetch('/api/agent', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    input: option,
+                                    userId,
+                                    sessionId,
+                                    currentStep,
+                                    messages: [...messages, userMessage],
+                                  }),
+                                })
+                                .then(res => res.json())
+                                .then(data => {
+                                  if (data.currentStep) setCurrentStep(data.currentStep);
+                                  if (data.sessionId) setSessionId(data.sessionId);
+                                  if (data.message.includes('Would you like a copy sent to your email')) setShowEmailInput(true);
+                                  if (data.message.includes('save this recommendation') && data.message.includes('Premium')) setIsPremiumPrompt(true);
+                                  if (data.data?.recommendation && currentStep === 'select') {
+                                    setRecommendation(data.data.recommendation);
+                                    setShowRecommendation(true);
+                                  }
+                                  setMessages(prev => [...prev, { 
+                                    role: 'assistant', 
+                                    content: data.message,
+                                    step: data.currentStep || detectStepFromContent(data.message),
+                                    responseOptions: data.data?.responseOptions || data.responseOptions
+                                  }]);
+                                })
+                                .catch(error => {
+                                  console.error('Error:', error);
+                                  setMessages(prev => [...prev, { 
+                                    role: 'assistant', 
+                                    content: 'I apologize, but I encountered an error. Please try again.',
+                                    step: currentStep
+                                  }]);
+                                })
+                                .finally(() => setIsLoading(false));
+                              }, 100);
+                            }}
+                            className="block w-full text-left px-3 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition-colors text-sm border border-indigo-200 dark:border-indigo-700"
                           >
                             {option}
-                          </Button>
+                          </button>
                         ))}
                       </div>
                     )}
@@ -731,24 +783,6 @@ export default function AgentGuideScreen() {
             onClose={() => setShowRecommendation(false)}
             onSave={handleSaveRecommendation}
           />
-        </div>
-      )}
-
-      {/* Coming Soon Popup */}
-      {showComingSoonPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
-            <h3 className="text-lg font-semibold mb-4">Coming Soon!</h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              This feature is currently under development. Stay tuned for updates!
-            </p>
-            <Button
-              onClick={() => setShowComingSoonPopup(false)}
-              className="w-full"
-            >
-              Close
-            </Button>
-          </div>
         </div>
       )}
     </div>
