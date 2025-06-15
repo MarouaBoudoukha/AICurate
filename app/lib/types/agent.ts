@@ -28,7 +28,7 @@ export interface AITool {
 export interface TasksSession {
   id: string;
   userId: string;
-  step: 'target' | 'assess' | 'sample' | 'knowledge' | 'success' | 'complete';
+  step: 'target' | 'assess' | 'select' | 'complete';
   context: {
     userGoal: string;
     refinedGoal: string;
@@ -59,8 +59,13 @@ export interface AgentResponse {
       nextSteps: string[];
       tips: string[];
       aiCurateScore: number;
+      alternativeTool?: {
+        name: string;
+        score: number;
+        reasoning: string;
+      };
     };
   };
   clarifyingQuestion?: string;
-  nextStep: 'target' | 'assess' | 'sample' | 'knowledge' | 'success' | 'complete';
+  nextStep: 'target' | 'assess' | 'select' | 'complete';
 } 

@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = gemini.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
 
 const SYSTEM_PROMPT = `You are Agent AICurate, a specialized AI-powered curator that helps users find the best AI tools for their tasks. Follow these guidelines:
 

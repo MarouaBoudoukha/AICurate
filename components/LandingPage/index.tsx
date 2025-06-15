@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 
 export function LandingPage() {
-  const [username, setUsername] = useState("");
+  // const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const router = useRouter();
 
@@ -66,13 +67,23 @@ export function LandingPage() {
 
       // STEP 3: Verify on backend
       console.log("Step 3: Verifying with backend...");
+      
+      // Get username from MiniKit user object first, then fallback to manual input
+      const walletUsername = MiniKit.user?.username || email;
+      console.log("Using username:", { 
+        minikitUsername: MiniKit.user?.username, 
+        manualUsername: email, 
+        finalUsername: walletUsername 
+      });
+      
       const verifyResponse = await fetch("/api/complete-siwe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           payload: finalPayload, 
           nonce,
-          username: username || undefined // Pass username if provided
+          email: email || undefined, // Pass email from input
+          username: MiniKit.user?.username || undefined // Pass username from MiniKit
         }),
       });
       
@@ -94,7 +105,7 @@ export function LandingPage() {
       
       // Store individual keys for consistency with your session hook
       localStorage.setItem('worldcoin_user_id', verifyResult.user.id);
-      localStorage.setItem('worldcoin_username', verifyResult.user.name || username);
+      localStorage.setItem('worldcoin_username', verifyResult.user.name || email || 'User');
       
       // STEP 5: Access wallet info from MiniKit
       console.log("Wallet address from payload:", finalPayload.address);
@@ -135,9 +146,9 @@ export function LandingPage() {
             <div className="username-input-container">
               <input
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username (optional)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email (optional)"
                 className="username-input"
               />
             </div>
@@ -153,7 +164,6 @@ export function LandingPage() {
               >
                 {isVerifying ? 'Connecting...' : 'Sign in with Wallet'}
               </motion.button>
-              {/* Temporarily removed guest signup option
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => router.push("/quiz")}
@@ -161,7 +171,6 @@ export function LandingPage() {
               >
                 Continue as Guest
               </motion.button>
-              */}
             </div>
           </div>
         </div>

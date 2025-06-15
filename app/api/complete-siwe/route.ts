@@ -6,16 +6,18 @@ import { prisma } from '@/lib/prisma'
 interface IRequestPayload {
   payload: MiniAppWalletAuthSuccessPayload
   nonce: string
+  email?: string
   username?: string
 }
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { payload, nonce, username } = (await req.json()) as IRequestPayload
+    const { payload, nonce, email, username } = (await req.json()) as IRequestPayload
     
     console.log("Received SIWE verification request:", { 
       nonce, 
       address: payload.address,
+      email,
       username 
     });
     
@@ -60,13 +62,19 @@ export const POST = async (req: NextRequest) => {
       let user
       if (!existingUser) {
         // Create new user with wallet address
-        const displayName = username || `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+        // Prioritize MiniKit username, then email, then wallet address format
+        const displayName = (username && username.trim() !== '') 
+          ? username 
+          : (email && email.trim() !== '') 
+            ? email 
+            : `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+        
         user = await prisma.user.create({
           data: {
             worldcoinId: walletAddress,
             name: displayName,
             username: displayName,
-            email: walletAddress, // Store wallet address in email field for now
+            email: email || walletAddress, // Store email if provided, otherwise wallet address
             isVerified: true,
             userType: "INDIVIDUAL",
             experienceLevel: "BEGINNER",
@@ -80,7 +88,7 @@ export const POST = async (req: NextRequest) => {
             onboardingCompleted: false,
           }
         })
-        console.log("Wallet user created:", user.id)
+        console.log("Wallet user created:", user.id, "with name:", displayName)
       } else {
         // Update existing user
         const updateData: any = {
@@ -88,10 +96,17 @@ export const POST = async (req: NextRequest) => {
           lastActiveAt: new Date(),
         }
         
-        // Update username if provided from MiniKit
-        if (username && username !== existingUser.username) {
+        // Update username if provided from MiniKit and it's different from current
+        if (username && username.trim() !== '' && username !== existingUser.username) {
           updateData.name = username
           updateData.username = username
+          console.log("Updating username from", existingUser.username, "to", username)
+        }
+        
+        // Update email if provided and different from current
+        if (email && email.trim() !== '' && email !== existingUser.email) {
+          updateData.email = email
+          console.log("Updating email from", existingUser.email, "to", email)
         }
         
         user = await prisma.user.update({

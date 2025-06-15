@@ -6,7 +6,7 @@ export function GET(req: NextRequest) {
   const nonce = crypto.randomUUID().replace(/-/g, "");
 
   // Store nonce in cookies with proper expiration
-  cookies().set("siwe", nonce, {
+  cookies().set("siwe", nonce, { 
     secure: process.env.NODE_ENV === 'production', // Only secure in production
     httpOnly: true,
     sameSite: 'strict',

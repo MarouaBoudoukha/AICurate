@@ -29,15 +29,15 @@ const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       if (!user?.id) return false;
       const existing = await prisma.user.findUnique({ where: { id: user.id } });
-      if (!existing) {
-        await prisma.user.create({
-          data: {
-            id: user.id,
-            name: user.name,
-          }
-        });
-      }
-      return true;
+        if (!existing) {
+          await prisma.user.create({
+            data: {
+              id: user.id,
+              name: user.name,
+            }
+          });
+        }
+        return true;
     },
   },
   debug: process.env.NODE_ENV === "development",

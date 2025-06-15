@@ -418,9 +418,9 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       const selectedOption = step.options.find(opt => opt.label === value);
       const tribe = selectedOption?.tribe || '';
       
-      return (
+        return (
         <div className="space-y-4">
-          <select
+            <select
             className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400 bg-white"
             value={value}
             onChange={(e) => {
@@ -430,15 +430,15 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                 setSelectedTribe(selected.tribe);
               }
             }}
-          >
+            >
             <option value="" disabled>Select your country</option>
             {step.options.map((option) => (
               <option key={option.label} value={option.label}>{option.label}</option>
-            ))}
-          </select>
+              ))}
+            </select>
           
-          <input
-            type="text"
+                  <input
+                    type="text"
             className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400"
             placeholder="Enter your city"
             value={city}
@@ -456,8 +456,8 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
               </p>
             </motion.div>
           )}
-        </div>
-      );
+          </div>
+        );
     }
     if (step.type === 'multi') {
       const selected: string[] = answers[step.key] || [];
@@ -616,15 +616,15 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
         return currentAnswers.length > 0;
       case 'dropdown':
         // Make city required for location step
-        if (step.key === 'location') {
+    if (step.key === 'location') {
           return currentAnswers && answers.city && currentAnswers.trim() !== '' && answers.city.trim() !== '';
-        }
+    }
         return currentAnswers;
       case 'radio':
       case 'single':
         return currentAnswers.length > 0;
       default:
-        return false;
+    return false;
     }
   };
 

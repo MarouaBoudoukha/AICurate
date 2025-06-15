@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   });
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
   return NextResponse.json(user);
-}
+} 
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {

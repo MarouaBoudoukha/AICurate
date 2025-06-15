@@ -1,0 +1,721 @@
+import { PrismaClient, PricingModel, Complexity, ToolStatus, TasksStep, UserType, MessageRole } from '@prisma/client';
+import { OpenAI } from 'openai';
+
+// --- User Profile and Session Types ---
+interface UserProfile {
+  id: string;
+  name: string;
+  userType: UserType;
+  experienceLevel: string;
+  interests: string[];
+  region: string;
+  preferences: any;
+  teamId?: string;
+}
+
+interface AgentSession {
+  id: string;
+  userId: string;
+  teamId?: string;
+  currentStep: string;
+  userType?: UserType;
+  userGoal?: string;
+  refinedGoal?: string;
+  constraints?: any;
+  recommendations?: any[];
+  finalPick?: string;
+  completed: boolean;
+  // Corporate specific
+  department?: string;
+  objectives?: string[];
+  budgetRange?: string;
+  integrationNeeds?: string[];
+  complianceReqs?: string[];
+}
+
+interface AgentResponse {
+  message: string;
+  currentStep: string;
+  data?: {
+    userType?: UserType;
+    constraints?: any;
+    tools?: any[];
+    comparison?: any;
+    recommendation?: any;
+    nextStepPreview?: string;
+    proofPointsEarned?: number;
+    curationTags?: string[];
+    responseOptions?: any[];
+  };
+  clarifyingQuestion?: string;
+  sessionComplete?: boolean;
+}
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  step?: string;
+}
+
+const prisma = new PrismaClient();
+
+export class AgentAICurate {
+  private openai: OpenAI;
+  private session: AgentSession;
+  private userProfile: UserProfile;
+  private currentStep: string;
+  private messages: Message[];
+
+  constructor(apiKey: string, userProfile: UserProfile, existingSession?: any, currentStep?: string, messages?: Message[]) {
+    // Use OpenAI API key from environment (never expose to client)
+    this.openai = new OpenAI({ apiKey });
+    this.userProfile = userProfile;
+    this.currentStep = currentStep || 'intro';
+    this.messages = messages || [];
+    this.session = existingSession || {
+      id: `session_${Date.now()}`,
+      userId: userProfile.id,
+      teamId: userProfile.teamId,
+      currentStep: this.currentStep,
+      completed: false
+    };
+  }
+
+  // --- System Prompt: Encodes all behavioral logic, tone, and flow requirements ---
+  private getSystemPrompt(): string {
+    const persona = `You are AICURATE — an intelligent AI tool curator specialized in finding the perfect AI tool to boost productivity for specific user needs.
+
+Core Mission:
+- Find the ONE perfect AI tool that matches their specific need and boosts their productivity
+- Never repeat what the user just said - build on it naturally
+- Be direct and helpful - avoid unnecessary phrases like "noted!", "got it!", "fantastic!"
+- Provide response options as clickable buttons when appropriate
+- Guide users through TASKS™ framework smoothly
+
+TASKS™ Framework (5 Steps):
+🎯 TARGET: Understand their specific goal - ask follow-up questions to clarify
+🔍 ASSESS: Learn constraints (experience, budget, platform preference) - provide options when possible
+🧪 SAMPLE: Present the ONE perfect AI tool with Compatibility Score™ and brief explanation
+🧠 KNOWLEDGE: Explain why this tool is ideal with specific technical insights
+⭐ SELECT: Deliver final recommendation with clear next steps and value proposition
+
+Conversation Rules:
+- Never repeat user's words back to them
+- Be direct: "What type of tasks?" not "Free options, noted! Now..."
+- Provide response options for common choices (mobile/desktop, beginner/advanced, etc.)
+- In SAMPLE step: Present the tool immediately with score and reasoning
+- Keep responses concise and actionable
+
+Response Options Rules:
+- Only provide response options for constraint questions (experience, budget, platform)
+- Never provide response options for open-ended questions about specific needs
+- Experience level: ["Beginner", "Intermediate", "Advanced"]
+- Platform: ["Mobile app", "Desktop application", "Web-based", "Any platform"]  
+- Budget: ["Free only", "Under $20/month", "Under $50/month", "No budget limit"]
+- Ask ONE constraint at a time with appropriate response options
+
+Response Format:
+CRITICAL: Always return ONLY valid JSON. No additional text before or after the JSON.
+Required JSON structure: { "message": "your response", "currentStep": "current_step", "responseOptions": ["option1", "option2"] }
+For SAMPLE step: { "message": "formatted tool recommendation", "currentStep": "knowledge" }
+For SELECT step: { "message": "final recommendation", "currentStep": "select", "recommendation": {...} }`;
+
+    return persona;
+  }
+
+  private getStepPrompt(): string {
+    const stepPrompts: Record<string, string> = {
+      intro: `Current Step: Intro
+Be direct and engaging. Ask what they want to accomplish.
+JSON schema: { message, currentStep }`,
+      
+      target: `Current Step: Target  
+Ask specific follow-up questions about their goal. Don't repeat what they said.
+Be direct: "What type of tasks?" or "Which platform?"
+JSON schema: { message, currentStep }`,
+      
+      assess: `Current Step: Assess
+First, ask for detailed specific needs - what exactly they want to accomplish with specific aspects.
+Then gather constraints: experience level, budget, platform preference.
+Only provide response options for constraint questions, not for detailed needs.
+JSON schema: { message, currentStep, responseOptions?: ["Option 1", "Option 2", "Option 3"] }`,
+      
+      sample: `Current Step: Sample
+You MUST present ONE specific AI tool using this EXACT format. Do not deviate from this format:
+
+✅ Recommended AI Tool: [Tool Name from Available Tools]
+🌟 AIcurate Compatibility Score™: [Score between 85-98]/100
+📌 Why this tool?
+[Tool Name] is perfect for your [specific need] because it's [reason based on their constraints: free, beginner-friendly, platform preference]. It handles [specific features they need] and is trusted by [reviews]+ developers.
+🚀 Try [Tool Name] Free → — ⭐ [Rating] | 👥 [Reviews]+ human-verified reviews
+💰 You earned +50 ProofPoints™ for this pick! Keep exploring to level up.
+
+Use the tool data from Available Tools section. Match their need: smart contract deployment + NFT minting + frontend integration.
+IMPORTANT: Return ONLY this formatted message, no additional text.
+JSON schema: { message, currentStep }`,
+      
+      knowledge: `Current Step: Knowledge
+Explain why this specific tool is perfect for their exact situation.
+Reference their constraints and how the tool addresses each one.
+JSON schema: { message, currentStep }`,
+      
+      select: `Current Step: Select
+Deliver final recommendation using this exact format:
+
+🧠 Your AIcurate Pick™
+Task: [Rephrased version of user request]
+
+👉 Your AIcurate Pick™
+✅ Tool: [Tool Name]
+🌟 AIcurate Compatibility Score™: [Score]/100
+📌 Why this Pick: [Detailed explanation referencing their specific needs, constraints, and why this tool is perfect]
+🚀 Try [Tool Name] Free → — ⭐ [Rating] | 👥 [Reviews]+ reviews | 💎 Human-Verified
+
+Always thank the user and remind them to return for updated recommendations.
+JSON schema: { message, currentStep, recommendation: { tool, reasoning, nextSteps, compatibilityScore, rating, reviews, curationTags, referralLink, proofPoints } }`
+    };
+
+    return stepPrompts[this.currentStep] || stepPrompts['intro'];
+  }
+
+  // --- Main entry point: process user input and advance the session ---
+  async processUserInput(input: string): Promise<AgentResponse> {
+    // Add user message to conversation history
+    this.messages.push({ role: 'user', content: input, step: this.currentStep });
+
+    // Special case: If we just entered SAMPLE step, immediately provide tool recommendation
+    if (this.currentStep === 'sample' && (input.toLowerCase().includes('desktop') || input.toLowerCase().includes('mobile') || input.toLowerCase().includes('web-based') || input.toLowerCase().includes('any platform') || input.toLowerCase().includes('any'))) {
+      console.log('Auto-triggering SAMPLE step response for platform:', input);
+      const userNeed = this.extractUserNeed();
+      console.log('Extracted user need:', userNeed);
+      const tools = await this.findMatchingTools(userNeed);
+      if (tools.length > 0) {
+        const tool = tools[0];
+        const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, input);
+        const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+        this.messages.push({ role: 'assistant', content: formattedMessage, step: 'knowledge' });
+        this.currentStep = 'knowledge';
+        this.session.currentStep = 'knowledge';
+        return {
+          message: formattedMessage,
+          currentStep: 'knowledge',
+          data: { proofPointsEarned: 50 }
+        };
+      }
+    }
+
+    // Build conversation context
+    const conversationHistory = this.messages.map(msg => 
+      `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+    ).join('\n');
+
+    // Get matching tools for sample/select steps
+    let matchingTools = [];
+    if (this.currentStep === 'sample' || this.currentStep === 'select') {
+      // Extract user need from conversation history
+      const userNeed = this.extractUserNeed();
+      console.log('Current step:', this.currentStep, 'User need:', userNeed);
+      matchingTools = await this.findMatchingTools(userNeed);
+      console.log('Matching tools found:', matchingTools.length, matchingTools.map(t => t.name));
+    }
+
+    // Create prompt with system instructions, step context, and conversation history
+    const systemPrompt = this.getSystemPrompt();
+    const stepPrompt = this.getStepPrompt();
+    const toolsContext = matchingTools.length > 0 ? `\n\nAvailable Tools: ${JSON.stringify(matchingTools)}` : '';
+    const userPrompt = `Conversation History:\n${conversationHistory}\n\nUser Profile: ${JSON.stringify(this.userProfile)}\n\nCurrent Step: ${this.currentStep}${toolsContext}\n\nUser Input: ${input}`;
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          { role: 'system', content: `${systemPrompt}\n\n${stepPrompt}` },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1200
+      });
+
+      console.log('OpenAI raw response:', completion.choices[0].message.content);
+      
+      let response;
+      try {
+        response = JSON.parse(completion.choices[0].message.content || '{}');
+        console.log('Parsed response:', response);
+      } catch (err) {
+        console.error('OpenAI returned invalid JSON:', completion.choices[0].message.content);
+        
+        // For SAMPLE step, create a formatted response if JSON parsing fails
+        if (this.currentStep === 'sample') {
+          const userNeed = this.extractUserNeed();
+          const tools = await this.findMatchingTools(userNeed);
+          if (tools.length > 0) {
+            const tool = tools[0];
+            const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
+            const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+            return {
+              message: formattedMessage,
+              currentStep: 'knowledge',
+              data: { proofPointsEarned: 50 }
+            };
+          }
+        }
+        
+        return await this.getFallbackResponse();
+      }
+
+      // Special handling for SAMPLE step - ensure we have a proper tool recommendation
+      if (this.currentStep === 'sample' && (!response.message || !response.message.includes('✅ Recommended AI Tool:'))) {
+        console.log('SAMPLE step fallback triggered - no proper tool recommendation found');
+        console.log('Current response message:', response.message);
+        const userNeed = this.extractUserNeed();
+        console.log('Extracted user need for fallback:', userNeed);
+        const tools = await this.findMatchingTools(userNeed);
+        console.log('Tools found for fallback:', tools.map(t => t.name));
+        if (tools.length > 0) {
+          const tool = tools[0];
+          const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
+          const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+          console.log('Generated fallback message:', formattedMessage);
+          this.messages.push({ role: 'assistant', content: formattedMessage, step: 'knowledge' });
+          this.currentStep = 'knowledge';
+          this.session.currentStep = 'knowledge';
+          return {
+            message: formattedMessage,
+            currentStep: 'knowledge',
+            data: { proofPointsEarned: 50 }
+          };
+        }
+      }
+
+      // If we're currently in SAMPLE step and got a valid response, move to knowledge
+      if (this.currentStep === 'sample' && response.message && response.message.includes('✅ Recommended AI Tool:')) {
+        this.currentStep = 'knowledge';
+      }
+
+      // Advance to next step based on current step
+      const nextStep = this.getNextStep(this.currentStep);
+      this.currentStep = response.currentStep || nextStep;
+
+      // CRITICAL: If we're in SAMPLE step, we MUST provide a tool recommendation
+      if (this.currentStep === 'sample') {
+        console.log('SAMPLE step detected - forcing tool recommendation');
+        const userNeed = this.extractUserNeed();
+        console.log('User need for SAMPLE step:', userNeed);
+        const tools = await this.findMatchingTools(userNeed);
+        console.log('Tools found for SAMPLE step:', tools.map(t => t.name));
+        if (tools.length > 0) {
+          const tool = tools[0];
+          const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
+          const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+          console.log('Forcing SAMPLE step tool recommendation:', formattedMessage);
+          this.messages.push({ role: 'assistant', content: formattedMessage, step: 'knowledge' });
+          this.currentStep = 'knowledge';
+          this.session.currentStep = 'knowledge';
+          return {
+            message: formattedMessage,
+            currentStep: 'knowledge',
+            data: { proofPointsEarned: 50 }
+          };
+        }
+      }
+
+      // Add assistant message to conversation history
+      this.messages.push({ role: 'assistant', content: response.message, step: this.currentStep });
+
+      // Update session state
+      this.session.currentStep = this.currentStep;
+      if (this.currentStep === 'completed') {
+        this.session.completed = true;
+      }
+
+      return {
+        message: response.message,
+        currentStep: this.currentStep,
+        data: {
+          ...response.data,
+          responseOptions: response.responseOptions
+        },
+        clarifyingQuestion: response.nextQuestion,
+        sessionComplete: this.currentStep === 'select'
+      };
+
+    } catch (error) {
+      console.error('Error in processUserInput:', error);
+      return await this.getFallbackResponse();
+    }
+  }
+
+  private getNextStep(currentStep: string): string {
+    const stepFlow = {
+      intro: 'target',
+      target: 'assess',
+      assess: 'sample',
+      sample: 'knowledge',
+      knowledge: 'select',
+      select: 'select' // Stay on select as final step
+    };
+    return stepFlow[currentStep as keyof typeof stepFlow] || 'target';
+  }
+
+  private async getFallbackResponse(): Promise<AgentResponse> {
+    // For SAMPLE step, provide a formatted tool recommendation
+    if (this.currentStep === 'sample') {
+      const userNeed = this.extractUserNeed();
+      const tools = await this.findMatchingTools(userNeed);
+      if (tools.length > 0) {
+        const tool = tools[0];
+        const compatibilityScore = this.calculateCompatibilityScore(tool, userNeed, 'any platform');
+        const formattedMessage = this.createFormattedToolRecommendation(tool, userNeed, compatibilityScore);
+        return {
+          message: formattedMessage,
+          currentStep: 'knowledge',
+          data: { proofPointsEarned: 50 }
+        };
+      }
+    }
+
+    const fallbacks = {
+      intro: "I'm AICURATE. What do you need to build or accomplish?",
+      target: "Tell me more about what you're trying to build.",
+      assess: "What's your experience level with this type of project?",
+      sample: "Let me find the right tool for your specific needs.",
+      knowledge: "Here's why this tool matches your requirements.",
+      select: "Based on your needs, here's my recommendation.",
+      completed: "You're all set. Check back for updates on new tools."
+    };
+
+    return {
+      message: fallbacks[this.currentStep as keyof typeof fallbacks] || fallbacks.intro,
+      currentStep: this.currentStep,
+      data: {}
+    };
+  }
+
+  // --- AI Tool Matching Logic ---
+  private async findMatchingTools(userNeed?: string): Promise<any[]> {
+    console.log('Finding matching tools for need:', userNeed);
+    
+    try {
+      const need = userNeed?.toLowerCase() || '';
+      let whereClause: any = {
+        status: ToolStatus.ACTIVE,
+        isVerified: true
+      };
+
+      // Enhanced category matching based on user need
+      if (need.includes('smart contract') || need.includes('blockchain') || need.includes('web3') || need.includes('dapp')) {
+        whereClause.OR = [
+          { category: { contains: 'Development', mode: 'insensitive' } },
+          { category: { contains: 'Blockchain', mode: 'insensitive' } },
+          { description: { contains: 'smart contract', mode: 'insensitive' } },
+          { description: { contains: 'blockchain', mode: 'insensitive' } },
+          { name: { in: ['Remix IDE', 'Thirdweb', 'Hardhat'] } } // Fallback to known blockchain tools
+        ];
+      } else if (need.includes('image') || need.includes('photo') || need.includes('picture') || need.includes('visual')) {
+        whereClause.OR = [
+          { category: { contains: 'Image', mode: 'insensitive' } },
+          { category: { contains: 'Photo', mode: 'insensitive' } },
+          { category: { contains: 'Visual', mode: 'insensitive' } },
+          { category: { contains: 'Design', mode: 'insensitive' } }
+        ];
+      } else if (need.includes('video') || need.includes('movie') || need.includes('film')) {
+        whereClause.OR = [
+          { category: { contains: 'Video', mode: 'insensitive' } },
+          { category: { contains: 'Media', mode: 'insensitive' } }
+        ];
+      } else if (need.includes('write') || need.includes('text') || need.includes('content') || need.includes('blog')) {
+        whereClause.OR = [
+          { category: { contains: 'Writing', mode: 'insensitive' } },
+          { category: { contains: 'Content', mode: 'insensitive' } },
+          { category: { contains: 'Text', mode: 'insensitive' } }
+        ];
+      } else if (need.includes('chat') || need.includes('conversation') || need.includes('talk')) {
+        whereClause.OR = [
+          { category: { contains: 'Conversational', mode: 'insensitive' } },
+          { category: { contains: 'Chat', mode: 'insensitive' } }
+        ];
+      } else if (need.includes('music') || need.includes('audio') || need.includes('sound')) {
+        whereClause.OR = [
+          { category: { contains: 'Audio', mode: 'insensitive' } },
+          { category: { contains: 'Music', mode: 'insensitive' } }
+        ];
+      } else if (need.includes('code') || need.includes('programming') || need.includes('development')) {
+        whereClause.OR = [
+          { category: { contains: 'Development', mode: 'insensitive' } },
+          { category: { contains: 'Code', mode: 'insensitive' } },
+          { category: { contains: 'Programming', mode: 'insensitive' } }
+        ];
+      }
+
+      // Get tools from database with intelligent matching
+      const tools = await prisma.aITool.findMany({
+        where: whereClause,
+        orderBy: [
+          { isFeatured: 'desc' },
+          { isTrending: 'desc' },
+          { rating: 'desc' },
+          { popularity: 'desc' }
+        ],
+        take: 3 // Limit to top 3 most relevant tools
+      });
+
+      if (tools.length > 0) {
+        console.log('Using database tools:', tools.map(t => t.name));
+        return tools.map(tool => ({
+          id: tool.id,
+          name: tool.name,
+          description: tool.description,
+          category: tool.category,
+          pricing: {
+            model: tool.pricingModel,
+            details: tool.pricingDetails
+          },
+          features: tool.features,
+          complexity: tool.complexity,
+          rating: tool.rating || 4.5,
+          reviews: tool.reviewCount || 1000,
+          url: tool.website,
+          curationTags: [
+            tool.isVerified ? 'Human-Verified' : '',
+            tool.isTrending ? 'Trending' : '',
+            tool.isFeatured ? 'Featured' : '',
+            'AIcurate Curated'
+          ].filter(Boolean)
+        }));
+      }
+
+      // If no specific matches, get top trending tools
+      const fallbackTools = await prisma.aITool.findMany({
+        where: {
+          status: ToolStatus.ACTIVE,
+          isVerified: true,
+          isTrending: true
+        },
+        orderBy: [
+          { popularity: 'desc' },
+          { rating: 'desc' }
+        ],
+        take: 3
+      });
+
+      if (fallbackTools.length > 0) {
+        console.log('Using fallback trending tools:', fallbackTools.map(t => t.name));
+        return fallbackTools.map(tool => ({
+          id: tool.id,
+          name: tool.name,
+          description: tool.description,
+          category: tool.category,
+          pricing: {
+            model: tool.pricingModel,
+            details: tool.pricingDetails
+          },
+          features: tool.features,
+          complexity: tool.complexity,
+          rating: tool.rating || 4.5,
+          reviews: tool.reviewCount || 1000,
+          url: tool.website,
+          curationTags: [
+            tool.isVerified ? 'Human-Verified' : '',
+            tool.isTrending ? 'Trending' : '',
+            'AIcurate Curated'
+          ].filter(Boolean)
+        }));
+      }
+
+      // Final fallback to mock tools for blockchain-specific needs
+      if (need.includes('smart contract') || need.includes('nft') || need.includes('dapp') || 
+          need.includes('deploy') || need.includes('mint') || need.includes('blockchain') || 
+          need.includes('web3')) {
+        console.log('Using blockchain-specific mock tools as final fallback');
+        return this.getMockToolsForNeed(userNeed);
+      }
+
+      // Return empty array if no tools found
+      return [];
+
+    } catch (error) {
+      console.error('Error finding matching tools:', error);
+      // Fallback to mock tools for blockchain needs
+      const need = userNeed?.toLowerCase() || '';
+      if (need.includes('smart contract') || need.includes('nft') || need.includes('dapp') || 
+          need.includes('deploy') || need.includes('mint') || need.includes('blockchain') || 
+          need.includes('web3')) {
+        return this.getMockToolsForNeed(userNeed);
+      }
+      return [];
+    }
+  }
+
+  private getMockToolsForNeed(userNeed?: string): any[] {
+    console.log('getMockToolsForNeed called with:', userNeed);
+    
+    const mockTools = {
+      'smart_contract': {
+        name: 'Remix IDE',
+        description: 'Web-based IDE for Ethereum smart contract development',
+        rating: 4.7,
+        reviews: 2500,
+        url: 'https://remix.ethereum.org',
+        category: 'Blockchain Development',
+        pricing: { model: 'FREE', details: 'Completely free' },
+        features: ['Smart Contract Compilation', 'Deployment', 'Testing', 'Debugging'],
+        complexity: 'BEGINNER',
+        curationTags: ['Human-Verified', 'Free', 'Web-based']
+      },
+      'nft_minting': {
+        name: 'OpenSea Creator Studio',
+        description: 'No-code NFT creation and minting platform',
+        rating: 4.5,
+        reviews: 1800,
+        url: 'https://opensea.io/create',
+        category: 'NFT Creation',
+        pricing: { model: 'FREE', details: 'Free with gas fees' },
+        features: ['NFT Minting', 'Collection Management', 'Metadata Generation'],
+        complexity: 'BEGINNER',
+        curationTags: ['Human-Verified', 'No-Code', 'Popular']
+      },
+      'dapp_development': {
+        name: 'Thirdweb',
+        description: 'Complete web3 development platform with smart contract deployment, NFT minting, and frontend SDKs',
+        rating: 4.8,
+        reviews: 3200,
+        url: 'https://thirdweb.com',
+        category: 'Web3 Development',
+        pricing: { model: 'FREE', details: 'Free tier with generous limits' },
+        features: ['Smart Contract Deployment', 'NFT Minting', 'Frontend SDK Integration', 'Testing & Debugging', 'Dashboard Management'],
+        complexity: 'BEGINNER',
+        curationTags: ['Human-Verified', 'Developer-Friendly', 'Trending', 'Full-Stack']
+      }
+    };
+
+    // Match user need to appropriate tool
+    const need = userNeed?.toLowerCase() || '';
+    console.log('Analyzing need:', need);
+    
+    // For complex needs involving multiple aspects, prioritize the most comprehensive tool
+    if ((need.includes('smart contract') && need.includes('nft')) || 
+        (need.includes('deploy') && need.includes('mint')) ||
+        (need.includes('dapp') && (need.includes('nft') || need.includes('smart contract')))) {
+      console.log('Selected comprehensive tool: Thirdweb');
+      return [mockTools.dapp_development]; // Thirdweb handles full stack web3 development
+    } else if (need.includes('smart contract') || need.includes('deploy')) {
+      console.log('Selected smart contract tool: Remix IDE');
+      return [mockTools.smart_contract];
+    } else if (need.includes('nft') || need.includes('mint')) {
+      console.log('Selected NFT tool: OpenSea Creator Studio');
+      return [mockTools.nft_minting];
+    } else if (need.includes('dapp') || need.includes('web3')) {
+      console.log('Selected DAPP tool: Thirdweb');
+      return [mockTools.dapp_development];
+    }
+
+    // Default to comprehensive tool for blockchain-related needs
+    console.log('Using default comprehensive tool: Thirdweb');
+    return [mockTools.dapp_development];
+  }
+
+  // --- Helper Methods ---
+  private extractUserNeed(): string {
+    // Extract the main user need from conversation history
+    const userMessages = this.messages.filter(msg => msg.role === 'user');
+    
+    // Look for messages that contain substantial project descriptions
+    for (const message of userMessages) {
+      const content = message.content.toLowerCase();
+      // Look for messages with project-related keywords
+      if (content.includes('smart contract') || content.includes('nft') || content.includes('dapp') || 
+          content.includes('deploy') || content.includes('mint') || content.includes('frontend') ||
+          content.includes('integrate') || content.includes('blockchain') || content.includes('web3')) {
+        console.log('Found relevant user need:', message.content);
+        return message.content;
+      }
+    }
+    
+    // Fallback to the first substantial message (longer than 10 characters)
+    const substantialMessage = userMessages.find(msg => msg.content.length > 10);
+    if (substantialMessage) {
+      console.log('Using fallback user need:', substantialMessage.content);
+      return substantialMessage.content;
+    }
+    
+    return '';
+  }
+
+  private createFormattedToolRecommendation(tool: any, userNeed: string, compatibilityScore?: number): string {
+    const score = compatibilityScore || Math.floor(Math.random() * (98 - 85 + 1)) + 85; // Random score between 85-98 if not provided
+    
+    return `✅ Recommended AI Tool: ${tool.name}
+🌟 AIcurate Compatibility Score™: ${score}/100
+📌 Why this tool?
+${tool.name} is perfect for your ${userNeed.toLowerCase()} because it's ${tool.pricing.model === 'FREE' ? 'completely free' : 'affordable'}, ${tool.complexity === 'BEGINNER' ? 'beginner-friendly' : 'suitable for your experience level'}, and ${tool.curationTags.includes('Web-based') ? 'web-based as you prefer' : 'available on your preferred platform'}. It handles ${tool.features.join(', ')} and is trusted by ${tool.reviews}+ developers.
+🚀 Try ${tool.name} Free → — ⭐ ${tool.rating} | 👥 ${tool.reviews}+ human-verified reviews
+💰 You earned +50 ProofPoints™ for this pick! Keep exploring to level up.`;
+  }
+
+  private calculateCompatibilityScore(tool: any, userNeed: string, platformPreference: string): number {
+    let score = 0;
+    
+    // Task Relevance (40% weight)
+    const taskRelevance = this.calculateTaskRelevance(tool, userNeed);
+    score += taskRelevance * 0.4;
+    
+    // Budget Fit (20% weight) - assuming free tools get max score for "free only" users
+    const budgetFit = tool.pricing.model === 'FREE' ? 1.0 : 0.7; // Free tools score higher
+    score += budgetFit * 0.2;
+    
+    // User Skill Match (15% weight) - beginner tools for beginner users
+    const skillMatch = tool.complexity === 'BEGINNER' ? 1.0 : 0.8;
+    score += skillMatch * 0.15;
+    
+    // Regional Suitability (10% weight) - assume all tools are globally available
+    const regionalSuitability = 1.0;
+    score += regionalSuitability * 0.1;
+    
+    // User Ratings & Reviews (10% weight)
+    const ratingScore = tool.rating / 5.0; // Normalize 5-star rating to 0-1
+    score += ratingScore * 0.1;
+    
+    // Trending Status (5% weight)
+    const trendingScore = tool.curationTags.includes('Trending') ? 1.0 : 0.6;
+    score += trendingScore * 0.05;
+    
+    // Convert to 0-100 scale and ensure it's in the 85-98 range for high-quality tools
+    const finalScore = Math.max(85, Math.min(98, Math.round(score * 100)));
+    return finalScore;
+  }
+
+  private calculateTaskRelevance(tool: any, userNeed: string): number {
+    const need = userNeed.toLowerCase();
+    const toolCategory = tool.category.toLowerCase();
+    const toolFeatures = tool.features.map((f: string) => f.toLowerCase());
+    
+    // High relevance for exact matches
+    if (need.includes('smart contract') && (toolCategory.includes('blockchain') || toolFeatures.some((f: string) => f.includes('contract')))) {
+      return 1.0;
+    }
+    if (need.includes('nft') && (toolCategory.includes('nft') || toolFeatures.some((f: string) => f.includes('nft')))) {
+      return 1.0;
+    }
+    if (need.includes('dapp') && (toolCategory.includes('web3') || toolCategory.includes('blockchain'))) {
+      return 1.0;
+    }
+    
+    // Medium relevance for related matches
+    if (need.includes('deploy') && toolFeatures.some((f: string) => f.includes('deployment'))) {
+      return 0.8;
+    }
+    if (need.includes('frontend') && toolFeatures.some((f: string) => f.includes('sdk') || f.includes('integration'))) {
+      return 0.8;
+    }
+    
+    // Default relevance
+    return 0.6;
+  }
+
+  // --- Session State Management ---
+  public getSessionState(): AgentSession {
+    return this.session;
+  }
+}
+ 
