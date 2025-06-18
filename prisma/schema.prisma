@@ -43,6 +43,12 @@ model User {
   badges            String[]
   streak            Int               @default(0)
   
+  // Badge Minting Status
+  hasCompletedQuiz  Boolean           @default(false)
+  hasMintedBadge    Boolean           @default(false)
+  badgeTransactionId String?
+  badgeMintedAt     DateTime?
+  
   // Subscription & Payments
   subscriptionStatus SubscriptionStatus @default(FREE)
   subscriptionEndDate DateTime?
@@ -72,6 +78,7 @@ model User {
   referredBy        Referral[]        @relation("ReferredUser")
   notifications     Notification[]
   toolUsages        ToolUsage[]
+  badgeMints        BadgeMint[]
   
   @@map("users")
   @@index([email])
@@ -81,6 +88,8 @@ model User {
   @@index([level])
   @@index([subscriptionStatus])
   @@index([createdAt])
+  @@index([hasMintedBadge])
+  @@index([hasCompletedQuiz])
 }
 
 // =====================================================
@@ -1087,4 +1096,42 @@ model UserTrophy {
   @@map("user_trophies")
   @@index([userId])
   @@index([trophyName])
+}
+
+// =====================================================
+// BADGE MINTING TRACKING
+// =====================================================
+
+model BadgeMint {
+  id              String    @id @default(cuid())
+  userId          String
+  badgeName       String
+  badgeType       String    @default("EdgeEsmeralda")
+  contractAddress String
+  tokenId         String
+  transactionId   String    @unique
+  blockNumber     String?
+  status          MintStatus @default(PENDING)
+  
+  // Additional metadata
+  nullifierHash   String?
+  userAddress     String
+  network         String    @default("World Chain Sepolia")
+  
+  mintedAt        DateTime  @default(now())
+  confirmedAt     DateTime?
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("badge_mints")
+  @@index([userId])
+  @@index([transactionId])
+  @@index([status])
+  @@index([badgeType])
+}
+
+enum MintStatus {
+  PENDING
+  CONFIRMED
+  FAILED
 }

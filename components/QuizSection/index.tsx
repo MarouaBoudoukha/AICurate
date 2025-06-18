@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { MiniKit } from '@worldcoin/minikit-js';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
+import { useEdgeEsmeralda } from '../../hooks/useEdgeEsmeralda';
 
 // Quiz step definitions
 const quizSteps: QuizStep[] = [
@@ -312,6 +313,7 @@ interface QuizStep {
 
 export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } = {}) {
   const unifiedSession = useUnifiedSession();
+  const { mintEdgeEsmeralda, loading: mintLoading, error: mintHookError } = useEdgeEsmeralda();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [otherInputs, setOtherInputs] = useState<Record<string, any>>({});
@@ -322,6 +324,9 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   const [mintError, setMintError] = useState<string | null>(null);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const [showMintSuccess, setShowMintSuccess] = useState(false);
+  const [showAlreadyMinted, setShowAlreadyMinted] = useState(false);
+  const [mintResult, setMintResult] = useState<any>(null);
+  const [badgeStatus, setBadgeStatus] = useState<any>(null);
   const router = useRouter();
 
   // Get user ID from session, localStorage, or generate guest ID
@@ -334,6 +339,24 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       return guestId;
     }
     return userId;
+  };
+
+  // Check badge status
+  const checkBadgeStatus = async () => {
+    try {
+      const worldcoinId = unifiedSession.user?.worldcoinId;
+      if (!worldcoinId) return null;
+
+      const response = await fetch(`/api/user/badge-status?worldcoinId=${worldcoinId}`);
+      if (response.ok) {
+        const status = await response.json();
+        setBadgeStatus(status);
+        return status;
+      }
+    } catch (error) {
+      console.error('Error checking badge status:', error);
+    }
+    return null;
   };
 
   // Country grid selection handler
@@ -641,35 +664,35 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       try {
         const userId = getUserId();
         console.log('User ID:', userId);
-        
+
         if (userId) {
-          // Format answers for database
-          const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
-            questionId,
+        // Format answers for database
+        const formattedAnswers = Object.entries(answers).map(([questionId, answer]) => ({
+          questionId,
             answer: Array.isArray(answer) ? answer.join(', ') : String(answer),
             score: 1
-          }));
+        }));
 
           console.log('Formatted answers:', formattedAnswers);
 
-          // Save to database
-          const response = await fetch('/api/quiz', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId,
-              answers: formattedAnswers
-            }),
-          });
+        // Save to database
+        const response = await fetch('/api/quiz', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId,
+            answers: formattedAnswers
+          }),
+        });
 
           if (response.ok) {
             console.log('Quiz answers saved successfully');
           } else {
             const errorData = await response.text();
             console.error('Failed to save quiz answers:', errorData);
-          }
+        }
         } else {
           console.log('No user ID found - skipping database save');
         }
@@ -682,35 +705,139 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
     }
   };
 
-
-
   const handleMintNFT = async () => {
     setIsMinting(true);
     setMintError(null);
     
     try {
-      // Check if MiniKit is installed in the browser
-      if (MiniKit.isInstalled()) {
-        console.log('MiniKit is available - user has World App');
-        // You can add actual minting logic here if needed
-      } else {
-        console.log('MiniKit not available - user doesn\'t have World App');
+      // First check if user has already minted
+      const status = await checkBadgeStatus();
+      if (status?.hasMintedBadge && status?.badgeDetails) {
+        console.log('User has already minted badge:', status.badgeDetails);
+        setBadgeStatus(status);
+        setShowReveal(false);
+        setShowAlreadyMinted(true);
+        setIsMinting(false);
+        return;
       }
-    } catch (error) {
-      console.log('MiniKit check failed:', error);
-    }
-    
-    // Always show success after a short delay
-    setTimeout(() => {
+
+      // Check if MiniKit is installed
+      if (!MiniKit.isInstalled()) {
+        throw new Error('Please install World App to mint your badge');
+      }
+
+      // Get user's wallet address from multiple sources
+      let userAddress = null;
+      
+      // First try to get from unified session
+      if (unifiedSession.user?.worldcoinId) {
+        userAddress = unifiedSession.user.worldcoinId;
+      }
+      
+      // Then try localStorage (where SIWE stores the wallet info)
+      if (!userAddress && typeof window !== 'undefined') {
+        const storedAddress = localStorage.getItem('worldcoin_wallet_address');
+        if (storedAddress) {
+          userAddress = storedAddress;
+        }
+      }
+      
+      // Finally try MiniKit directly
+      if (!userAddress && MiniKit.isInstalled() && (MiniKit as any).walletAddress) {
+        userAddress = (MiniKit as any).walletAddress;
+      }
+      
+      // Log for debugging
+      console.log('🔍 Checking wallet addresses:', {
+        fromSession: unifiedSession.user?.worldcoinId,
+        fromLocalStorage: typeof window !== 'undefined' ? localStorage.getItem('worldcoin_wallet_address') : null,
+        fromMiniKit: MiniKit.isInstalled() ? (MiniKit as any).walletAddress : null,
+        finalAddress: userAddress
+      });
+      
+      if (!userAddress) {
+        throw new Error('No wallet address found. Please make sure you\'re signed in with World App.');
+      }
+
+      // Generate a nullifier hash (in production, this would come from World ID verification)
+      const nullifierData = `${userAddress}-${Date.now()}-${Math.random()}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(nullifierData);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const nullifierHash = `0x${hashArray.map(b => b.toString(16).padStart(2, '0')).join('')}`;
+
+      console.log('🎯 Minting EdgeEsmeralda badge...', { userAddress, nullifierHash });
+
+      // Use the EdgeEsmeralda hook to mint
+      const result = await mintEdgeEsmeralda(userAddress, nullifierHash);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to mint badge');
+      }
+
+      console.log('✅ Badge minted successfully!', result);
+
+      // Record the mint in the database
+      try {
+        const recordResponse = await fetch('/api/badge/mint', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            worldcoinId: unifiedSession.user?.worldcoinId,
+            transactionId: result.transactionId,
+            userAddress,
+            nullifierHash,
+            badgeName: 'EdgeEsmeralda Badge'
+          }),
+        });
+
+        if (recordResponse.ok) {
+          console.log('Badge mint recorded in database');
+        } else {
+          console.error('Failed to record badge mint in database');
+        }
+      } catch (dbError) {
+        console.error('Error recording badge mint:', dbError);
+        // Continue anyway - user experience should not be blocked
+      }
+      
+      // Store result for success popup
+      setMintResult({
+        ...result,
+        userAddress,
+        nullifierHash,
+        badgeName: 'EdgeEsmeralda Badge',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Store mint result in localStorage for wallet display
+      localStorage.setItem('lastMintResult', JSON.stringify({
+        ...result,
+        userAddress,
+        nullifierHash,
+        badgeName: 'EdgeEsmeralda Badge',
+        timestamp: new Date().toISOString()
+      }));
+      
+      // Show success after minting
       setIsMinting(false);
       setShowReveal(false);
       setShowMintSuccess(true);
-    }, 2000);
+
+    } catch (error) {
+      console.error('❌ Minting failed:', error);
+      setMintError(error instanceof Error ? error.message : 'Failed to mint badge');
+      setIsMinting(false);
+    }
   };
 
   const handleViewWallet = () => {
     setShowMintSuccess(false);
-    router.push("/challenge/start");
+    // Use replace instead of push to avoid navigation issues
+    router.replace("/settings/wallet");
   };
 
   // --- Main render ---
@@ -866,20 +993,35 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                 {/* Transaction Details Section */}
                 <div className="w-full max-w-xs mx-auto mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    🧾 Transaction Details
+                    🧾 Minting Details
                   </h3>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm text-gray-600">Badge:</span>  
-                      <span className="text-sm font-medium">Explorer Badge</span>
+                      <span className="text-sm font-medium">{mintResult?.badgeName || 'EdgeEsmeralda Explorer'}</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm text-gray-600">Reward:</span>
-                      <span className="text-sm font-medium">50 ProofPoints™</span>
+                      <span className="text-sm text-gray-600">Contract:</span>
+                      <span className="text-sm font-medium">ERC1155</span>
                     </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Network:</span>
+                      <span className="text-sm font-medium">World Chain</span>
+                    </div>
+                    {mintResult?.transactionId && (
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm text-gray-600">TX ID:</span>
+                        <span className="text-xs font-mono bg-white px-1 py-0.5 rounded border max-w-[120px] overflow-hidden text-ellipsis">
+                          {mintResult.transactionId.slice(0, 10)}...{mintResult.transactionId.slice(-6)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className="text-sm font-medium text-green-600">Completed</span>
+                      <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Minted Successfully
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -887,21 +1029,33 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                 {/* Messages */}
                 <div className="text-center mb-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    Your badges, coins live in your wallet.
+                    Your badge has been successfully minted to your wallet!
                   </p>
                   <p className="text-xs text-gray-500">
-                    NFT minting details will be available soon
+                    View transaction details and collectibles in your wallet
                   </p>
                 </div>
 
-                {/* CTA Button */}
-                <button
-                  onClick={handleViewWallet}
-                  className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
-                  style={{ minHeight: 56 }}
-                >
-                  Start your AI Hunt →
-                </button>
+                {/* CTA Buttons */}
+                <div className="w-full space-y-3">
+                  <button
+                    onClick={handleViewWallet}
+                    className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
+                    style={{ minHeight: 56 }}
+                  >
+                    Go to Wallet 🎒
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setShowMintSuccess(false);
+                      router.push("/challenge/start");
+                    }}
+                    className="w-full px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium rounded-lg transition-all"
+                  >
+                    Start AI Hunt →
+                  </button>
+                </div>
 
                 {/* Confetti celebration animation */}
                 <Confetti
@@ -910,6 +1064,100 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                   recycle={false}
                   numberOfPieces={150}
                 />
+              </motion.div>
+            )}
+
+            {/* Already Minted Popup */}
+            {showAlreadyMinted && badgeStatus?.badgeDetails && (
+              <motion.div
+                key="already-minted"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="absolute inset-0 p-4 sm:p-8 bg-white rounded-lg shadow-lg text-center flex flex-col items-center justify-center z-20 max-w-md mx-auto my-auto space-y-5"
+              >
+                {/* Headline */}
+                <div className="w-full flex flex-col items-center mb-4">
+                  <div className="text-2xl font-bold text-gray-900 mb-2">
+                    Badge Already Minted! ✨
+                  </div>
+                  <div className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <span className="text-blue-600 font-bold text-lg">You already own this badge!</span>
+                  </div>
+                </div>
+
+                {/* Badge visual */}
+                <div className="relative w-full aspect-square max-w-[140px] mx-auto mb-4">
+                  <Image
+                    src="/badges/Edge_Badge.png"
+                    alt="Explorer Badge"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 140px) 100vw, 140px"
+                    priority
+                  />
+                </div>
+
+                {/* Badge Details Section */}
+                <div className="w-full max-w-xs mx-auto mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    🎯 Your Badge Details
+                  </h3>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Badge:</span>  
+                      <span className="text-sm font-medium">{badgeStatus.badgeDetails.badgeName}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Network:</span>
+                      <span className="text-sm font-medium">{badgeStatus.badgeDetails.network}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-600">Minted:</span>
+                      <span className="text-sm font-medium">
+                        {new Date(badgeStatus.badgeDetails.mintedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-sm text-gray-600">TX ID:</span>
+                      <span className="text-xs font-mono bg-white px-1 py-0.5 rounded border max-w-[120px] overflow-hidden text-ellipsis">
+                        {badgeStatus.badgeDetails.transactionId.slice(0, 10)}...{badgeStatus.badgeDetails.transactionId.slice(-6)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Confirmed
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    This badge is already in your wallet. You can view it and all your collectibles anytime!
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Each user can only mint one EdgeEsmeralda badge
+                  </p>
+                </div>
+
+                {/* CTA Button */}
+                <div className="w-full">
+                  <button
+                    onClick={() => {
+                      setShowAlreadyMinted(false);
+                      // Use replace to avoid navigation issues
+                      router.replace("/settings/wallet");
+                    }}
+                    className="w-full px-4 py-3 text-white bg-[#8b5cf6] hover:bg-[#7c3aed] font-bold text-lg rounded-2xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
+                    style={{ minHeight: 56 }}
+                  >
+                    View in Wallet 🎒
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

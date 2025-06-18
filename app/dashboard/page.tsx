@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { UserCircle, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 
 // ProofProfile Home Screen (formerly Dashboard)
@@ -10,6 +10,10 @@ export default function ProofProfile() {
   const router = useRouter();
   const unifiedSession = useUnifiedSession();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State declarations must come before any conditional logic
+  const [proofPoints, setProofPoints] = useState(50);
+  const [credits, setCredits] = useState(3);
 
   // Redirect to landing if not authenticated
   useEffect(() => {
@@ -17,6 +21,31 @@ export default function ProofProfile() {
       router.push('/landing');
     }
   }, [unifiedSession.status, router]);
+
+  // Load user data like wallet does
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userId = unifiedSession.user?.id;
+        if (!userId) return;
+
+        // Fetch user's real data from database (same as wallet)
+        const response = await fetch(`/api/user/badges?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProofPoints(data.proofPoints || 50);
+          // Keep credits as is for now, or set to a default
+          setCredits(3);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    if (unifiedSession.status !== 'loading' && unifiedSession.user?.id) {
+      loadUserData();
+    }
+  }, [unifiedSession.status, unifiedSession.user?.id]);
 
   // Show loading state
   if (unifiedSession.status === 'loading') {
@@ -30,8 +59,6 @@ export default function ProofProfile() {
 
   // Get user data from session or use defaults
   const username = unifiedSession.user?.name || 'Explorer';
-  const proofPoints = 1250; // TODO: Get from API
-  const credits = 3; // TODO: Get from API
 
   // Avatar upload handler (placeholder, no upload logic)
   const handleAvatarClick = () => {
@@ -112,13 +139,7 @@ export default function ProofProfile() {
         >
           Start New Hunt
         </motion.button>
-        <motion.button
-          className="w-full bg-gradient-to-r from-yellow-400 to-pink-500 hover:from-yellow-500 hover:to-pink-600 text-white font-semibold py-3 rounded-lg shadow-lg border-0 transition-all focus:ring-2 focus:ring-pink-300 focus:outline-none"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Claim My Rewards
-        </motion.button>
+
       </motion.div>
       {/* Section Links */}
       <motion.div
@@ -153,7 +174,7 @@ export default function ProofProfile() {
             label: 'Hunt Vault',
             desc: 'Phoenix Coins staked here',
             color: 'text-pink-500',
-            to: '/vault',
+            to: '/settings/wallet',
           },
         ].map((item, i) => (
           <motion.div

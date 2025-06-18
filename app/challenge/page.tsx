@@ -1,6 +1,8 @@
 "use client";
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 import { 
   Rocket, 
   ThumbsUp, 
@@ -69,8 +71,34 @@ const challengeSections = [
 
 export default function ChallengePage() {
   const router = useRouter();
-  const credits = 3; // Replace with real credits logic
-  const proofPoints = 150; // Replace with real ProofPoints logic
+  const [credits, setCredits] = useState(3);
+  const [proofPoints, setProofPoints] = useState(150);
+  const unifiedSession = useUnifiedSession();
+
+  // Load user data like wallet does
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userId = unifiedSession?.user?.id;
+        if (!userId) return;
+
+        // Fetch user's real data from database (same as wallet)
+        const response = await fetch(`/api/user/badges?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProofPoints(data.proofPoints || 150);
+          // Keep credits as is for now, or set to a default
+          setCredits(3);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    if (unifiedSession?.status !== 'loading' && unifiedSession?.user?.id) {
+      loadUserData();
+    }
+  }, [unifiedSession?.status, unifiedSession?.user?.id]);
 
   return (
     <motion.div

@@ -56,6 +56,15 @@ export async function POST(req: NextRequest) {
         })
       )
     );
+
+    // Mark quiz as completed
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        hasCompletedQuiz: true,
+        onboardingCompleted: true
+      }
+    });
     
     return NextResponse.json({ success: true, results });
   } catch (error) {

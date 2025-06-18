@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MiniKit } from "@worldcoin/minikit-js";
 import { useUnifiedSession } from "@/hooks/useUnifiedSession";
+import { useEdgeEsmeralda } from "../../../hooks/useEdgeEsmeralda";
 import Image from 'next/image';
 import Confetti from 'react-confetti';
 
@@ -14,6 +15,7 @@ export default function MintBadgePage() {
   const [showConfetti, setShowConfetti] = useState(true);
   const router = useRouter();
   const unifiedSession = useUnifiedSession();
+  const { mintEdgeEsmeralda, loading: mintLoading, error: mintHookError } = useEdgeEsmeralda();
 
   useEffect(() => {
     // Check if user is authenticated
@@ -30,60 +32,84 @@ export default function MintBadgePage() {
     return () => clearTimeout(timer);
   }, [unifiedSession.status, router]);
 
-  // Minimal ABI for ERC721 mint function
-  const NFT_ABI = [
-    {
-      "inputs": [
-        { "internalType": "address", "name": "to", "type": "address" },
-        { "internalType": "string", "name": "uri", "type": "string" }
-      ],
-      "name": "safeMint",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    }
-  ];
-  const NFT_CONTRACT_ADDRESS = '0x761eDad8F522a153096110e0B88513BAbb19fCf4';
+  // Using EdgeEsmeralda ERC1155 contract via hook
 
   const handleMintNFT = async () => {
     setIsMinting(true);
     setMintError(null);
+    
     try {
-      if (!MiniKit.isInstalled()) throw new Error('Please install World App to continue');
-      const nonceResponse = await fetch('/api/nonce');
-      if (!nonceResponse.ok) throw new Error('Failed to get nonce');
-      const { nonce } = await nonceResponse.json();
-      if (!(MiniKit as any).walletAddress) {
-        const { finalPayload } = await MiniKit.commandsAsync.walletAuth({
-          nonce,
-          statement: 'Connect your wallet to mint your NFT',
-          expirationTime: new Date(Date.now() + 1000 * 60 * 60)
-        });
-        if (finalPayload.status === 'error') throw new Error('Failed to connect wallet');
-        const verifyResponse = await fetch('/api/complete-siwe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ payload: finalPayload, nonce }),
-        });
-        if (!verifyResponse.ok) throw new Error('Failed to verify wallet connection');
-        const { address } = await verifyResponse.json();
-        if (!address) throw new Error('No wallet address returned');
+      // Check if MiniKit is installed
+      if (!MiniKit.isInstalled()) {
+        throw new Error('Please install World App to mint your badge');
       }
-      const response = await MiniKit.commandsAsync.sendTransaction({
-        transaction: [{
-          address: NFT_CONTRACT_ADDRESS,
-          abi: NFT_ABI,
-          functionName: 'safeMint',
-          args: [(MiniKit as any).walletAddress as string, 'ipfs://QmdStFxJS9SNNEvxAk4U8jiwsEbRoStffQJUDyghxvgcvj/0']
-        }]
+
+      // Get user's wallet address from multiple sources
+      let userAddress = null;
+      
+      // First try to get from unified session
+      if (unifiedSession.user?.worldcoinId) {
+        userAddress = unifiedSession.user.worldcoinId;
+      }
+      
+      // Then try localStorage (where SIWE stores the wallet info)
+      if (!userAddress && typeof window !== 'undefined') {
+        const storedAddress = localStorage.getItem('worldcoin_wallet_address');
+        if (storedAddress) {
+          userAddress = storedAddress;
+        }
+      }
+      
+      // Finally try MiniKit directly
+      if (!userAddress && MiniKit.isInstalled() && (MiniKit as any).walletAddress) {
+        userAddress = (MiniKit as any).walletAddress;
+      }
+      
+      // Log for debugging
+      console.log('🔍 Checking wallet addresses:', {
+        fromSession: unifiedSession.user?.worldcoinId,
+        fromLocalStorage: typeof window !== 'undefined' ? localStorage.getItem('worldcoin_wallet_address') : null,
+        fromMiniKit: MiniKit.isInstalled() ? (MiniKit as any).walletAddress : null,
+        finalAddress: userAddress
       });
-      if (!response?.finalPayload || response.finalPayload.status === 'error') throw new Error('Failed to mint NFT');
-      const transactionId = response.finalPayload.transaction_id;
-      if (transactionId) console.log('Transaction ID:', transactionId);
-      router.push("/dashboard");
+      
+      if (!userAddress) {
+        throw new Error('No wallet address found. Please make sure you\'re signed in with World App.');
+      }
+
+      // Generate a nullifier hash (in production, this would come from World ID verification)
+      const nullifierData = `${userAddress}-${Date.now()}-${Math.random()}`;
+      const encoder = new TextEncoder();
+      const data = encoder.encode(nullifierData);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const nullifierHash = `0x${hashArray.map(b => b.toString(16).padStart(2, '0')).join('')}`;
+
+      console.log('🎯 Minting EdgeEsmeralda badge...', { userAddress, nullifierHash });
+
+      // Use the EdgeEsmeralda hook to mint
+      const result = await mintEdgeEsmeralda(userAddress, nullifierHash);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to mint badge');
+      }
+
+      console.log('✅ Badge minted successfully!', result);
+      
+      // Store mint result in localStorage for wallet display
+      localStorage.setItem('lastMintResult', JSON.stringify({
+        ...result,
+        userAddress,
+        nullifierHash,
+        badgeName: 'EdgeEsmeralda Badge',
+        timestamp: new Date().toISOString()
+      }));
+      
+      router.push("/settings/wallet");
+
     } catch (error) {
-      console.error('Minting error:', error);
-      setMintError(error instanceof Error ? error.message : 'Failed to mint NFT');
+      console.error('❌ Minting failed:', error);
+      setMintError(error instanceof Error ? error.message : 'Failed to mint badge');
     } finally {
       setIsMinting(false);
     }

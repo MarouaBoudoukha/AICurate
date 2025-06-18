@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const tabs = [
   {
-    label: 'ProofProfile',
+    label: 'AI Journey',
     icon: User,
     path: '/dashboard',
     color: 'from-indigo-500 to-purple-500',

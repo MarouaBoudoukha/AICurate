@@ -3,6 +3,17 @@ import { prisma } from '@/lib/prisma';
 
 const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  
+  // Optimize session strategy
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  
+  // Optimize JWT settings
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
 
   providers: [
     {
@@ -29,18 +40,42 @@ const authOptions: NextAuthOptions = {
     async signIn({ user }) {
       if (!user?.id) return false;
       const existing = await prisma.user.findUnique({ where: { id: user.id } });
-        if (!existing) {
-          await prisma.user.create({
-            data: {
-              id: user.id,
-              name: user.name,
-            }
-          });
-        }
-        return true;
+      if (!existing) {
+        await prisma.user.create({
+          data: {
+            id: user.id,
+            name: user.name,
+          }
+        });
+      }
+      return true;
     },
+    async jwt({ token, user }) {
+      // Include user info in JWT to avoid database calls on each request
+      if (user) {
+        token.id = user.id;
+        token.name = user.name;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Get user info from token instead of database
+      if (token && session.user) {
+        (session.user as any).id = token.id as string;
+        session.user.name = token.name as string;
+      }
+      return session;
+    }
   },
+  
+  // Completely disable debug mode for production-like performance
   debug: process.env.NODE_ENV === "development",
+  
+  // Add pages configuration for better performance
+  pages: {
+    signIn: '/auth/signin',
+    error: '/auth/error',
+  }
 };
 
 const handler = NextAuth(authOptions);

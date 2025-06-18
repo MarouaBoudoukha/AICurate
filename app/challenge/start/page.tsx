@@ -2,7 +2,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Coins, Gift, Award, Rocket, ArrowLeft, Users, Clock, Star, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 
 interface BaseChallenge {
   title: string;
@@ -117,8 +118,34 @@ export default function StartChallengePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [proofPoints, setProofPoints] = useState(50); // Replace with real ProofPoints™ logic
-  const credits = 3; // Replace with real credits logic
+  const [proofPoints, setProofPoints] = useState(50);
+  const [credits, setCredits] = useState(3);
+  const unifiedSession = useUnifiedSession();
+
+  // Load user data like wallet does
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const userId = unifiedSession?.user?.id;
+        if (!userId) return;
+
+        // Fetch user's real data from database (same as wallet)
+        const response = await fetch(`/api/user/badges?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setProofPoints(data.proofPoints || 50);
+          // Keep credits as is for now, or set to a default
+          setCredits(3);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+
+    if (unifiedSession?.status !== 'loading' && unifiedSession?.user?.id) {
+      loadUserData();
+    }
+  }, [unifiedSession?.status, unifiedSession?.user?.id]);
 
   const handleJoinChallenge = (challenge: Challenge) => {
     // Only the Edge Esmeralda World Meme Hunt is active
@@ -170,7 +197,7 @@ export default function StartChallengePage() {
             </div>
             <div className="flex items-center gap-2">
               <Star className="w-6 h-6 text-purple-500" />
-              <div>
+          <div>
                 <div className="text-xs text-gray-500">ProofPoints™</div>
                 <div className="text-lg font-bold text-purple-700">{proofPoints}</div>
               </div>
@@ -272,10 +299,10 @@ export default function StartChallengePage() {
               )}
 
               <div className="flex gap-2">
-                <button
-                  onClick={() => handleJoinChallenge(challenge)}
+              <button
+                onClick={() => handleJoinChallenge(challenge)}
                   className="flex-1 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-300 transition"
-                >
+              >
                   Join
                 </button>
                 <button
@@ -283,7 +310,7 @@ export default function StartChallengePage() {
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition"
                 >
                   View
-                </button>
+              </button>
               </div>
             </div>
           </motion.div>

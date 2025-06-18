@@ -106,12 +106,20 @@ export function LandingPage() {
       // Store individual keys for consistency with your session hook
       localStorage.setItem('worldcoin_user_id', verifyResult.user.id);
       localStorage.setItem('worldcoin_username', verifyResult.user.name || email || 'User');
+      localStorage.setItem('worldcoin_wallet_address', finalPayload.address);
       
       // STEP 5: Access wallet info from MiniKit
       console.log("Wallet address from payload:", finalPayload.address);
       console.log("Username from MiniKit:", MiniKit.user?.username);
       
-      router.push("/quiz");
+      // Check if user has already completed quiz/onboarding
+      if (verifyResult.user.hasCompletedQuiz || verifyResult.user.onboardingCompleted) {
+        // User has already completed onboarding, go to dashboard/proofpoints page
+        router.push("/dashboard");
+      } else {
+        // User hasn't completed onboarding, go to quiz
+        router.push("/quiz");
+      }
     } catch (error) {
       console.error("Wallet authentication failed:", error);
       alert(error instanceof Error ? error.message : "Wallet authentication failed");

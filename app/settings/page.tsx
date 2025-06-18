@@ -1,6 +1,6 @@
 "use client";
 import { motion } from 'framer-motion';
-import { User, CreditCard, Vault, Bell, HelpCircle, Shield, LogOut, ChevronRight } from 'lucide-react';
+import { User, CreditCard, Vault, Bell, HelpCircle, Shield, LogOut, ChevronRight, Edit } from 'lucide-react';
 import Link from 'next/link';
 
 const settingsOptions = [
@@ -15,6 +15,12 @@ const settingsOptions = [
     icon: CreditCard,
     color: 'text-purple-600',
     path: '/settings/subscription'
+  },
+  {
+    label: 'Edit Quiz Responses',
+    icon: Edit,
+    color: 'text-orange-500',
+    path: '/settings/quiz'
   },
   {
     label: 'Vault',
