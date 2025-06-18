@@ -47,6 +47,9 @@ importers:
       '@worldcoin/minikit-js':
         specifier: ^1.9.6
         version: 1.9.6(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(typescript@5.8.3)(viem@2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66))(zod@3.25.66)
+      '@worldcoin/minikit-react':
+        specifier: ^1.9.7
+        version: 1.9.7(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(typescript@5.8.3)(viem@2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66))(zod@3.25.66)
       ai:
         specifier: ^4.1.25
         version: 4.3.16(react@18.3.1)(zod@3.25.66)
@@ -113,6 +116,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.19.1)(typescript@5.8.3)))
+      viem:
+        specifier: ^2.31.3
+        version: 2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66)
       zustand:
         specifier: ^5.0.3
         version: 5.0.5(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(use-sync-external-store@1.5.0(react@18.3.1))
@@ -1982,6 +1988,13 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       react: ^17 || ^18 || ^19
+      viem: ^2.23.5
+
+  '@worldcoin/minikit-react@1.9.7':
+    resolution: {integrity: sha512-K/dp2VGPf4VvQwYPK8i4UzW+WuK2J+T70ZHWnF3JiiU7aql5n75d2LIpqEXCC43LFkmu54F7FIxQ+mNQ5Exryg==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      react: ^18 || ^19
       viem: ^2.23.5
 
   abbrev@1.0.9:
@@ -5104,6 +5117,40 @@ packages:
   tsx@4.20.3:
     resolution: {integrity: sha512-qjbnuR9Tr+FJOMBqJCW5ehvIo/buZq7vH7qD7JziU98h6l3qGy0a/yPFjwO+y0/T7GFpNgNAvEcPPVfyT8rrPQ==}
     engines: {node: '>=18.0.0'}
+    hasBin: true
+
+  turbo-darwin-64@2.5.4:
+    resolution: {integrity: sha512-ah6YnH2dErojhFooxEzmvsoZQTMImaruZhFPfMKPBq8sb+hALRdvBNLqfc8NWlZq576FkfRZ/MSi4SHvVFT9PQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  turbo-darwin-arm64@2.5.4:
+    resolution: {integrity: sha512-2+Nx6LAyuXw2MdXb7pxqle3MYignLvS7OwtsP9SgtSBaMlnNlxl9BovzqdYAgkUW3AsYiQMJ/wBRb7d+xemM5A==}
+    cpu: [arm64]
+    os: [darwin]
+
+  turbo-linux-64@2.5.4:
+    resolution: {integrity: sha512-5May2kjWbc8w4XxswGAl74GZ5eM4Gr6IiroqdLhXeXyfvWEdm2mFYCSWOzz0/z5cAgqyGidF1jt1qzUR8hTmOA==}
+    cpu: [x64]
+    os: [linux]
+
+  turbo-linux-arm64@2.5.4:
+    resolution: {integrity: sha512-/2yqFaS3TbfxV3P5yG2JUI79P7OUQKOUvAnx4MV9Bdz6jqHsHwc9WZPpO4QseQm+NvmgY6ICORnoVPODxGUiJg==}
+    cpu: [arm64]
+    os: [linux]
+
+  turbo-windows-64@2.5.4:
+    resolution: {integrity: sha512-EQUO4SmaCDhO6zYohxIjJpOKRN3wlfU7jMAj3CgcyTPvQR/UFLEKAYHqJOnJtymbQmiiM/ihX6c6W6Uq0yC7mA==}
+    cpu: [x64]
+    os: [win32]
+
+  turbo-windows-arm64@2.5.4:
+    resolution: {integrity: sha512-oQ8RrK1VS8lrxkLriotFq+PiF7iiGgkZtfLKF4DDKsmdbPo0O9R2mQxm7jHLuXraRCuIQDWMIw6dpcr7Iykf4A==}
+    cpu: [arm64]
+    os: [win32]
+
+  turbo@2.5.4:
+    resolution: {integrity: sha512-kc8ZibdRcuWUG1pbYSBFWqmIjynlD8Lp7IB6U3vIzvOv9VG+6Sp8bzyeBWE3Oi8XV5KsQrznyRTBPvrf99E4mA==}
     hasBin: true
 
   tween-functions@1.2.0:
@@ -8279,6 +8326,19 @@ snapshots:
       '@worldcoin/idkit-core': 2.1.0(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(typescript@5.8.3)(zod@3.25.66)
       abitype: 1.0.8(typescript@5.8.3)(zod@3.25.66)
       react: 18.3.1
+      viem: 2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66)
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - typescript
+      - zod
+
+  '@worldcoin/minikit-react@1.9.7(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(typescript@5.8.3)(viem@2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66))(zod@3.25.66)':
+    dependencies:
+      '@worldcoin/minikit-js': 1.9.6(@types/react@18.3.23)(immer@10.0.2)(react@18.3.1)(typescript@5.8.3)(viem@2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66))(zod@3.25.66)
+      abitype: 1.0.8(typescript@5.8.3)(zod@3.25.66)
+      react: 18.3.1
+      turbo: 2.5.4
       viem: 2.31.3(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.25.66)
     transitivePeerDependencies:
       - '@types/react'
@@ -11895,6 +11955,33 @@ snapshots:
       get-tsconfig: 4.10.1
     optionalDependencies:
       fsevents: 2.3.3
+
+  turbo-darwin-64@2.5.4:
+    optional: true
+
+  turbo-darwin-arm64@2.5.4:
+    optional: true
+
+  turbo-linux-64@2.5.4:
+    optional: true
+
+  turbo-linux-arm64@2.5.4:
+    optional: true
+
+  turbo-windows-64@2.5.4:
+    optional: true
+
+  turbo-windows-arm64@2.5.4:
+    optional: true
+
+  turbo@2.5.4:
+    optionalDependencies:
+      turbo-darwin-64: 2.5.4
+      turbo-darwin-arm64: 2.5.4
+      turbo-linux-64: 2.5.4
+      turbo-linux-arm64: 2.5.4
+      turbo-windows-64: 2.5.4
+      turbo-windows-arm64: 2.5.4
 
   tween-functions@1.2.0: {}
 
