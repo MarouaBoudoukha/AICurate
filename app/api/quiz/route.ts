@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { CUR8TokenService } from '@/lib/services/cur8TokenService';
+
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
@@ -57,16 +59,113 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // Mark quiz as completed
+    // 🎯 Award proof points for quiz completion (50 points)
+    const quizProofPoints = 50;
+    const newProofPoints = user.proofPoints + quizProofPoints;
+    const newLevel = Math.floor(newProofPoints / 100) + 1;
+
+    // Mark quiz as completed and award proof points
     await prisma.user.update({
       where: { id: userId },
       data: {
         hasCompletedQuiz: true,
-        onboardingCompleted: true
+        onboardingCompleted: true,
+        proofPoints: newProofPoints,
+        level: newLevel,
+        lastActiveAt: new Date()
       }
     });
+
+    // Create quiz completion activity
+    await prisma.userActivity.create({
+      data: {
+        userId: userId,
+        activityType: 'QUIZ_COMPLETE',
+        description: 'Onboarding quiz completed',
+        proofPointsEarned: quizProofPoints,
+        metadata: {
+          questionsAnswered: answers.length,
+          pointsAwarded: quizProofPoints
+        }
+      }
+    });
+
+    // 🪙 Mint CUR8 rewards for quiz completion
+    let cur8MintResult = null;
+    try {
+      // Get user's wallet address from worldcoinId (this is their wallet address)
+      const userWalletAddress = user.worldcoinId;
+      
+      if (userWalletAddress) {
+        console.log(`🎯 Minting CUR8 rewards for quiz completion: ${userWalletAddress}`);
+        
+        const cur8Service = new CUR8TokenService();
+        cur8MintResult = await cur8Service.mintRewardForProofPoints(
+          userWalletAddress,
+          quizProofPoints,
+          'quiz_completion'
+        );
+
+        if (cur8MintResult.success) {
+          console.log(`✅ CUR8 quiz rewards minted! TX: ${cur8MintResult.transactionHash}`);
+          
+          // Store the minting transaction
+          await prisma.userActivity.create({
+            data: {
+              userId: userId,
+              activityType: 'CUR8_REWARD_MINTED',
+              description: `CUR8 tokens minted for quiz completion`,
+              proofPointsEarned: quizProofPoints,
+              metadata: {
+                cur8TxHash: cur8MintResult.transactionHash,
+                rewardType: 'quiz_completion',
+                originalProofPoints: quizProofPoints
+              }
+            }
+          });
+        } else {
+          console.warn(`⚠️ Failed to mint CUR8 quiz rewards: ${cur8MintResult.error}`);
+        }
+      } else {
+        console.log(`ℹ️ No wallet address found for user ${userId}, skipping CUR8 minting`);
+      }
+    } catch (error) {
+      console.error('❌ Error in CUR8 quiz minting process:', error);
+      // Don't fail the entire request if minting fails
+    }
+
+    // Check for level up and create notification
+    if (newLevel > user.level) {
+      await prisma.notification.create({
+        data: {
+          userId: userId,
+          type: 'LEVEL_UP',
+          title: 'Level Up!',
+          message: `Congratulations! You've reached level ${newLevel}`,
+          metadata: {
+            newLevel: newLevel,
+            oldLevel: user.level,
+            pointsEarned: quizProofPoints,
+            source: 'quiz_completion'
+          }
+        }
+      });
+    }
     
-    return NextResponse.json({ success: true, results });
+    return NextResponse.json({ 
+      success: true, 
+      results,
+      userStats: {
+        proofPoints: newProofPoints,
+        level: newLevel,
+        levelUp: newLevel > user.level
+      },
+      blockchain: {
+        cur8Minted: cur8MintResult?.success || false,
+        transactionHash: cur8MintResult?.transactionHash,
+        error: cur8MintResult?.error
+      }
+    });
   } catch (error) {
     console.error('Error processing quiz:', error);
     return NextResponse.json(

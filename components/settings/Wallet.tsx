@@ -131,6 +131,29 @@ export default function Wallet() {
           }
         }
 
+        // Fetch CUR8 transaction history 
+        const cur8Response = await fetch(`/api/user/cur8-transactions?userId=${userId}`);
+        if (cur8Response.ok) {
+          const cur8Data = await cur8Response.json();
+          
+          if (cur8Data.success && cur8Data.transactions.length > 0) {
+            const cur8Transactions = cur8Data.transactions.map((tx: any) => ({
+              id: `cur8_${tx.id}`,
+              type: 'earn',
+              amount: tx.proofPointsEarned,
+              description: `🪙 CUR8 Token Reward - ${tx.rewardType}`,
+              date: new Date(tx.date).toLocaleDateString(),
+              status: 'completed',
+              txHash: tx.txHash
+            }));
+
+            setTransactions(prev => [
+              ...cur8Transactions,
+              ...prev.filter(tx => !tx.id.toString().startsWith('cur8_'))
+            ]);
+          }
+        }
+
         // Also check localStorage for fallback data
         const storedMintResult = localStorage.getItem('lastMintResult');
         if (storedMintResult && userBadges.length === 0) {
@@ -234,8 +257,12 @@ export default function Wallet() {
 
   // TX Hash click functionality
   const handleTxHashClick = (txHash: string) => {
-    const explorerUrl = `https://worldscan.org/tx/${txHash}`;
+    // Use World Chain Sepolia explorer for CUR8 transactions (testnet)
+    const explorerUrl = `https://worldchain-sepolia.blockscout.com/tx/${txHash}`;
     window.open(explorerUrl, '_blank');
+    
+    // Also log for debugging
+    console.log('🔍 Opening transaction in explorer:', explorerUrl);
   };
 
   const getTransactionIcon = (type: string) => {
@@ -413,17 +440,6 @@ export default function Wallet() {
 
         {activeTab === 'overview' && (
           <div className="p-6">
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{proofPoints}</div>
-                <div className="text-sm text-gray-600">ProofPoints™</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{credits}</div>
-                <div className="text-sm text-gray-600">Credits</div>
-              </div>
-            </div>
-
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Recent Activity</h4>
               {transactions.slice(0, 3).map((transaction) => (

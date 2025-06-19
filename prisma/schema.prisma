@@ -25,6 +25,7 @@ model User {
   email             String?           @unique
   name              String?
   username          String?           @unique
+  walletAddress     String?           @unique
   isVerified        Boolean           @default(false)
   userType          UserType          @default(INDIVIDUAL)
   
@@ -48,6 +49,9 @@ model User {
   hasMintedBadge    Boolean           @default(false)
   badgeTransactionId String?
   badgeMintedAt     DateTime?
+  
+  // Edge Esmeralda Status
+  EdgeEsmeraldaAtt  Boolean           @default(false)
   
   // Subscription & Payments
   subscriptionStatus SubscriptionStatus @default(FREE)
@@ -1026,6 +1030,7 @@ enum ActivityType {
   LOGIN
   SIGNUP
   UPGRADE
+  CUR8_REWARD_MINTED
 }
 
 enum TrendingPeriod {

@@ -1,0 +1,14 @@
+{
+  "contractAddress": "0x61caE2660107D3E8faF07263053cbAe207622dFF",
+  "deployer": "0x2D4DE4eEA255cC61bfC0Ce9447436D9089fAe668",
+  "network": "worldchainSepolia",
+  "networkType": "testnet",
+  "chainId": 4801,
+  "blockNumber": 14868664,
+  "transactionHash": "0x60fc7b6c06b9bab0aa8c31ecc01a6feb56e1888de34532b16e27807f01746e4c",
+  "timestamp": "2025-06-18T22:12:37.163Z",
+  "tokenName": "Phoenix Proof Token",
+  "tokenSymbol": "CUR8",
+  "blockchain": "World Chain",
+  "gasModel": "FREE via World Send Transaction"
+}

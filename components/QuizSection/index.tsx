@@ -314,6 +314,7 @@ interface QuizStep {
 export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } = {}) {
   const unifiedSession = useUnifiedSession();
   const { mintEdgeEsmeralda, loading: mintLoading, error: mintHookError } = useEdgeEsmeralda();
+  const [showIntro, setShowIntro] = useState(true); // NEW: Show intro page first
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [otherInputs, setOtherInputs] = useState<Record<string, any>>({});
@@ -327,6 +328,9 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   const [showAlreadyMinted, setShowAlreadyMinted] = useState(false);
   const [mintResult, setMintResult] = useState<any>(null);
   const [badgeStatus, setBadgeStatus] = useState<any>(null);
+  const [showEmailCollection, setShowEmailCollection] = useState(false); // NEW: Show email collection after quiz
+  const [userEmail, setUserEmail] = useState(''); // NEW: Store user email
+  const [isCheckingEdgeOS, setIsCheckingEdgeOS] = useState(false); // NEW: Loading state for EdgeOS API
   const router = useRouter();
 
   // Get user ID from session, localStorage, or generate guest ID
@@ -657,8 +661,8 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   // Next step
   const handleNext = async () => {
     if (currentStep === quizSteps.length - 1) {
-      // Show the reveal screen immediately for better UX
-      setShowReveal(true);
+      // NEW: Show email collection page instead of reveal screen
+      setShowEmailCollection(true);
       
       // Save quiz answers to database in the background
       try {
@@ -840,41 +844,222 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
     router.replace("/settings/wallet");
   };
 
+  // NEW: Render intro page
+  const renderIntroPage = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full h-full flex flex-col items-center justify-center text-center space-y-6"
+    >
+      {/* Hunt icon */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: "spring" }}
+        className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center"
+      >
+        <span className="text-3xl">🎯</span>
+      </motion.div>
+
+      {/* Title */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-2"
+      >
+        <h1 className="text-2xl font-bold text-gray-900">
+          Start your first AI Hunt
+        </h1>
+        <p className="text-lg text-gray-600">
+          Personalize your AI journey with a quiz and claim 50 ProofPoints™
+        </p>
+      </motion.div>
+
+      {/* Features */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="space-y-3 text-left max-w-xs"
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-indigo-500">✨</span>
+          <span>Discover AI tools tailored to you</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-indigo-500">🎁</span>
+          <span>Earn 50 ProofPoints™ instantly</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-indigo-500">🏆</span>
+          <span>Unlock exclusive badges</span>
+        </div>
+      </motion.div>
+
+      {/* CTA Button */}
+      <motion.button
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.8 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => setShowIntro(false)}
+        className="w-full mt-8 px-6 py-4 text-white font-bold text-lg bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition-all"
+      >
+        Start Quiz 🚀
+      </motion.button>
+    </motion.div>
+  );
+
+  // NEW: Render email collection page
+  const renderEmailCollection = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full h-full flex flex-col items-center justify-center text-center space-y-6"
+    >
+      {/* Congratulations */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2, type: "spring" }}
+        className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center"
+      >
+        <span className="text-3xl">🎉</span>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="space-y-3"
+      >
+                 <h1 className="text-2xl font-bold text-gray-900">
+           Congratulations! 
+         </h1>
+         <p className="text-lg text-gray-600">
+           You&apos;ve completed your first AI Hunt
+         </p>
+        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+          <span className="text-green-600 font-bold">+ 50 ProofPoints™ earned!</span>
+        </div>
+      </motion.div>
+
+      {/* Email input for Edge Esmeralda */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="w-full space-y-4"
+      >
+        <p className="text-md text-gray-700 font-medium">
+          Enter your email to continue and check eligibility for Edge Esmeralda NFT Badge
+        </p>
+        
+        <input
+          type="email"
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.target.value)}
+          placeholder="Enter your email address"
+          className="w-full p-3 border-2 border-indigo-300 rounded-xl text-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+        />
+
+        <button
+          onClick={handleEmailSubmit}
+          disabled={!userEmail.includes('@') || isCheckingEdgeOS}
+          className="w-full px-4 py-3 text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl font-bold hover:from-indigo-600 hover:to-purple-600 disabled:opacity-50 transition-all"
+        >
+          {isCheckingEdgeOS ? 'Checking...' : 'Continue →'}
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+
+  // NEW: Handle email submission with EdgeOS API
+  const handleEmailSubmit = async () => {
+    if (!userEmail.includes('@')) return;
+    
+    setIsCheckingEdgeOS(true);
+    try {
+      // Call EdgeOS API to check if email is part of Edge Esmeralda
+      const response = await fetch('/api/check-edgeos-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: userEmail,
+          userId: getUserId(),
+          worldcoinId: unifiedSession.user?.worldcoinId
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.isEdgeEsmeralda) {
+        // User is part of Edge Esmeralda, proceed to badge minting
+        console.log(`🎉 Edge Esmeralda verified for ${userEmail}`);
+        setShowEmailCollection(false);
+        setShowReveal(true);
+      } else {
+        // User is not part of Edge Esmeralda, redirect to dashboard
+        console.log(`Email ${userEmail} saved, redirecting to dashboard`);
+        setShowEmailCollection(false);
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error checking EdgeOS email:', error);
+      alert('There was an error checking your email. Please try again.');
+    } finally {
+      setIsCheckingEdgeOS(false);
+    }
+  };
+
   // --- Main render ---
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa]">
       <div className="screen-frame flex items-center justify-center">
         <div className="screen-1-container flex flex-col relative" style={{ position: 'relative', width: 400, minHeight: 600 }}>
           <div className="screen-1-content flex flex-col items-center justify-between w-full h-full" style={{ padding: '40px 24px 32px' }}>
-            {/* Header for all quiz screens */}
-            <h1 className="text-lg font-semibold text-gray-700 mb-4 text-center">
-              Customize your AI journey
-            </h1>
-            {renderProgress()}
-            <motion.div
-              className="w-full"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">
-                {quizSteps[currentStep].title}
-              </h2>
-              {quizSteps[currentStep].subtitle && (
-                <p className="text-sm text-gray-600 mb-4 text-center">
-                  {quizSteps[currentStep].subtitle}
-                </p>
-              )}
-              {renderStep(quizSteps[currentStep], currentStep)}
-            </motion.div>
-            <motion.button
-              className="w-full mt-8 px-4 py-3 text-white font-bold text-lg bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              whileTap={{ scale: 0.97 }}
-              onClick={handleNext}
-              disabled={!canProceed()}
-            >
-              {currentStep === quizSteps.length - 1 ? 'Continue' : 'Next →'}
-            </motion.button>
+            
+            {/* NEW: Show intro page first */}
+            {showIntro && renderIntroPage()}
+            
+            {/* NEW: Show email collection page after quiz completion */}
+            {showEmailCollection && renderEmailCollection()}
+            
+            {/* Show quiz steps when not showing intro or email collection */}
+            {!showIntro && !showEmailCollection && !showReveal && !showMintSuccess && !showAlreadyMinted && (
+              <>
+                {/* Header for all quiz screens */}
+                <h1 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                  Customize your AI journey
+                </h1>
+                {renderProgress()}
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">
+                    {quizSteps[currentStep].title}
+                  </h2>
+                  {quizSteps[currentStep].subtitle && (
+                    <p className="text-sm text-gray-600 mb-4 text-center">
+                      {quizSteps[currentStep].subtitle}
+                    </p>
+                  )}
+                  {renderStep(quizSteps[currentStep], currentStep)}
+                </motion.div>
+                <motion.button
+                  className="w-full mt-8 px-4 py-3 text-white font-bold text-lg bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleNext}
+                  disabled={!canProceed()}
+                >
+                  {currentStep === quizSteps.length - 1 ? 'Continue' : 'Next →'}
+                </motion.button>
+              </>
+            )}
           </div>
           {/* Confetti and Reveal/Minting UI */}
           <AnimatePresence mode="wait">

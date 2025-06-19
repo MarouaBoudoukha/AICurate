@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AgentAICurate } from '@/lib/services/AgentAICurate';
+import { CUR8TokenService } from '@/lib/services/cur8TokenService';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
@@ -128,6 +129,52 @@ export async function POST(request: NextRequest) {
           lastActiveAt: new Date()
         }
       });
+
+      // 🪙 NEW: Mint CUR8 rewards on blockchain for proof points earned
+      try {
+        // Get user's wallet address (we'll need to store this in the user model)
+        // For now, we'll check if user has a wallet connected via WorldCoin
+        const userWalletAddress = user.worldcoinId; // This would be the user's wallet address
+        
+        if (userWalletAddress) {
+          console.log(`🎯 Attempting to mint CUR8 rewards for user ${userId} (${userWalletAddress})`);
+          
+          const cur8Service = new CUR8TokenService();
+          const mintResult = await cur8Service.mintRewardForProofPoints(
+            userWalletAddress,
+            response.data.proofPointsEarned,
+            `agent_session_${response.currentStep}`
+          );
+
+          if (mintResult.success) {
+            console.log(`✅ CUR8 rewards minted! TX: ${mintResult.transactionHash}`);
+            
+            // Store the minting transaction in activity metadata
+            await prisma.userActivity.create({
+              data: {
+                userId: userId,
+                activityType: 'CUR8_REWARD_MINTED',
+                description: `CUR8 tokens minted for agent session completion`,
+                sessionId: agent.getSessionState().id,
+                proofPointsEarned: response.data.proofPointsEarned,
+                metadata: {
+                  step: response.currentStep,
+                  userType: user.userType,
+                  cur8TxHash: mintResult.transactionHash,
+                  rewardType: `agent_session_${response.currentStep}`
+                }
+              }
+            });
+          } else {
+            console.warn(`⚠️ Failed to mint CUR8 rewards: ${mintResult.error}`);
+          }
+        } else {
+          console.log(`ℹ️ User ${userId} doesn't have a wallet address, skipping CUR8 minting`);
+        }
+      } catch (error) {
+        console.error('❌ Error in CUR8 minting process:', error);
+        // Don't fail the entire request if minting fails
+      }
 
       // Create activity record
       await prisma.userActivity.create({

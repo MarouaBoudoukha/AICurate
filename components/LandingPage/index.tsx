@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 
 export function LandingPage() {
-  // const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const router = useRouter();
 
@@ -68,12 +66,11 @@ export function LandingPage() {
       // STEP 3: Verify on backend
       console.log("Step 3: Verifying with backend...");
       
-      // Get username from MiniKit user object first, then fallback to manual input
-      const walletUsername = MiniKit.user?.username || email;
+      // Get username from MiniKit user object (email will be collected in quiz)
+      const walletUsername = MiniKit.user?.username;
       console.log("Using username:", { 
-        minikitUsername: MiniKit.user?.username, 
-        manualUsername: email, 
-        finalUsername: walletUsername 
+        minikitUsername: MiniKit.user?.username,
+        finalUsername: walletUsername
       });
       
       const verifyResponse = await fetch("/api/complete-siwe", {
@@ -82,7 +79,6 @@ export function LandingPage() {
         body: JSON.stringify({ 
           payload: finalPayload, 
           nonce,
-          email: email || undefined, // Pass email from input
           username: MiniKit.user?.username || undefined // Pass username from MiniKit
         }),
       });
@@ -105,7 +101,7 @@ export function LandingPage() {
       
       // Store individual keys for consistency with your session hook
       localStorage.setItem('worldcoin_user_id', verifyResult.user.id);
-      localStorage.setItem('worldcoin_username', verifyResult.user.name || email || 'User');
+      localStorage.setItem('worldcoin_username', verifyResult.user.name || 'User');
       localStorage.setItem('worldcoin_wallet_address', finalPayload.address);
       
       // STEP 5: Access wallet info from MiniKit
@@ -150,16 +146,7 @@ export function LandingPage() {
             </h1>
             {/* Main Bullet (optional, can be removed if not needed) */}
             {/* <div className="main-bullet" style={{ fontWeight: 'bold', marginBottom: 12 }}><b>It starts with Proof</b></div> */}
-            {/* Username Input */}
-            <div className="username-input-container">
-              <input
-                type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="username-input"
-              />
-            </div>
+            {/* Removed email input - will be collected in quiz flow instead */}
           </div>
           {/* Bottom section with CTA buttons */}
           <div className="w-full flex flex-col items-center">
