@@ -12,8 +12,8 @@ interface CreditsStore {
 export const useCreditsStore = create<CreditsStore>()(
   persist(
     (set) => ({
-      credits: 5, // Initial free credits
-      maxCredits: 5, // Track highest number of credits ever had
+      credits: 1, // Initial free credits
+      maxCredits: 3, // Track highest number of credits ever had
       setCredits: (credits) => set((state) => ({ 
         credits, 
         maxCredits: Math.max(credits, state.maxCredits) 
