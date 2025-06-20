@@ -297,7 +297,7 @@ function AIToolRecommendationModal({
 
 export default function AgentGuideScreen() {
   const { user, status } = useUnifiedSession();
-  const { credits, deductCredit } = useCreditsStore();
+  const { credits, maxCredits, deductCredit } = useCreditsStore();
   const guestId = useMemo(() => `guest-${Math.random().toString(36).slice(2, 10)}`, []);
   const userId = user?.id || guestId;
 
@@ -642,7 +642,7 @@ export default function AgentGuideScreen() {
             <Coins className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
             <div className="text-right">
               <div className="text-xs text-gray-500 dark:text-gray-400">Credits</div>
-              <div className="text-sm font-bold text-yellow-700 dark:text-yellow-300">{credits}</div>
+              <div className="text-sm font-bold text-yellow-700 dark:text-yellow-300">{credits}/{maxCredits}</div>
             </div>
           </div>
         </div>
