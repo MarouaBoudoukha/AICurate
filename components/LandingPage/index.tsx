@@ -159,13 +159,7 @@ export function LandingPage() {
               >
                 {isVerifying ? 'Connecting...' : 'Sign in with Wallet'}
               </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => router.push("/quiz")}
-                className="guest-signup-button"
-              >
-                Continue as Guest
-              </motion.button>
+
             </div>
           </div>
         </div>

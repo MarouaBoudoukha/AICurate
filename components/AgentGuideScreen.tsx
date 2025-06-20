@@ -2,7 +2,17 @@
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, Clock } from "lucide-react";
+import { 
+  MessageCircle, 
+  Send, 
+  Clock, 
+  Target, 
+  Search, 
+  TestTube, 
+  Brain, 
+  CheckCircle,
+  Star 
+} from 'lucide-react';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
 import Image from "next/image";
 
@@ -38,6 +48,7 @@ interface Message {
   content: string;
   step?: string;
   responseOptions?: string[];
+  recommendationData?: any;
 }
 
 interface AIToolRecommendation {
@@ -421,8 +432,18 @@ export default function AgentGuideScreen() {
       }
       
       // Check if this is an AI Tool Recommendation
-      if (data.data?.recommendation && currentStep === 'select') {
-        setRecommendation(data.data.recommendation);
+      if (data.data?.recommendation && (currentStep === 'complete' || data.currentStep === 'complete')) {
+        setRecommendation({
+          tool: data.data.recommendation.toolName || 'AI Tool',
+          reasoning: data.data.recommendation.whyPerfect || 'Perfect match for your needs',
+          nextSteps: 'Click the link to get started',
+          compatibilityScore: data.data.recommendation.compatibilityScore || 90,
+          rating: data.data.recommendation.rating || 4.5,
+          reviews: 1000,
+          curationTags: data.data.recommendation.keyFeatures || ['AI-Powered', 'Recommended'],
+          referralLink: data.data.recommendation.url || '#',
+          proofPoints: 50
+        });
         setShowRecommendation(true);
       }
       
@@ -430,7 +451,8 @@ export default function AgentGuideScreen() {
         role: 'assistant', 
         content: data.message,
         step: data.currentStep || detectStepFromContent(data.message),
-        responseOptions: data.data?.responseOptions || data.responseOptions
+        responseOptions: data.data?.responseOptions || data.responseOptions,
+        recommendationData: data.data?.recommendation // Store recommendation data in message
       }]);
     } catch (error) {
       console.error('Error:', error);
@@ -508,8 +530,18 @@ export default function AgentGuideScreen() {
       }
       
       // Check if this is an AI Tool Recommendation
-      if (data.data?.recommendation && currentStep === 'select') {
-        setRecommendation(data.data.recommendation);
+      if (data.data?.recommendation && (currentStep === 'complete' || data.currentStep === 'complete')) {
+        setRecommendation({
+          tool: data.data.recommendation.toolName || 'AI Tool',
+          reasoning: data.data.recommendation.whyPerfect || 'Perfect match for your needs',
+          nextSteps: 'Click the link to get started',
+          compatibilityScore: data.data.recommendation.compatibilityScore || 90,
+          rating: data.data.recommendation.rating || 4.5,
+          reviews: 1000,
+          curationTags: data.data.recommendation.keyFeatures || ['AI-Powered', 'Recommended'],
+          referralLink: data.data.recommendation.url || '#',
+          proofPoints: 50
+        });
         setShowRecommendation(true);
       }
       
@@ -517,7 +549,8 @@ export default function AgentGuideScreen() {
         role: 'assistant', 
         content: data.message,
         step: data.currentStep || detectStepFromContent(data.message),
-        responseOptions: data.data?.responseOptions || data.responseOptions
+        responseOptions: data.data?.responseOptions || data.responseOptions,
+        recommendationData: data.data?.recommendation // Store recommendation data in message
       }]);
     } catch (error) {
       console.error('Error:', error);
@@ -548,39 +581,38 @@ export default function AgentGuideScreen() {
   };
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
-      {/* Chat Container */}
-      <div className="bg-white dark:bg-gray-800 flex-1 flex flex-col min-h-0">
-        {/* Compact Header inside chat container */}
-        <header className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-3 py-2">
-          <div className="flex items-center">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
-              <MessageCircle className="text-white" size={12} />
-            </div>
-            <div className="ml-2">
-              <h1 className="text-sm font-bold dark:text-white">AI Guide</h1>
-              <p className="text-xs text-gray-600 dark:text-gray-300">
-                Find the perfect AI tool for your needs
-              </p>
-            </div>
+    <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col">
+      {/* Header - relative positioning */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 shadow-sm flex-shrink-0">
+        <div className="flex items-center">
+          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
+            <MessageCircle className="text-white" size={12} />
           </div>
-        </header>
+          <div className="ml-2">
+            <h1 className="text-sm font-bold dark:text-white">AI Guide</h1>
+            <p className="text-xs text-gray-600 dark:text-gray-300">
+              Find the perfect AI tool for your needs
+            </p>
+          </div>
+        </div>
+      </header>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto space-y-2 min-h-0 px-3 py-2">
+      {/* Scrollable Messages Area - fills available space */}
+      <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800 px-3 py-2">
+        <div className="space-y-2">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col justify-center space-y-3">
+            <div className="h-full flex flex-col justify-center space-y-4 min-h-[400px]">
               <div className="text-center">
-                <div className="mb-2 flex justify-center">
+                <div className="mb-4 flex justify-center">
                   <Image
                     src="/onboarding/aicurate_agent.png"
                     alt="AICurate Agent"
-                    width={50}
-                    height={50}
-                    className="rounded-full"
+                    width={160}
+                    height={160}
+                    className="object-cover"
                   />
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Tell me what you need help with or choose from the suggestions below
                 </p>
               </div>
@@ -618,65 +650,88 @@ export default function AgentGuideScreen() {
                   )}
                   <div className="whitespace-pre-wrap text-sm">{message.content}</div>
                   
-                  {/* Response options as buttons */}
+                  {/* Response options */}
                   {message.role === 'assistant' && message.responseOptions && message.responseOptions.length > 0 && (
-                    <div className="mt-1 space-y-1">
+                    <div className="mt-3 space-y-2">
                       {message.responseOptions.map((option, optionIndex) => (
                         <button
                           key={optionIndex}
                           onClick={() => {
                             setInput(option);
-                            // Auto-send the response option
-                            setTimeout(() => {
-                              const userMessage: Message = { role: 'user', content: option, step: currentStep };
-                              setMessages(prev => [...prev, userMessage]);
-                              setInput('');
-                              setIsLoading(true);
-                              
-                              fetch('/api/agent', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  input: option,
-                                  userId,
-                                  sessionId,
-                                  currentStep,
-                                  messages: [...messages, userMessage],
-                                }),
-                              })
-                              .then(res => res.json())
-                              .then(data => {
-                                if (data.currentStep) setCurrentStep(data.currentStep);
-                                if (data.sessionId) setSessionId(data.sessionId);
-                                if (data.message.includes('Would you like a copy sent to your email')) setShowEmailInput(true);
-                                if (data.message.includes('save this recommendation') && data.message.includes('Premium')) setIsPremiumPrompt(true);
-                                if (data.data?.recommendation && currentStep === 'select') {
-                                  setRecommendation(data.data.recommendation);
-                                  setShowRecommendation(true);
-                                }
-                                setMessages(prev => [...prev, { 
-                                  role: 'assistant', 
-                                  content: data.message,
-                                  step: data.currentStep || detectStepFromContent(data.message),
-                                  responseOptions: data.data?.responseOptions || data.responseOptions
-                                }]);
-                              })
-                              .catch(error => {
-                                console.error('Error:', error);
-                                setMessages(prev => [...prev, { 
-                                  role: 'assistant', 
-                                  content: 'I apologize, but I encountered an error. Please try again.',
-                                  step: currentStep
-                                }]);
-                              })
-                              .finally(() => setIsLoading(false));
-                            }, 100);
+                            handleSend();
                           }}
-                          className="block w-full text-left px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition-colors text-xs border border-indigo-200 dark:border-indigo-700"
+                          className="block w-full text-left p-2 text-xs bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                         >
                           {option}
                         </button>
                       ))}
+                    </div>
+                  )}
+                  
+                  {/* Check if this message contains a card format recommendation */}
+                  {message.role === 'assistant' && (message.content.includes('Perfect Match Found!') || message.recommendationData) && (
+                    <div className="mt-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-700 shadow-sm">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                            <Star className="text-white" size={18} />
+                          </div>
+                          <div className="ml-3">
+                            <span className="text-sm font-bold text-blue-700 dark:text-blue-300 block">
+                              {message.recommendationData?.toolName || 'Perfect AI Tool Match'}
+                            </span>
+                            {message.recommendationData?.rating && (
+                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                ⭐ {message.recommendationData.rating}/5
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Tool details */}
+                      <div className="space-y-2 mb-4">
+                        {message.recommendationData?.compatibilityScore && (
+                          <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Match Score</span>
+                            <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                              {message.recommendationData.compatibilityScore}/100
+                            </span>
+                          </div>
+                        )}
+                        
+                        {message.recommendationData?.pricing && (
+                          <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg p-2">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Pricing</span>
+                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                              {message.recommendationData.pricing}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Action button */}
+                      <button 
+                        onClick={() => {
+                          const toolUrl = message.recommendationData?.url || 
+                                        message.content.match(/https?:\/\/[^\s\)]+/)?.[0];
+                          
+                          if (toolUrl && toolUrl !== '#') {
+                            window.open(toolUrl, '_blank');
+                          } else {
+                            alert('Getting tool link...');
+                          }
+                        }}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm font-semibold shadow-md hover:shadow-lg transform hover:scale-[1.02]"
+                      >
+                        🚀 Visit {message.recommendationData?.toolName || 'Tool'} Now
+                      </button>
+                      
+                      <div className="flex items-center justify-center pt-2 mt-2 border-t border-blue-200 dark:border-blue-700">
+                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          ✨ Personalized by AICURATE AI
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -701,15 +756,17 @@ export default function AgentGuideScreen() {
           )}
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Compact Input Area */}
-        <div className="flex gap-2 flex-shrink-0 p-3 border-t border-gray-100 dark:border-gray-700">
+      {/* Input Area at bottom - relative positioning */}
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 shadow-lg flex-shrink-0">
+        <div className="flex gap-2 p-3">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder={showEmailInput ? "Enter your email address..." : "Type your message..."}
+            placeholder={showEmailInput ? "Enter your email address..." : "Type your message or select an option above..."}
             className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
             disabled={isLoading}
           />
@@ -722,8 +779,8 @@ export default function AgentGuideScreen() {
           </Button>
         </div>
         
-        {currentStep === 'select' && (
-          <div className="flex justify-end flex-shrink-0 px-3 pb-2">
+        {currentStep === 'complete' && (
+          <div className="flex justify-end px-3 pb-2">
             <Button
               onClick={handleNewSession}
               className="px-3 py-1 text-xs"

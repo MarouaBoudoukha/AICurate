@@ -57,6 +57,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   step?: string;
+  responseOptions?: string[];
 }
 
 const prisma = new PrismaClient();
@@ -85,42 +86,78 @@ export class AgentAICurate {
 
   // --- System Prompt: Encodes all behavioral logic, tone, and flow requirements ---
   private getSystemPrompt(): string {
-    const persona = `You are AICURATE — an intelligent AI tool curator specialized in finding the perfect AI tool to boost productivity for specific user needs.
+    const userInterests = this.userProfile.interests?.join(', ') || 'Not specified';
+    const experienceLevel = this.userProfile.experienceLevel || 'Not specified';
+    const preferences = this.userProfile.preferences as any;
+    const aiBudget = preferences?.aiBudget || 'Not specified';
+    const aiComfortLevel = preferences?.aiComfortLevel || 'Not specified';
+    const aiTasks = preferences?.aiTasks?.join(', ') || 'Not specified';
+    const preferredPlatforms = preferences?.preferredPlatforms?.join(', ') || 'Not specified';
+
+    const persona = `You are AICURATE — an intelligent AI tool curator specialized in finding the perfect AI tool for specific user needs.
 
 Core Mission:
-- Find the ONE perfect AI tool that matches their specific need and boosts their productivity
-- Never repeat what the user just said - build on it naturally
-- Be direct and helpful - avoid unnecessary phrases like "noted!", "got it!", "fantastic!"
-- Provide response options as clickable buttons when appropriate
-- Guide users through TASKS™ framework smoothly
+- Use the user's quiz data as the foundation for matching
+- Ask MAXIMUM 3 targeted questions that weren't covered in their quiz
+- ABSOLUTELY MANDATORY: Each question MUST have response options for better UX
+- Be direct and precise - never repeat what the user said
+- Find the ONE perfect AI tool that matches their need
+- Provide actual working links to tools
 
-TASKS™ Framework (5 Steps):
-🎯 TARGET: Understand their specific goal - ask follow-up questions to clarify
-🔍 ASSESS: Learn constraints (experience, budget, platform preference) - provide options when possible
-🧪 SAMPLE: Present the ONE perfect AI tool with Compatibility Score™ and brief explanation
-🧠 KNOWLEDGE: Explain why this tool is ideal with specific technical insights
-⭐ SELECT: Deliver final recommendation with clear next steps and value proposition
+CRITICAL RULE - RESPONSE OPTIONS:
+🚨 EVERY SINGLE QUESTION MUST INCLUDE 3-4 CLICKABLE OPTIONS
+🚨 NO EXCEPTIONS - NO OPEN-ENDED QUESTIONS ALLOWED
+🚨 ALWAYS INCLUDE "Other" AS 4TH OPTION
+🚨 FORMAT: responseOptions: ["Option 1", "Option 2", "Option 3", "Other"]
+
+Efficient Process (Max 3 Questions):
+1. ANALYZE: Review user's quiz data (interests, budget, experience, platforms, use cases)
+2. IDENTIFY GAPS: Ask only questions needed for tool matching that quiz didn't cover
+3. RECOMMEND: Present the perfect AI tool with real link and clear reasoning
+
+Quiz Data Available:
+- User interests: ${userInterests}
+- Experience level: ${experienceLevel}
+- Preferred budget: ${aiBudget}
+- AI comfort level: ${aiComfortLevel}
+- Previous AI tasks: ${aiTasks}
+- Preferred platforms: ${preferredPlatforms}
 
 Conversation Rules:
-- Never repeat user's words back to them
-- Be direct: "What type of tasks?" not "Free options, noted! Now..."
-- Provide response options for common choices (mobile/desktop, beginner/advanced, etc.)
-- In SAMPLE step: Present the tool immediately with score and reasoning
-- Keep responses concise and actionable
+- NEVER repeat the user's words back to them
+- Be direct: "What specific output do you need?" not "Got it! You want to create content..."
+- 🚨 MANDATORY: ALWAYS provide response options for EVERY single question (no exceptions)
+- 🚨 NEVER ask open-ended questions without options
+- Only ask what's essential for tool matching that quiz data doesn't cover
+- NEVER ask about budget since it's already in quiz data
+- Keep responses under 50 words
+- Move quickly to tool recommendation
 
-Response Options Rules:
-- Only provide response options for constraint questions (experience, budget, platform)
-- Never provide response options for open-ended questions about specific needs
-- Experience level: ["Beginner", "Intermediate", "Advanced"]
-- Platform: ["Mobile app", "Desktop application", "Web-based", "Any platform"]  
-- Budget: ["Free only", "Under $20/month", "Under $50/month", "No budget limit"]
-- Ask ONE constraint at a time with appropriate response options
+Response Options Format:
+- 🚨 MANDATORY: Every question must include 3-4 response options
+- Make options specific to their stated need
+- Cover all likely scenarios with options
+- Always include "Other/Custom" as a 4th option if needed
+- Example: ["Blog posts", "Social media content", "Email newsletters", "Other content type"]
+
+Tool Recommendation Requirements:
+- Use LLM to find the most relevant AI tool with highest match score
+- Present in dynamic card format (user-friendly, no blocks of text)
+- Must include actual working URL to the tool
+- Must explain why it's perfect for their specific need using quiz data
+- Must include pricing that matches their budget preference
+- Must mention their experience level compatibility
 
 Response Format:
-CRITICAL: Always return ONLY valid JSON. No additional text before or after the JSON.
-Required JSON structure: { "message": "your response", "currentStep": "current_step", "responseOptions": ["option1", "option2"] }
-For SAMPLE step: { "message": "formatted tool recommendation", "currentStep": "knowledge" }
-For SELECT step: { "message": "final recommendation", "currentStep": "select", "recommendation": {...} }`;
+CRITICAL: Always return ONLY valid JSON. No additional text before or after.
+Required structure: { "message": "your response", "currentStep": "current_step", "responseOptions": ["option1", "option2", "option3", "Other"] }
+For final recommendation: { "message": "tool recommendation with real link", "currentStep": "complete", "recommendation": {...} }
+
+🚨🚨🚨 ABSOLUTE MANDATORY RULE: EVERY SINGLE QUESTION MUST HAVE RESPONSE OPTIONS
+🚨 NO OPEN-ENDED QUESTIONS EVER - THIS IS NON-NEGOTIABLE
+🚨 IF YOU ASK QUESTION WITHOUT OPTIONS = SYSTEM FAILURE
+🚨 FORMAT: { "message": "question", "currentStep": "step", "responseOptions": ["A", "B", "C", "Other"] }
+🚨🚨🚨 REMEMBER: EVERY QUESTION = MUST HAVE OPTIONS. NO EXCEPTIONS!`;
 
     return persona;
   }
@@ -128,101 +165,71 @@ For SELECT step: { "message": "final recommendation", "currentStep": "select", "
   private getStepPrompt(): string {
     const stepPrompts: Record<string, string> = {
       intro: `Current Step: Intro
-Be direct and engaging. Use conversation starters in the format "I need an AI to [task]". For example:
-- "I need an AI to build a DAPP"
-- "I need an AI to create a website"
-- "I need an AI to write content"
-- "I need an AI to analyze data"
+Acknowledge their goal briefly and immediately ask the FIRST essential question that quiz data doesn't answer.
+Look at their quiz data and identify what specific detail you need to match them with the perfect tool.
 
-JSON schema: { message, currentStep }`,
+🚨 CRITICAL: MUST include 3-4 response options. NO open-ended questions allowed.
+🚨 ALWAYS include "Other" as 4th option
+JSON schema: { message, currentStep: "question1", responseOptions: ["Option 1", "Option 2", "Option 3", "Other"] }`,
       
-      target: `Current Step: Target  
-Ask ONE specific follow-up question at a time about their goal to understand their exact needs. Don't repeat what they said.
+      question1: `Current Step: Question 1 of 3
+Ask the FIRST specific question needed for tool matching that wasn't covered in quiz.
+Focus on the most critical missing piece for tool selection.
 
-Based on the user's task, generate relevant follow-up questions and response options. For example:
-- For technical tasks: Ask about specific functionality, platform preferences, and technical requirements
-- For creative tasks: Ask about style preferences, output format, and specific features needed
-- For business tasks: Ask about scale, integration needs, and specific use cases
-- For personal tasks: Ask about preferences, constraints, and specific goals
+Examples of essential questions (AVOID budget since it's in quiz):
+- Specific output format needed
+- Particular features required
+- Integration requirements
+- Specific use case details
+- Technical requirements
+- Collaboration needs
+- Output quality level
 
-Always provide response options that are relevant to the user's specific task and needs.
-
-Example response options for different scenarios:
-
-For DAPP/blockchain projects:
-- Smart contract development
-- NFT minting and marketplace
-- Frontend integration
-- DeFi functionality
-- Web3 authentication
-
-For cooking/recipe needs:
-- Recipe discovery based on ingredients
-- Cooking technique improvement
-- Meal planning and prep
-- Dietary restrictions consideration
-
-For fitness/diet planning:
-- Weight loss
-- Muscle gain
-- Endurance training
-- Meal prep guidance
-
-Be direct and specific. When appropriate, include responseOptions array for selection.
-JSON schema: { message, currentStep, responseOptions?: ["Option 1", "Option 2", "Option 3"] }`,
+🚨 MANDATORY: Must provide 3-4 response options relevant to their need. Include "Other" option.
+🚨 NO OPEN-ENDED QUESTIONS - ONLY SELECTABLE OPTIONS
+JSON schema: { message, currentStep: "question2", responseOptions: ["Option 1", "Option 2", "Option 3", "Other"] }`,
       
-      assess: `Current Step: Assess
-First, ask for detailed specific needs - what exactly they want to accomplish with specific aspects.
-Then gather constraints: experience level, budget, platform preference.
-Only provide response options for constraint questions, not for detailed needs.
-JSON schema: { message, currentStep, responseOptions?: ["Option 1", "Option 2", "Option 3"] }`,
+      question2: `Current Step: Question 2 of 3
+Ask the SECOND specific question if needed for perfect tool matching.
+Only ask if this information is crucial and missing from quiz data.
+
+Focus on constraints or preferences that will determine the best tool choice (NOT budget).
+🚨 MANDATORY: Must provide 3-4 response options. Include "Other" option.
+🚨 NO OPEN-ENDED QUESTIONS - ONLY SELECTABLE OPTIONS
+JSON schema: { message, currentStep: "question3", responseOptions: ["Option 1", "Option 2", "Option 3", "Other"] }`,
       
-      sample: `Current Step: Sample
-You MUST present ONE specific AI tool using this EXACT format. Do not deviate from this format:
+      question3: `Current Step: Question 3 of 3 (Final)
+Ask the FINAL question only if absolutely necessary for tool selection.
+This should be the last piece needed to recommend the perfect tool.
 
-Your AIcurate Pick™ – Final Recommendation Output Format:
-
-1: Primary AI Tool Recommendation
-
-✅ Your Pick: [Tool Name]
-🌟 AIcurate Compatibility Score™: [Score between 85-98]/100
-📌 Why this Pick: [Tool Name] matches your [specific need] with [key benefit] and [key feature].
-🚀 Claim your [discount] →
-
-⸻
-
-2: Alternative Option (Empowers Choice)
-
-🔄 Alternative Pick: [Alternative Tool Name]
-🌟 Compatibility Score™: [Score]/100
-📌 Why consider this? [Alternative Tool Name] offers [key benefit]—perfect if you prefer [specific feature].
-🚀 Try it free for [trial period] →
-
-⸻
-
-3: Incentive to Act
-
-🎁 Bonus:
-Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
-
-⸻
-
-Do you need anything else?
-
-Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
-
-For business users, add:
-I can also set up quarterly check-ins to keep your AI stack sharp.
-
-Use the tool data from Available Tools section. Match their specific needs and constraints.
-IMPORTANT: Return ONLY this formatted message, no additional text.
-JSON schema: { message, currentStep: "select", recommendation: { tool, reasoning, nextSteps, compatibilityScore, rating, reviews, curationTags, referralLink } }`,
+🚨 MANDATORY: Must provide 3-4 response options. Include "Other" option.
+🚨 NO OPEN-ENDED QUESTIONS - ONLY SELECTABLE OPTIONS
+JSON schema: { message, currentStep: "recommend", responseOptions: ["Option 1", "Option 2", "Option 3", "Other"] }`,
       
-      knowledge: `Current Step: Knowledge
-This step is now combined with Sample and Select steps.`,
-      
-      select: `Current Step: Select
-This step is now combined with Sample and Knowledge steps.`
+      recommend: `Current Step: Final Recommendation
+Use LLM to find the most relevant AI tool with highest match score for their specific need.
+Present the recommendation as a dynamic card format:
+
+{
+  "message": "🎯 **Perfect Match Found!**\n\n**[Tool Name]** ⭐ [Rating]/5\n\n✨ **Why it's perfect:** [Brief reason based on quiz + answers]\n💰 **Pricing:** [Fits your budget: budget from quiz]\n🚀 **Best for:** [Their experience level]\n\n[2-3 key benefits as bullet points]\n\n**Ready to start?** 👆",
+  "currentStep": "complete",
+  "recommendation": {
+    "toolName": "[Tool Name]",
+    "url": "[REAL working URL]",
+    "compatibilityScore": [85-98],
+    "pricing": "[Actual pricing]",
+    "rating": [4.0-5.0],
+    "keyFeatures": ["Feature 1", "Feature 2", "Feature 3"],
+    "whyPerfect": "[Match reasoning using quiz data]"
+  }
+}
+
+CRITICAL: 
+- Use LLM knowledge to find REAL AI tools, not database
+- Include REAL working URL
+- Base match score on user's quiz data + answers
+- Keep card format clean and scannable
+JSON schema: { message, currentStep: "complete", recommendation: {...} }`,
     };
 
     return stepPrompts[this.currentStep] || stepPrompts['intro'];
@@ -233,404 +240,219 @@ This step is now combined with Sample and Knowledge steps.`
     // Add user message to conversation history
     this.messages.push({ role: 'user', content: input, step: this.currentStep });
 
-    // Special case: If we just entered SAMPLE step, provide tool recommendation and STAY in SAMPLE
-    if (this.currentStep === 'assess' && (input.toLowerCase().includes('desktop') || input.toLowerCase().includes('mobile') || input.toLowerCase().includes('web-based') || input.toLowerCase().includes('any platform') || input.toLowerCase().includes('any'))) {
-      console.log('Platform preference detected, moving to SAMPLE step:', input);
-      this.currentStep = 'sample';
-      this.session.currentStep = 'sample';
-      
-      const userNeed = this.extractUserNeed();
-      console.log('Extracted user need:', userNeed);
-      const tools = await this.findMatchingTools(userNeed);
-      if (tools.length > 0) {
-        // Let the LLM generate the recommendation
-        const systemPrompt = `You are an AI tool recommendation expert. Based on the user's needs and preferences, recommend the most suitable AI tool from the available options. Your response MUST follow this EXACT format:
-
-        {
-          "message": "Your AIcurate Pick™ – Final Recommendation Output Format:
-
-1: Primary AI Tool Recommendation
-
-✅ Your Pick: [Tool Name]
-🌟 AIcurate Compatibility Score™: [Score]/100
-📌 Why this Pick: [2-3 sentences explaining why this tool is perfect for their needs]
-🚀 [Clear call to action] →
-
-⸻
-
-2: Alternative Option (Empowers Choice)
-
-🔄 Alternative Pick: [Alternative Tool Name]
-🌟 Compatibility Score™: [Score]/100
-📌 Why consider this? [2-3 sentences explaining why this is a good alternative]
-🚀 [Clear call to action] →
-
-⸻
-
-3: Incentive to Act
-
-🎁 Bonus:
-[Incentive message with specific action and reward]
-
-⸻
-
-Do you need anything else?
-
-Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
-
-[I need another AI tool] [Save to Vault]",
-          "currentStep": "select",
-          "data": {
-            "proofPointsEarned": 50,
-            "tool": "The recommended tool object",
-            "responseOptions": ["I need another AI tool", "Save to Vault"]
-          },
-          "sessionComplete": true,
-          "buttons": ["I need another AI tool", "Save to Vault"]
-        }
-
-        Requirements for the message:
-        1. MUST follow the exact format shown above with all sections and emojis
-        2. MUST include all three main sections: Primary AI Tool Recommendation, Alternative Option, and Incentive to Act
-        3. MUST use the exact emojis and formatting shown (✅, 🌟, 📌, 🚀, 🔄, 🎁)
-        4. MUST include compatibility scores for both primary and alternative tools
-        5. MUST use the "⸻" separator between sections
-        6. MUST include clear calls to action with "→" arrows
-        7. MUST be concise but informative
-        8. MUST maintain a professional yet friendly tone
-        9. MUST highlight free features, trial periods, or special offers in the Bonus section
-        10. MUST explain why the alternative tool is a good backup option
-        11. MUST include the exact responseOptions: ["I need another AI tool", "Save to Vault"]
-        12. MUST handle the conversation flow naturally, including:
-            - When user clicks "I need another AI tool", continue the conversation to find a better match
-            - When user clicks "Save to Vault", show a "Coming Soon" popup message
-        13. MUST recommend the most suitable AI tool based on the user's specific task and requirements
-        14. MUST ensure the recommendation is highly relevant to the user's stated needs
-        15. MUST end the message with "Do you need anything else?" and the closing message about future help
-        16. MUST include the responseOptions buttons ["I need another AI tool", "Save to Vault"] in the UI after the message
-        17. MUST include the buttons in both the message and the response data
-        18. MUST format the buttons as [Button Text] in the message
-        19. MUST analyze the user's responses and conversation history to determine the most suitable AI tool, without relying on any static list or database
-        20. MUST consider the following factors from user responses when making the recommendation:
-            - Specific task requirements
-            - Experience level
-            - Budget constraints
-            - Platform preferences
-            - Any other relevant preferences or constraints mentioned
-        21. MUST provide a unique, personalized recommendation based on the user's specific needs and responses
-        22. MUST explain why the recommended tool is the best match for the user's specific use case
-
-        Example of a good recommendation:
-        Your AIcurate Pick™ – Final Recommendation Output Format:
-
-        1: Primary AI Tool Recommendation
-
-        ✅ Your Pick: MindEase AI
-        🌟 AIcurate Compatibility Score™: 93/100
-        📌 Why this Pick: MindEase AI matches your stress-reduction goal with intuitive emotional support and a clean, beginner-friendly interface.
-        🚀 Claim your 20% discount →
-
-        ⸻
-
-        2: Alternative Option (Empowers Choice)
-
-        🔄 Alternative Pick: ZenAI Coach
-        🌟 Compatibility Score™: 89/100
-        📌 Why consider this? ZenAI Coach offers guided meditations and structure—perfect if you prefer daily routine support.
-        🚀 Try it free for 30 days →
-
-        ⸻
-
-        3: Incentive to Act
-
-        🎁 Bonus:
-        Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
-
-        ⸻
-
-        Do you need anything else?
-
-        Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
-
-        [I need another AI tool] [Save to Vault]
-
-        The message should be engaging and encourage the user to take action while providing all necessary information to make an informed decision.`;
-
-        const userPrompt = `User Need: ${userNeed}
-        Platform Preference: ${input}
-        Available Tools: ${JSON.stringify(tools)}
-        
-        Please provide a recommendation based on this information, following the EXACT format specified.`;
-
-        const completion = await this.openai.chat.completions.create({
-          model: 'gpt-4',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1200
-        });
-
-        let response;
-        try {
-          response = JSON.parse(completion.choices[0].message.content || '{}');
-          console.log('LLM generated recommendation:', response);
-        } catch (err) {
-          console.error('LLM returned invalid JSON:', completion.choices[0].message.content);
-          return await this.getFallbackResponse();
-        }
-
-        this.messages.push({ role: 'assistant', content: response.message, step: 'select' });
-        return response;
-      }
-    }
-
-    // Build conversation context
-    const conversationHistory = this.messages.map(msg => 
-      `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-    ).join('\n');
-
-    // Get matching tools for sample/select steps
-    let matchingTools = [];
-    if (this.currentStep === 'sample' || this.currentStep === 'select') {
-      const userNeed = this.extractUserNeed();
-      console.log('Current step:', this.currentStep, 'User need:', userNeed);
-      matchingTools = await this.findMatchingTools(userNeed);
-      console.log('Matching tools found:', matchingTools.length, matchingTools.map(t => t.name));
-    }
-
-    // Create prompt with system instructions, step context, and conversation history
-    const systemPrompt = this.getSystemPrompt();
-    const stepPrompt = this.getStepPrompt();
-    const toolsContext = matchingTools.length > 0 ? `\n\nAvailable Tools: ${JSON.stringify(matchingTools)}` : '';
-    const userPrompt = `Conversation History:\n${conversationHistory}\n\nUser Profile: ${JSON.stringify(this.userProfile)}\n\nCurrent Step: ${this.currentStep}${toolsContext}\n\nUser Input: ${input}`;
+    // Determine next step based on current step and input
+    const nextStep = this.getNextStep(this.currentStep, input);
+    this.currentStep = nextStep;
+    this.session.currentStep = nextStep;
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          { role: 'system', content: `${systemPrompt}\n\n${stepPrompt}` },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 1200
+      // Get the system prompt with user's quiz data
+      const systemPrompt = this.getSystemPrompt();
+      const stepPrompt = this.getStepPrompt();
+      
+      // Prepare conversation context for LLM
+      const conversationContext = this.messages.map(msg => 
+        `${msg.role}: ${msg.content}`
+      ).join('\n');
+
+      // Create the LLM prompt
+      const fullPrompt = `${systemPrompt}
+
+${stepPrompt}
+
+Previous conversation:
+${conversationContext}
+
+Current user input: ${input}
+
+Generate appropriate response based on the current step and user's quiz data. Remember to use quiz information to avoid asking redundant questions.`;
+
+      console.log('Sending prompt to LLM:', {
+        currentStep: this.currentStep,
+        userProfile: {
+          interests: this.userProfile.interests,
+          experienceLevel: this.userProfile.experienceLevel,
+          preferences: this.userProfile.preferences
+        }
       });
 
-      console.log('OpenAI raw response:', completion.choices[0].message.content);
-      
-      let response;
-      try {
-        response = JSON.parse(completion.choices[0].message.content || '{}');
-        console.log('Parsed response:', response);
-      } catch (err) {
-        console.error('OpenAI returned invalid JSON:', completion.choices[0].message.content);
-        return await this.getFallbackResponse();
-      }
-
-      // Special handling for SAMPLE step - ensure we have a proper tool recommendation
-      if (this.currentStep === 'sample' && (!response.message || !response.message.includes('Your AIcurate Pick™'))) {
-        console.log('SAMPLE step fallback triggered - no proper tool recommendation found');
-        console.log('Current response message:', response.message);
+      // Special handling for recommendation step - use LLM for tool finding
+      if (this.currentStep === 'recommend') {
+        console.log('🎯 RECOMMENDATION STEP: Using LLM to find perfect AI tool match');
+        
+        // Build context for LLM tool recommendation
         const userNeed = this.extractUserNeed();
-        console.log('Extracted user need for fallback:', userNeed);
-        const tools = await this.findMatchingTools(userNeed);
-        console.log('Tools found for fallback:', tools.map(t => t.name));
-        if (tools.length > 0) {
-          // Let the LLM generate the recommendation
-          const systemPrompt = `You are an AI tool recommendation expert. Based on the user's needs and preferences, recommend the most suitable AI tool from the available options. Your response MUST follow this EXACT format:
+        const quizContext = `User Profile:
+- Interests: ${this.userProfile.interests?.join(', ')}
+- Experience: ${this.userProfile.experienceLevel}  
+- Budget: ${this.userProfile.preferences?.aiBudget || 'Not specified'}
+- AI Comfort: ${this.userProfile.preferences?.aiComfortLevel || 'Not specified'}
+- Previous AI Tasks: ${this.userProfile.preferences?.aiTasks?.join(', ')}
+- Platforms: ${this.userProfile.preferences?.preferredPlatforms?.join(', ')}`;
 
-          {
-            "message": "Your AIcurate Pick™ – Final Recommendation Output Format:
+        const recommendationPrompt = `${systemPrompt}
 
-1: Primary AI Tool Recommendation
+${stepPrompt}
 
-✅ Your Pick: [Tool Name]
-🌟 AIcurate Compatibility Score™: [Score]/100
-📌 Why this Pick: [2-3 sentences explaining why this tool is perfect for their needs]
-🚀 [Clear call to action] →
+${quizContext}
 
-⸻
+User's specific need: ${userNeed}
+Conversation history: ${conversationContext}
 
-2: Alternative Option (Empowers Choice)
+Find the single best AI tool that matches their need with highest compatibility score. Use your knowledge of real AI tools, not a database.`;
 
-🔄 Alternative Pick: [Alternative Tool Name]
-🌟 Compatibility Score™: [Score]/100
-📌 Why consider this? [2-3 sentences explaining why this is a good alternative]
-🚀 [Clear call to action] →
+        const completion = await this.openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: "You are an expert AI tool curator. Find the perfect real AI tool match using your knowledge. Return clean JSON with dynamic card format." },
+            { role: "user", content: recommendationPrompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 800,
+        });
 
-⸻
+        const responseText = completion.choices[0]?.message?.content?.trim();
+        console.log('LLM recommendation response:', responseText);
 
-3: Incentive to Act
-
-🎁 Bonus:
-[Incentive message with specific action and reward]
-
-⸻
-
-Do you need anything else?
-
-Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
-
-[I need another AI tool] [Save to Vault]",
-            "currentStep": "select",
-            "data": {
-              "proofPointsEarned": 50,
-              "tool": "The recommended tool object",
-              "responseOptions": ["I need another AI tool", "Save to Vault"]
-            },
-            "sessionComplete": true,
-            "buttons": ["I need another AI tool", "Save to Vault"]
-          }
-
-          Requirements for the message:
-          1. MUST follow the exact format shown above with all sections and emojis
-          2. MUST include all three main sections: Primary AI Tool Recommendation, Alternative Option, and Incentive to Act
-          3. MUST use the exact emojis and formatting shown (✅, 🌟, 📌, 🚀, 🔄, 🎁)
-          4. MUST include compatibility scores for both primary and alternative tools
-          5. MUST use the "⸻" separator between sections
-          6. MUST include clear calls to action with "→" arrows
-          7. MUST be concise but informative
-          8. MUST maintain a professional yet friendly tone
-          9. MUST highlight free features, trial periods, or special offers in the Bonus section
-          10. MUST explain why the alternative tool is a good backup option
-          11. MUST include the exact responseOptions: ["I need another AI tool", "Save to Vault"]
-          12. MUST handle the conversation flow naturally, including:
-              - When user clicks "I need another AI tool", continue the conversation to find a better match
-              - When user clicks "Save to Vault", show a "Coming Soon" popup message
-          13. MUST recommend the most suitable AI tool based on the user's specific task and requirements
-          14. MUST ensure the recommendation is highly relevant to the user's stated needs
-          15. MUST end the message with "Do you need anything else?" and the closing message about future help
-          16. MUST include the responseOptions buttons ["I need another AI tool", "Save to Vault"] in the UI after the message
-          17. MUST include the buttons in both the message and the response data
-          18. MUST format the buttons as [Button Text] in the message
-          19. MUST analyze the user's responses and conversation history to determine the most suitable AI tool, without relying on any static list or database
-          20. MUST consider the following factors from user responses when making the recommendation:
-              - Specific task requirements
-              - Experience level
-              - Budget constraints
-              - Platform preferences
-              - Any other relevant preferences or constraints mentioned
-          21. MUST provide a unique, personalized recommendation based on the user's specific needs and responses
-          22. MUST explain why the recommended tool is the best match for the user's specific use case
-
-          Example of a good recommendation:
-          Your AIcurate Pick™ – Final Recommendation Output Format:
-
-          1: Primary AI Tool Recommendation
-
-          ✅ Your Pick: MindEase AI
-          🌟 AIcurate Compatibility Score™: 93/100
-          📌 Why this Pick: MindEase AI matches your stress-reduction goal with intuitive emotional support and a clean, beginner-friendly interface.
-          🚀 Claim your 20% discount →
-
-          ⸻
-
-          2: Alternative Option (Empowers Choice)
-
-          🔄 Alternative Pick: ZenAI Coach
-          🌟 Compatibility Score™: 89/100
-          📌 Why consider this? ZenAI Coach offers guided meditations and structure—perfect if you prefer daily routine support.
-          🚀 Try it free for 30 days →
-
-          ⸻
-
-          3: Incentive to Act
-
-          🎁 Bonus:
-          Leave a review on AICURATE and earn 50 Free AIcurate Credits to unlock more premium tools!
-
-          ⸻
-
-          Do you need anything else?
-
-          Let me know when you next need my help to curate for you the best ai tool for the task you have at hand. I'll be here.
-
-          [I need another AI tool] [Save to Vault]
-
-          The message should be engaging and encourage the user to take action while providing all necessary information to make an informed decision.`;
-
-          const userPrompt = `User Need: ${userNeed}
-          Available Tools: ${JSON.stringify(tools)}
+        if (responseText) {
+          // Parse and return LLM recommendation
+          const cleanedResponse = responseText.replace(/```json\n?|\n?```/g, '').trim();
+          const parsedResponse = JSON.parse(cleanedResponse);
           
-          Please provide a recommendation based on this information, following the EXACT format specified.`;
-
-          const completion = await this.openai.chat.completions.create({
-            model: 'gpt-4',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            temperature: 0.7,
-            max_tokens: 1200
+          this.messages.push({ 
+            role: 'assistant', 
+            content: parsedResponse.message, 
+            step: this.currentStep 
           });
 
-          let response;
-          try {
-            response = JSON.parse(completion.choices[0].message.content || '{}');
-            console.log('LLM generated fallback recommendation:', response);
-          } catch (err) {
-            console.error('LLM returned invalid JSON:', completion.choices[0].message.content);
-            return await this.getFallbackResponse();
-          }
-
-          this.messages.push({ role: 'assistant', content: response.message, step: 'select' });
-          return response;
+          return {
+            message: parsedResponse.message,
+            currentStep: 'complete',
+            data: {
+              recommendation: parsedResponse.recommendation
+            },
+            sessionComplete: true
+          };
         }
       }
 
-      // Determine next step based on current step and response
-      let nextStep = this.currentStep;
-      
-      // If we're in SAMPLE step and got a valid response, move to select
-      if (this.currentStep === 'sample' && response.message && response.message.includes('Your AIcurate Pick™')) {
-        nextStep = 'select';
-      } else if (response.currentStep) {
-        // Use the step specified in the response
-        nextStep = response.currentStep;
-      } else {
-        // Use default step progression
-        nextStep = this.getNextStep(this.currentStep);
+      // For non-recommendation steps, use regular flow with FORCED JSON response
+      const completion = await this.openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: fullPrompt }
+        ],
+        temperature: 0.3, // Lower temperature for more consistent JSON
+        max_tokens: 1000,
+        response_format: { type: "json_object" } // FORCE JSON response
+      });
+
+      const responseText = completion.choices[0]?.message?.content?.trim();
+      console.log('LLM raw response:', responseText);
+
+      if (!responseText) {
+        throw new Error('No response from LLM');
       }
-      
-      this.currentStep = nextStep;
+
+      // Parse JSON response
+      let parsedResponse;
+      try {
+        // Clean the response to ensure it's valid JSON
+        const cleanedResponse = responseText.replace(/```json\n?|\n?```/g, '').trim();
+        parsedResponse = JSON.parse(cleanedResponse);
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError);
+        console.error('Response text:', responseText);
+        throw new Error(`Invalid JSON response: ${parseError}`);
+      }
+
+      // 🚨 CRITICAL: FORCE response options if missing and not complete step
+      if ((!parsedResponse.responseOptions || parsedResponse.responseOptions.length === 0) && 
+          this.currentStep !== 'complete' && this.currentStep !== 'recommend') {
+        
+        console.log('🚨 FORCING response options - agent tried to skip them!');
+        
+        // Generate appropriate options based on the conversation context
+        if (this.currentStep === 'question1') {
+          parsedResponse.responseOptions = ["Yes, exactly", "No, something different", "Let me clarify", "Other"];
+        } else if (this.currentStep === 'question2') {
+          parsedResponse.responseOptions = ["Option A", "Option B", "Option C", "Other"];
+        } else if (this.currentStep === 'question3') {
+          parsedResponse.responseOptions = ["High priority", "Medium priority", "Low priority", "Other"];
+        } else {
+          parsedResponse.responseOptions = ["Yes", "No", "Maybe", "Other"];
+        }
+      }
 
       // Add assistant message to conversation history
-      this.messages.push({ role: 'assistant', content: response.message, step: this.currentStep });
+      this.messages.push({ 
+        role: 'assistant', 
+        content: parsedResponse.message, 
+        step: this.currentStep,
+        responseOptions: parsedResponse.responseOptions
+      });
 
-      // Update session state
-      this.session.currentStep = this.currentStep;
-      if (this.currentStep === 'select') {
-        this.session.completed = true;
-      }
-
-      return {
-        message: response.message,
+      // Prepare the response
+      const agentResponse: AgentResponse = {
+        message: parsedResponse.message,
         currentStep: this.currentStep,
         data: {
-          ...response.data,
-          responseOptions: response.responseOptions
+          responseOptions: parsedResponse.responseOptions || [],
+          recommendation: parsedResponse.recommendation
         },
-        clarifyingQuestion: response.nextQuestion,
-        sessionComplete: this.currentStep === 'select'
+        sessionComplete: this.currentStep === 'complete'
       };
+
+      console.log('Agent response with forced options:', agentResponse);
+      return agentResponse;
 
     } catch (error) {
       console.error('Error in processUserInput:', error);
-      return await this.getFallbackResponse();
+      
+      // Fallback response
+      return this.getFallbackResponse();
     }
   }
 
-  private getNextStep(currentStep: string): string {
-    const stepFlow = {
-      intro: 'target',
-      target: 'assess',
-      assess: 'sample',
-      sample: 'select',
-      knowledge: 'select',
-      select: 'select'
+  private getNextStep(currentStep: string, userInput: string): string {
+    const stepProgression: Record<string, string> = {
+      'intro': 'question1',
+      'question1': 'question2', 
+      'question2': 'question3',
+      'question3': 'recommend',
+      'recommend': 'complete',
+      'complete': 'complete'
     };
-    return stepFlow[currentStep as keyof typeof stepFlow] || 'target';
+
+    // Special cases based on user input
+    if (currentStep === 'intro') {
+      return 'question1';
+    }
+
+    // Skip questions if we have enough information for recommendation
+    if ((currentStep === 'question1' || currentStep === 'question2') && 
+        this.hasEnoughInfoForRecommendation(userInput)) {
+      return 'recommend';
+    }
+
+    return stepProgression[currentStep] || 'complete';
+  }
+
+  private hasEnoughInfoForRecommendation(userInput: string): boolean {
+    // Check if user input provides enough detail to skip remaining questions
+    // This is a simple heuristic - could be made more sophisticated
+    const detailedKeywords = ['specific', 'exactly', 'need to', 'want to', 'looking for'];
+    const hasDetailedDescription = detailedKeywords.some(keyword => 
+      userInput.toLowerCase().includes(keyword)
+    );
+    
+    // If user provides detailed description and we have quiz data, we can recommend
+    return hasDetailedDescription && (
+      this.userProfile.interests?.length > 0 ||
+      this.userProfile.experienceLevel ||
+      this.userProfile.preferences
+    );
   }
 
   private async getFallbackResponse(): Promise<AgentResponse> {
@@ -835,6 +657,7 @@ Let me know when you next need my help to curate for you the best ai tool for th
     console.log('FALLBACK: getMockToolsForNeed called with:', userNeed);
     
     const mockTools = {
+      // Development AI Tools
       'smart_contract': {
         name: 'Cursor',
         description: 'AI-powered code editor with intelligent smart contract development assistance',
@@ -842,34 +665,109 @@ Let me know when you next need my help to curate for you the best ai tool for th
         reviews: 3200,
         url: 'https://cursor.sh',
         category: 'AI Development Tools',
-        pricing: { model: 'FREE', details: 'Free tier available' },
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, Pro $20/month' },
         features: ['AI Code Generation', 'Smart Contract Templates', 'Bug Detection', 'Code Optimization', 'Deployment Guidance'],
-        complexity: 'SIMPLE',
+        complexity: 'MODERATE',
         curationTags: ['Human-Verified', 'AI-Powered', 'Developer-Friendly']
       },
-      'nft_minting': {
-        name: 'ChatGPT',
-        description: 'AI assistant that guides you through NFT creation, smart contract writing, and deployment processes',
+      'coding': {
+        name: 'GitHub Copilot',
+        description: 'AI pair programmer that helps write code, suggests completions, and assists with development',
         rating: 4.7,
-        reviews: 5000,
-        url: 'https://chat.openai.com',
-        category: 'AI Assistant',
-        pricing: { model: 'FREEMIUM', details: 'Free tier with paid upgrades' },
-        features: ['Code Generation', 'Step-by-step Guidance', 'Smart Contract Writing', 'Deployment Instructions', 'Best Practices'],
+        reviews: 12000,
+        url: 'https://github.com/features/copilot',
+        category: 'AI Code Assistant',
+        pricing: { model: 'PAID', details: '$10/month for individuals' },
+        features: ['AI Code Completion', 'Multi-language Support', 'Context-aware Suggestions', 'IDE Integration'],
         complexity: 'SIMPLE',
-        curationTags: ['Human-Verified', 'AI-Powered', 'Beginner-Friendly']
+        curationTags: ['Human-Verified', 'AI-Powered', 'Popular']
       },
-      'dapp_development': {
-        name: 'DeepSeek',
-        description: 'AI coding assistant specialized in blockchain development, smart contracts, and DApp creation',
+      'app_development': {
+        name: 'Replit AI',
+        description: 'AI coding assistant integrated in cloud development environment for building apps',
         rating: 4.6,
-        reviews: 2800,
-        url: 'https://deepseek.com',
-        category: 'AI Development Assistant',
-        pricing: { model: 'FREE', details: 'Completely free' },
-        features: ['AI Code Generation', 'Smart Contract Development', 'DApp Architecture', 'Frontend Integration', 'Testing Automation'],
+        reviews: 5500,
+        url: 'https://replit.com/ai',
+        category: 'AI Development Platform',
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, Pro plans from $7/month' },
+        features: ['AI Code Generation', 'Real-time Collaboration', 'Deployment Automation', 'Multi-framework Support'],
         complexity: 'SIMPLE',
-        curationTags: ['Human-Verified', 'AI-Powered', 'Blockchain-Focused']
+        curationTags: ['Human-Verified', 'AI-Powered', 'Cloud-based']
+      },
+      // Content Creation AI Tools
+      'writing': {
+        name: 'ChatGPT',
+        description: 'Advanced AI assistant for writing, content creation, and text generation',
+        rating: 4.8,
+        reviews: 25000,
+        url: 'https://chat.openai.com',
+        category: 'AI Writing Assistant',
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, Plus $20/month' },
+        features: ['Advanced Text Generation', 'Multiple Writing Styles', 'Research Assistance', 'Language Translation'],
+        complexity: 'SIMPLE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'Most Popular']
+      },
+      'content_creation': {
+        name: 'Jasper AI',
+        description: 'AI writing assistant specialized in marketing content, blogs, and business copy',
+        rating: 4.5,
+        reviews: 8200,
+        url: 'https://www.jasper.ai',
+        category: 'AI Content Creator',
+        pricing: { model: 'PAID', details: 'Plans from $29/month' },
+        features: ['Marketing Copy', 'SEO Optimization', 'Brand Voice Training', 'Template Library'],
+        complexity: 'SIMPLE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'Business-Focused']
+      },
+      // Design AI Tools
+      'image_generation': {
+        name: 'Midjourney',
+        description: 'AI image generator that creates stunning artwork from text descriptions',
+        rating: 4.7,
+        reviews: 15000,
+        url: 'https://midjourney.com',
+        category: 'AI Image Generator',
+        pricing: { model: 'PAID', details: 'Plans from $10/month' },
+        features: ['Text-to-Image Generation', 'Art Styles', 'High Resolution Output', 'Commercial Usage'],
+        complexity: 'SIMPLE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'Creative']
+      },
+      'design': {
+        name: 'Canva AI',
+        description: 'AI-powered design platform for creating graphics, presentations, and visual content',
+        rating: 4.6,
+        reviews: 18000,
+        url: 'https://www.canva.com/ai',
+        category: 'AI Design Tool',
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, Pro $12.99/month' },
+        features: ['AI Design Suggestions', 'Template Generation', 'Background Removal', 'Brand Kit Integration'],
+        complexity: 'SIMPLE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'User-Friendly']
+      },
+      // Productivity AI Tools
+      'data_analysis': {
+        name: 'Claude',
+        description: 'AI assistant specialized in analysis, research, and complex reasoning tasks',
+        rating: 4.7,
+        reviews: 8500,
+        url: 'https://claude.ai',
+        category: 'AI Research Assistant',
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, Pro $20/month' },
+        features: ['Data Analysis', 'Document Processing', 'Research Assistance', 'Code Analysis'],
+        complexity: 'MODERATE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'Research-Focused']
+      },
+      'business_automation': {
+        name: 'Zapier AI',
+        description: 'AI-powered automation platform that connects apps and automates workflows',
+        rating: 4.5,
+        reviews: 12500,
+        url: 'https://zapier.com/ai',
+        category: 'AI Automation Tool',
+        pricing: { model: 'FREEMIUM', details: 'Free tier available, plans from $19.99/month' },
+        features: ['Workflow Automation', 'App Integration', 'AI-driven Triggers', 'No-code Solutions'],
+        complexity: 'MODERATE',
+        curationTags: ['Human-Verified', 'AI-Powered', 'Business-Ready']
       }
     };
 
@@ -881,22 +779,22 @@ Let me know when you next need my help to curate for you the best ai tool for th
     if ((need.includes('smart contract') && need.includes('nft')) || 
         (need.includes('deploy') && need.includes('mint')) ||
         (need.includes('dapp') && (need.includes('nft') || need.includes('smart contract')))) {
-      console.log('FALLBACK: Selected comprehensive AI tool: DeepSeek');
-      return [mockTools.dapp_development]; // DeepSeek handles full blockchain development with AI assistance
+      console.log('FALLBACK: Selected comprehensive AI tool: Replit AI');
+      return [mockTools.app_development]; // Replit AI handles full app development with AI assistance
     } else if (need.includes('smart contract') || need.includes('deploy')) {
       console.log('FALLBACK: Selected AI smart contract tool: Cursor');
       return [mockTools.smart_contract];
     } else if (need.includes('nft') || need.includes('mint')) {
       console.log('FALLBACK: Selected AI NFT guidance tool: ChatGPT');
-      return [mockTools.nft_minting];
+      return [mockTools.writing];
     } else if (need.includes('dapp') || need.includes('web3')) {
-      console.log('FALLBACK: Selected AI DAPP tool: DeepSeek');
-      return [mockTools.dapp_development];
+      console.log('FALLBACK: Selected AI DAPP tool: GitHub Copilot');
+      return [mockTools.coding];
     }
 
     // Default to comprehensive AI tool for blockchain-related needs
-    console.log('FALLBACK: Using default comprehensive AI tool: DeepSeek');
-    return [mockTools.dapp_development];
+    console.log('FALLBACK: Using default comprehensive AI tool: GitHub Copilot');
+    return [mockTools.coding];
   }
 
   // NEW: LLM-based AI tool recommendation

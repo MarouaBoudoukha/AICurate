@@ -24,7 +24,7 @@ const slides = [
     id: 2,
     title: "Launch Your AI Journey in minutes",
     subtitle: "From overwhelmed to empowered",
-    image: "/onboarding/launch.jpg",
+    image: "/onboarding/launch.png",
     checklist: [
       "Too many AI tools? We''ll match you with the best ones — curated just for you.",
       "We recommend only what truly works for your task, budget, and skill level.",

@@ -71,30 +71,31 @@ export default function SettingsPage() {
         Settings
       </motion.h1>
 
+      {/* Settings Options */}
       <motion.div
-        className="bg-white rounded-xl shadow-lg p-4 space-y-2"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        className="space-y-4"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.08 } }
+        }}
       >
-        {settingsOptions.map((option, index) => (
-          <motion.div
+        {settingsOptions.map((option, i) => (
+          <motion.button
             key={option.label}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 * index, duration: 0.3 }}
+            className="w-full flex items-center justify-between bg-white rounded-xl shadow-lg px-4 py-4 hover:bg-indigo-50 focus:ring-2 focus:ring-indigo-300 transition group"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+            onClick={() => window.location.href = option.path}
           >
-            <Link
-              href={option.path}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-indigo-50 transition group"
-            >
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center ${option.color}`}>
-                <option.icon className="w-5 h-5" />
+            <div className="flex items-center gap-4">
+              <option.icon className={`w-6 h-6 ${option.color} group-hover:scale-110 transition-transform`} />
+              <span className="font-medium text-gray-900 text-base">{option.label}</span>
               </div>
-              <span className="flex-1 font-medium text-gray-700">{option.label}</span>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 transition" />
-            </Link>
-          </motion.div>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 transition" />
+          </motion.button>
         ))}
       </motion.div>
     </motion.div>

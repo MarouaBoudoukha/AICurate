@@ -12,7 +12,8 @@ import {
   PlusCircle, 
   ChevronRight, 
   Coins,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -22,6 +23,12 @@ const challengeSections = [
     icon: Rocket,
     color: 'text-indigo-600',
     path: '/challenge/start',
+  },
+  {
+    label: 'Verify with World Orb',
+    icon: Shield,
+    color: 'text-emerald-600',
+    path: '/challenge/world-orb',
   },
   {
     label: 'Vote with Proof',
@@ -107,41 +114,7 @@ export default function ChallengePage() {
         Complete challenges and earn rewards
       </motion.h1>
 
-      {/* Stats Widget - Using same icons as Wallet */}
-      <motion.div
-        className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm p-5 mb-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <div className="flex items-center justify-between">
-          {/* Credits Section */}
-          <div className="flex items-center gap-3">
-            <Coins className="w-8 h-8 text-purple-500" />
-            <div>
-              <div className="text-xs text-gray-500 font-medium">Credits</div>
-              <div className="text-xl font-bold text-purple-700">{credits}</div>
-            </div>
-          </div>
 
-          {/* ProofPoints Section */}
-          <div className="flex items-center gap-3">
-            <Image src="/badges/coin.PNG" alt="ProofPoints" width={32} height={32} />
-            <div>
-              <div className="text-xs text-gray-500 font-medium">ProofPoints™</div>
-              <div className="text-xl font-bold text-orange-700">{proofPoints}</div>
-            </div>
-          </div>
-
-          {/* Buy More Button */}
-          <button 
-            onClick={handleBuyMore}
-            className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-yellow-500 hover:to-pink-600 focus:ring-2 focus:ring-pink-300 transition hover:scale-105"
-          >
-            Buy More
-          </button>
-        </div>
-      </motion.div>
 
       {/* Challenge Sections */}
       <motion.div

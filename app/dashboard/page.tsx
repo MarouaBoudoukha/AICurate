@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from 'next/navigation';
-import { UserCircle, Camera, Bot, BarChart3, Trophy, Wallet, Crown, Coins } from 'lucide-react';
+import { UserCircle, Camera, Bot, BarChart3, Trophy, Wallet, Crown, Coins, Bell, History } from 'lucide-react';
 import { motion } from 'framer-motion';
 import React, { useRef, useEffect, useState } from 'react';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
@@ -124,13 +124,13 @@ export default function ProofProfile() {
       to: '/trophy',
     },
     {
-      label: 'Wallet',
-      desc: 'Phoenix Coins staked here',
-      color: 'text-pink-600',
-      bgColor: 'from-pink-50 to-pink-100',
-      icon: Wallet,
-      iconColor: 'text-pink-500',
-      to: '/settings/wallet',
+      label: 'AI Picks History',
+      desc: 'Your recommended AI tools',
+      color: 'text-green-600',
+      bgColor: 'from-green-50 to-green-100',
+      icon: History,
+      iconColor: 'text-green-500',
+      to: '/ai-picks-history',
     },
   ];
 
@@ -141,6 +141,21 @@ export default function ProofProfile() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
+      {/* Notification Bell - Top Right */}
+      <motion.div
+        className="flex justify-end mb-2"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+      >
+        <div className="relative">
+          <Bell className="w-6 h-6 text-gray-600 cursor-pointer hover:text-indigo-600 transition-colors" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-xs text-white font-bold">3</span>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Top: Welcome & Avatar */}
       <motion.div
         className="flex flex-col items-center mb-4"
