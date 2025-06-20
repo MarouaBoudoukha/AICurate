@@ -239,50 +239,50 @@ Note: World App automatically recognizes CUR8 transactions!`;
 
       // Fallback for external browsers with MetaMask
       if (typeof window !== 'undefined' && window.ethereum) {
-        console.log('🦊 Adding CUR8 to MetaMask on World Chain...');
+      console.log('🦊 Adding CUR8 to MetaMask on World Chain...');
 
-        // Switch to World Chain network
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: `0x${worldChainConfig.chainId.toString(16)}` }],
-          });
-        } catch (switchError) {
-          // If network doesn't exist, add it
-          if (switchError.code === 4902) {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: `0x${worldChainConfig.chainId.toString(16)}`,
-                chainName: worldChainConfig.name,
-                nativeCurrency: {
-                  name: 'ETH',
-                  symbol: 'ETH',
-                  decimals: 18,
-                },
-                rpcUrls: [worldChainConfig.rpcUrl],
-                blockExplorerUrls: [worldChainConfig.explorerUrl],
-              }],
-            });
-          }
-        }
-
-        // Add CUR8 token
+      // Switch to World Chain network
+      try {
         await window.ethereum.request({
-          method: 'wallet_watchAsset',
-          params: {
-            type: 'ERC20',
-            options: {
-              address: contractAddress,
-              symbol: 'CUR8',
-              decimals: 18,
-              image: `${window.location.origin}/tokens/cur8-token.png`,
-            },
-          },
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: `0x${worldChainConfig.chainId.toString(16)}` }],
         });
+      } catch (switchError) {
+        // If network doesn't exist, add it
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: `0x${worldChainConfig.chainId.toString(16)}`,
+              chainName: worldChainConfig.name,
+              nativeCurrency: {
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18,
+              },
+              rpcUrls: [worldChainConfig.rpcUrl],
+              blockExplorerUrls: [worldChainConfig.explorerUrl],
+            }],
+          });
+        }
+      }
 
-        console.log('✅ CUR8 added to MetaMask!');
-        return { success: true };
+      // Add CUR8 token
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: contractAddress,
+            symbol: 'CUR8',
+            decimals: 18,
+            image: `${window.location.origin}/tokens/cur8-token.png`,
+          },
+        },
+      });
+
+      console.log('✅ CUR8 added to MetaMask!');
+      return { success: true };
       }
 
       // No wallet available

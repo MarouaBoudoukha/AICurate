@@ -8,15 +8,13 @@ import {
   ThumbsUp, 
   Share2, 
   FlaskConical, 
-  Award, 
   BookOpen, 
   PlusCircle, 
   ChevronRight, 
   Coins,
-  Users,
-  Trophy,
-  Star
+  X
 } from 'lucide-react';
+import Image from 'next/image';
 
 const challengeSections = [
   {
@@ -44,12 +42,6 @@ const challengeSections = [
     path: '/challenge/test',
   },
   {
-    label: 'Claim Rewards',
-    icon: Award,
-    color: 'text-yellow-500',
-    path: '/challenge/claim',
-  },
-  {
     label: 'Educate or Write',
     icon: BookOpen,
     color: 'text-green-600',
@@ -61,18 +53,13 @@ const challengeSections = [
     color: 'text-indigo-500',
     path: '/challenge/list',
   },
-  {
-    label: 'Join Clan Battle',
-    icon: Users,
-    color: 'text-red-500',
-    path: '/challenge/clan',
-  },
 ];
 
 export default function ChallengePage() {
   const router = useRouter();
   const [credits, setCredits] = useState(3);
   const [proofPoints, setProofPoints] = useState(150);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const unifiedSession = useUnifiedSession();
 
   // Load user data like wallet does
@@ -100,6 +87,10 @@ export default function ChallengePage() {
     }
   }, [unifiedSession?.status, unifiedSession?.user?.id]);
 
+  const handleBuyMore = () => {
+    setShowComingSoon(true);
+  };
+
   return (
     <motion.div
       className="p-4 max-w-2xl mx-auto"
@@ -113,33 +104,43 @@ export default function ChallengePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
       >
-        Join the Top AI Explorers & shape the future of AI
+        Complete challenges and earn rewards
       </motion.h1>
 
-      {/* Stats Widget */}
+      {/* Stats Widget - Using same icons as Wallet */}
       <motion.div
-        className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow px-5 py-4 mb-6"
+        className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow-sm p-5 mb-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <div className="flex items-center gap-3">
-          <Coins className="w-7 h-7 text-yellow-500" />
-          <div>
-            <div className="text-xs text-gray-500">Credits Available</div>
-            <div className="text-xl font-bold text-indigo-700">{credits}</div>
+        <div className="flex items-center justify-between">
+          {/* Credits Section */}
+          <div className="flex items-center gap-3">
+            <Coins className="w-8 h-8 text-purple-500" />
+            <div>
+              <div className="text-xs text-gray-500 font-medium">Credits</div>
+              <div className="text-xl font-bold text-purple-700">{credits}</div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Star className="w-7 h-7 text-purple-500" />
-          <div>
-            <div className="text-xs text-gray-500">ProofPoints™</div>
-            <div className="text-xl font-bold text-purple-700">{proofPoints}</div>
+
+          {/* ProofPoints Section */}
+          <div className="flex items-center gap-3">
+            <Image src="/badges/coin.PNG" alt="ProofPoints" width={32} height={32} />
+            <div>
+              <div className="text-xs text-gray-500 font-medium">ProofPoints™</div>
+              <div className="text-xl font-bold text-orange-700">{proofPoints}</div>
+            </div>
           </div>
+
+          {/* Buy More Button */}
+          <button 
+            onClick={handleBuyMore}
+            className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-yellow-500 hover:to-pink-600 focus:ring-2 focus:ring-pink-300 transition hover:scale-105"
+          >
+            Buy More
+          </button>
         </div>
-        <button className="ml-4 px-4 py-2 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-yellow-500 hover:to-pink-600 focus:ring-2 focus:ring-pink-300 transition">
-          Buy More
-        </button>
       </motion.div>
 
       {/* Challenge Sections */}
@@ -169,6 +170,42 @@ export default function ChallengePage() {
           </motion.button>
         ))}
       </motion.div>
+
+      {/* Coming Soon Popup */}
+      {showComingSoon && (
+        <motion.div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowComingSoon(false)}
+        >
+          <motion.div
+            className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Coming Soon!</h3>
+              <button
+                onClick={() => setShowComingSoon(false)}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-gray-600 mb-4">
+              This feature is currently in development. Stay tuned for updates!
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 rounded-lg font-medium hover:from-indigo-600 hover:to-purple-600 transition"
+            >
+              Got it!
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 } 

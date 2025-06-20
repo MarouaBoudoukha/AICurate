@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, Gift, Award, Rocket, ArrowLeft, Users, Clock, Star, X } from 'lucide-react';
+import { Coins, Gift, Award, Rocket, ArrowLeft, Users, Clock, Star, X, Timer, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
@@ -171,7 +171,7 @@ export default function StartChallengePage() {
     >
       <motion.button
         onClick={() => router.push('/challenge')}
-        className="mb-4 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 rounded hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-400 transition flex items-center gap-2"
+        className="mb-6 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 rounded hover:bg-indigo-200 focus:ring-2 focus:ring-indigo-400 transition flex items-center gap-2"
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.05, duration: 0.4 }}
@@ -179,143 +179,183 @@ export default function StartChallengePage() {
         <ArrowLeft className="w-5 h-5" /> Go Back
       </motion.button>
 
-      {/* Balance Widget */}
+      {/* Tabs */}
       <motion.div
-        className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow px-5 py-4 mb-6"
+        className="flex space-x-2 mb-6 overflow-x-auto pb-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
       >
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <Coins className="w-6 h-6 text-yellow-500" />
-              <div>
-                <div className="text-xs text-gray-500">Credits</div>
-                <div className="text-lg font-bold text-indigo-700">{credits}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-purple-500" />
-          <div>
-                <div className="text-xs text-gray-500">ProofPoints™</div>
-                <div className="text-lg font-bold text-purple-700">{proofPoints}</div>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 bg-green-500 text-white text-sm rounded-lg font-semibold shadow hover:bg-green-600 focus:ring-2 focus:ring-green-300 transition">
-              convert to credits
-            </button>
-            <button className="px-3 py-1 bg-purple-500 text-white text-sm rounded-lg font-semibold shadow hover:bg-purple-600 focus:ring-2 focus:ring-purple-300 transition">
-              stake coins
-            </button>
-          </div>
-        </div>
-        <button className="w-full px-4 py-2 bg-gradient-to-r from-yellow-400 to-pink-500 text-white rounded-lg font-semibold shadow hover:from-yellow-500 hover:to-pink-600 focus:ring-2 focus:ring-pink-300 transition">
-          Buy more widget with tokens/FIAT
-        </button>
-      </motion.div>
-
-      {/* Tabs */}
-      <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition ${
+            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition transform hover:scale-105 ${
               activeTab === tab.id
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             {tab.label}
           </button>
         ))}
-      </div>
+      </motion.div>
 
-      {/* Challenge Cards */}
-      <div className="space-y-4">
+      {/* Challenge Cards - Enhanced with Dynamic Animations */}
+      <motion.div
+        className="space-y-6"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.1 } }
+        }}
+      >
         {challenges[activeTab].map((challenge, index) => (
           <motion.div
             key={challenge.title}
-            className={`bg-white rounded-xl shadow-lg overflow-hidden ${
-              challenge.featured ? 'border-2 border-indigo-500' : ''
+            variants={{
+              hidden: { opacity: 0, y: 30, scale: 0.95 },
+              visible: { opacity: 1, y: 0, scale: 1 }
+            }}
+            transition={{ delay: 0.2 + index * 0.1, duration: 0.5 }}
+            className={`group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg hover:shadow-xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 ${
+              challenge.featured ? 'ring-2 ring-indigo-500 ring-opacity-50' : ''
             }`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
           >
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900">{challenge.title}</h3>
-                  {isDetailedChallenge(challenge) && (
-                    <div className="text-sm text-gray-600 mt-2 whitespace-pre-line">
-                      {challenge.blurb}
+            {/* Featured Badge */}
+            {challenge.featured && (
+              <motion.div
+                className="absolute top-4 right-4 z-10"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.5 + index * 0.1, duration: 0.5, type: 'spring' }}
+              >
+                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  Featured
+                </div>
+              </motion.div>
+            )}
+
+            <div className="p-6">
+              {/* Header */}
+              <motion.div
+                className="mb-4"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-indigo-700 transition-colors">
+                  {challenge.title}
+                </h3>
+                {isDetailedChallenge(challenge) && (
+                  <div className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-lg p-3 border-l-4 border-indigo-300">
+                    {challenge.blurb.split('\n').map((line, i) => (
+                      <div key={i} className={line.trim() === '' ? 'h-2' : ''}>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Stats Grid */}
+              {isDetailedChallenge(challenge) && (
+                <motion.div
+                  className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 + index * 0.1 }}
+                >
+                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-3 flex items-center gap-2">
+                    <Star className="w-5 h-5 text-yellow-600" />
+                    <div>
+                      <div className="text-xs text-gray-500">Reward</div>
+                      <div className="text-sm font-semibold text-yellow-700">{challenge.reward.split(' ')[0]} pts</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-3 flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <div className="text-xs text-gray-500">Cost</div>
+                      <div className="text-sm font-semibold text-blue-700">{challenge.requiredCredits} credits</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-3 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-green-600" />
+                    <div>
+                      <div className="text-xs text-gray-500">Participants</div>
+                      <div className="text-sm font-semibold text-green-700">{challenge.participants}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-3 flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <div className="text-xs text-gray-500">Duration</div>
+                      <div className="text-sm font-semibold text-purple-700">{challenge.duration}</div>
+                    </div>
+                  </div>
+
+                  {challenge.badge && (
+                    <div className="bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg p-3 flex items-center gap-2">
+                      <Award className="w-5 h-5 text-pink-600" />
+                      <div>
+                        <div className="text-xs text-gray-500">Badge</div>
+                        <div className="text-sm font-semibold text-pink-700">Included</div>
+                      </div>
                     </div>
                   )}
-                </div>
-                {challenge.featured && (
-                  <span className="px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full ml-2 flex-shrink-0">
-                    Featured
-                  </span>
-                )}
-              </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="flex items-center gap-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm text-gray-600">{challenge.reward}</span>
-                </div>
-                {isDetailedChallenge(challenge) && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <Coins className="w-4 h-4 text-indigo-500" />
-                      <span className="text-sm text-gray-600">{challenge.requiredCredits} credits</span>
-                    </div>
-                    {challenge.badge && (
-                      <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm text-gray-600">{challenge.badge}</span>
+                  {challenge.endsIn && (
+                    <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-3 flex items-center gap-2">
+                      <Timer className="w-5 h-5 text-red-600" />
+                      <div>
+                        <div className="text-xs text-gray-500">Ends in</div>
+                        <div className="text-sm font-semibold text-red-700">{challenge.endsIn}</div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-blue-500" />
-                      <span className="text-sm text-gray-600">{challenge.participants} participants</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-green-500" />
-                      <span className="text-sm text-gray-600">{challenge.duration}</span>
-                    </div>
-                  </>
-                )}
-              </div>
+                  )}
+                </motion.div>
+              )}
 
-              {isDetailedChallenge(challenge) && challenge.endsIn && (
-                <div className="text-sm text-gray-500 mb-4">
-                  Ends in: <span className="font-medium text-indigo-600">{challenge.endsIn}</span>
+              {/* Simple challenges reward display */}
+              {!isDetailedChallenge(challenge) && (
+                <div className="mb-4 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-indigo-600" />
+                    <span className="text-sm font-medium text-indigo-700">{challenge.reward}</span>
+                  </div>
                 </div>
               )}
 
-              <div className="flex gap-2">
-              <button
-                onClick={() => handleJoinChallenge(challenge)}
-                  className="flex-1 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-300 transition"
+              {/* Action Buttons */}
+              <motion.div
+                className="flex gap-3"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: 'spring', stiffness: 300 }}
               >
-                  Join
-                </button>
-                <button
+                <motion.button
+                  onClick={() => handleJoinChallenge(challenge)}
+                  className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 focus:ring-2 focus:ring-indigo-300 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Join Challenge
+                </motion.button>
+                <motion.button
                   onClick={() => {/* Add view functionality if needed */}}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition"
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 focus:ring-2 focus:ring-gray-300 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                  whileTap={{ scale: 0.95 }}
                 >
                   View
-              </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Coming Soon Popup */}
       <AnimatePresence>

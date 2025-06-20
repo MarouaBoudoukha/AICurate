@@ -1,8 +1,131 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, QuestionType } from '@prisma/client';
 import { CUR8TokenService } from '@/lib/services/cur8TokenService';
 
 const prisma = new PrismaClient();
+
+export async function GET(req: NextRequest) {
+  try {
+    // Fetch all quiz questions from the database
+    const questions = await prisma.quizQuestion.findMany({
+      where: { isActive: true },
+      orderBy: { order: 'asc' }
+    });
+
+    // If no questions exist, create default onboarding questions
+    if (questions.length === 0) {
+      const defaultQuestions = [
+        {
+          question: 'What are your interests?',
+          type: QuestionType.MULTIPLE_CHOICE,
+          options: ['Technology', 'Business', 'Creative Arts', 'Science', 'Health & Fitness', 'Travel', 'Education', 'Entertainment'],
+          category: 'PERSONAL',
+          order: 1,
+          isActive: true
+        },
+        {
+          question: 'What is your location?',
+          type: QuestionType.TEXT,
+          options: undefined,
+          category: 'PERSONAL',
+          order: 2,
+          isActive: true
+        },
+        {
+          question: 'What city are you in?',
+          type: QuestionType.TEXT,
+          options: undefined,
+          category: 'PERSONAL',
+          order: 3,
+          isActive: true
+        },
+        {
+          question: 'How old are you?',
+          type: QuestionType.MULTIPLE_CHOICE,
+          options: ['18-25', '26-35', '36-45', '46-55', '56-65', '65+'],
+          category: 'PERSONAL',
+          order: 4,
+          isActive: true
+        },
+        {
+          question: 'Where do you hang out most online?',
+          type: QuestionType.MULTI_SELECT,
+          options: ['Twitter/X', 'LinkedIn', 'Instagram', 'TikTok', 'YouTube', 'Discord', 'Reddit', 'Facebook'],
+          category: 'DIGITAL',
+          order: 5,
+          isActive: true
+        },
+        {
+          question: 'What do you want AI to help you with?',
+          type: QuestionType.MULTI_SELECT,
+          options: ['Writing & Content', 'Image Generation', 'Code & Development', 'Research & Analysis', 'Personal Assistant', 'Learning & Education'],
+          category: 'AI_USAGE',
+          order: 6,
+          isActive: true
+        },
+        {
+          question: 'What\'s your comfort level with AI?',
+          type: QuestionType.SCALE,
+          options: undefined,
+          category: 'AI_USAGE',
+          order: 7,
+          isActive: true
+        },
+        {
+          question: 'What\'s your monthly budget for AI tools?',
+          type: QuestionType.MULTIPLE_CHOICE,
+          options: ['$0 (Free only)', '$1-20', '$21-50', '$51-100', '$101-200', '$200+'],
+          category: 'AI_USAGE',
+          order: 8,
+          isActive: true
+        }
+      ];
+
+      // Create the default questions
+      const createdQuestions = await Promise.all(
+        defaultQuestions.map((q) =>
+          prisma.quizQuestion.create({
+            data: q
+          })
+        )
+      );
+
+      // Return the created questions
+      return NextResponse.json({
+        success: true,
+        questions: createdQuestions.map(q => ({
+          id: q.id,
+          question: q.question,
+          type: q.type,
+          category: q.category,
+          options: q.options,
+          order: q.order
+        }))
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      questions: questions.map(q => ({
+        id: q.id,
+        question: q.question,
+        type: q.type,
+        category: q.category,
+        options: q.options,
+        order: q.order
+      }))
+    });
+
+  } catch (error) {
+    console.error('Error fetching quiz questions:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch quiz questions' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -75,7 +198,7 @@ export async function POST(req: NextRequest) {
         lastActiveAt: new Date()
       }
     });
-
+    
     // Create quiz completion activity
     await prisma.userActivity.create({
       data: {
@@ -184,7 +307,8 @@ function getQuestionText(stepKey: string): string {
     'age': 'How old are you?',
     'platforms': 'Where do you hang out most online?',
     'tasks': 'What do you want AI to help you with?',
-    'comfort': 'What\'s your comfort level with AI?'
+    'comfort': 'What\'s your comfort level with AI?',
+    'budget': 'What\'s your monthly budget for AI tools?'
   };
   
   return questionTexts[stepKey] || `Question: ${stepKey}`;
@@ -199,7 +323,8 @@ function getQuestionOrder(stepKey: string): number {
     'age': 4,
     'platforms': 5,
     'tasks': 6,
-    'comfort': 7
+    'comfort': 7,
+    'budget': 8
   };
   
   return orderMap[stepKey] || 0;

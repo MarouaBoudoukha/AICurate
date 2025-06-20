@@ -62,13 +62,28 @@ export function Onboarding() {
 
   const handleNext = () => {
     if (currentSlide === slides.length - 1) {
-      router.push('/landing');
+      setCurrentSlide(prev => prev + 1);
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
     } else {
       setCurrentSlide(prev => prev + 1);
       if ('vibrate' in navigator) {
         navigator.vibrate(50);
       }
     }
+  };
+
+  // Handle page click to advance
+  const handlePageClick = () => {
+    if (currentSlide < slides.length - 1) {
+      handleNext();
+    }
+  };
+
+  // Handle sign in button
+  const handleSignIn = () => {
+    router.push('/landing');
   };
 
   const slide = slides[currentSlide];
@@ -95,7 +110,10 @@ export function Onboarding() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f8fa] pt-safe pb-safe">
       <div className="screen-1-container flex flex-col" style={{position: 'relative'}}>
-        <div className="screen-1-content flex flex-col items-center justify-between">
+        <div 
+          className="screen-1-content flex flex-col items-center justify-between cursor-pointer"
+          onClick={handlePageClick}
+        >
           {/* Carousel dots at the top */}
           <div className="w-full flex flex-col items-center mb-8">
             <div className="flex flex-row items-center justify-center gap-2">
@@ -181,12 +199,12 @@ export function Onboarding() {
             )}
           </div>
           {/* Bottom section with button */}
-          <div className="w-full flex flex-col items-center">
+          <div className="w-full flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
             <button
-              onClick={handleNext}
+              onClick={handleSignIn}
               className={currentSlide === 4 ? "welcome-cta-btn" : "plain-cta-btn"}
             >
-              {currentSlide === 0 ? 'Let\'s go →' : 'Next →'}
+              Sign In
             </button>
           </div>
         </div>
@@ -208,6 +226,10 @@ export function Onboarding() {
           display: flex;
           flex-direction: column;
           align-items: center;
+          transition: background-color 0.2s ease;
+        }
+        .screen-1-content:hover {
+          background-color: rgba(139, 92, 246, 0.02);
         }
         .journey-headline {
           font-size: 28px;
@@ -256,6 +278,10 @@ export function Onboarding() {
           box-shadow: 0 8px 25px rgba(16, 185, 129, 0.25);
           position: relative;
           animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
         .coin-effect {
           position: absolute;

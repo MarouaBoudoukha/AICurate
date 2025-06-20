@@ -27,12 +27,10 @@ const steps = [
 ];
 
 const conversationStarters = [
-  "I'm building a DAPP",
-  "I'm cooking a traditional dish",
-  "I'm planning a roadtrip",
-  "I'm creating content for social media",
-  "I'm analyzing data for insights",
-  "I'm automating my business workflow"
+  "I need an AI to write a book",
+  "I need an AI to build an app", 
+  "I need an AI to plan trips",
+  "I need an AI to create content"
 ];
 
 interface Message {
@@ -550,238 +548,190 @@ export default function AgentGuideScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header with step information and timer */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-4xl mx-auto py-4 px-4 flex justify-between items-center">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+      {/* Chat Container */}
+      <div className="bg-white dark:bg-gray-800 flex-1 flex flex-col min-h-0">
+        {/* Compact Header inside chat container */}
+        <header className="border-b border-gray-200 dark:border-gray-700 flex-shrink-0 px-3 py-2">
           <div className="flex items-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-              <MessageCircle className="text-white" size={24} />
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
+              <MessageCircle className="text-white" size={12} />
             </div>
-            <div className="ml-4">
-              <h1 className="text-xl font-bold dark:text-white">AICURATE</h1>
-              {currentStep !== 'intro' && (
-                <div className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-                  <span>{stepIcons[currentStep]} {currentStep.charAt(0).toUpperCase() + currentStep.slice(1)}</span>
-                </div>
-              )}
+            <div className="ml-2">
+              <h1 className="text-sm font-bold dark:text-white">AI Guide</h1>
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                Find the perfect AI tool for your needs
+              </p>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-4xl mx-auto p-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            AI Tool Curation — Powered by TASKS™
-          </h1>
-          <p className="mt-3 text-lg text-gray-600 dark:text-gray-300">
-            Intelligent AI tool matching in under 3 minutes
-          </p>
-        </div>
-
-
-
-        {/* Chat Container */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 h-[600px] flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="mb-4 flex justify-center">
-                    <Image
-                      src="/onboarding/aicurate_agent.png"
-                      alt="AICurate Agent"
-                      width={120}
-                      height={120}
-                      className="rounded-full"
-                    />
-                  </div>
-                  <p className="text-xl text-gray-800 dark:text-gray-200 mb-2">
-                    I&apos;m Accurate — your personal AI-powered curator. I help you find the best AI tools to get things done.
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Choose a quick start or describe your specific need
-                  </p>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto space-y-2 min-h-0 px-3 py-2">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col justify-center space-y-3">
+              <div className="text-center">
+                <div className="mb-2 flex justify-center">
+                  <Image
+                    src="/onboarding/aicurate_agent.png"
+                    alt="AICurate Agent"
+                    width={50}
+                    height={50}
+                    className="rounded-full"
+                  />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {conversationStarters.map((starter, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleStarterClick(starter)}
-                      className="p-4 text-left bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-800/30 dark:hover:to-purple-800/30 transition-all duration-300 border border-indigo-200 dark:border-indigo-700 hover:border-indigo-300 dark:hover:border-indigo-600 transform hover:scale-105 hover:shadow-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-800 flex items-center justify-center">
-                          <span className="text-indigo-600 dark:text-indigo-400">🚀</span>
-                        </div>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">{starter}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  Tell me what you need help with or choose from the suggestions below
+                </p>
               </div>
-            ) : (
-              messages.map((message, index) => (
+              <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
+                {conversationStarters.map((starter, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleStarterClick(starter)}
+                    className="p-2 text-xs text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                  >
+                    <span className="text-gray-700 dark:text-gray-200">{starter}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex ${
+                  message.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
+              >
                 <div
-                  key={index}
-                  className={`flex ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  className={`max-w-[80%] rounded-lg p-2 ${
+                    message.role === 'user'
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   }`}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
-                      message.role === 'user'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                    }`}
-                  >
-                    {message.role === 'assistant' && message.step && message.step !== 'intro' && (
-                      <div className="text-sm font-medium mb-1 text-indigo-600 dark:text-indigo-400">
-                        {stepIcons[message.step || 'intro']} {message.step.charAt(0).toUpperCase() + message.step.slice(1)}
-                      </div>
-                    )}
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                    
-                    {/* Response options as buttons */}
-                    {message.role === 'assistant' && message.responseOptions && message.responseOptions.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {message.responseOptions.map((option, optionIndex) => (
-                          <button
-                            key={optionIndex}
-                            onClick={() => {
-                              setInput(option);
-                              // Auto-send the response option
-                              setTimeout(() => {
-                                const userMessage: Message = { role: 'user', content: option, step: currentStep };
-                                setMessages(prev => [...prev, userMessage]);
-                                setInput('');
-                                setIsLoading(true);
-                                
-                                fetch('/api/agent', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    input: option,
-                                    userId,
-                                    sessionId,
-                                    currentStep,
-                                    messages: [...messages, userMessage],
-                                  }),
-                                })
-                                .then(res => res.json())
-                                .then(data => {
-                                  if (data.currentStep) setCurrentStep(data.currentStep);
-                                  if (data.sessionId) setSessionId(data.sessionId);
-                                  if (data.message.includes('Would you like a copy sent to your email')) setShowEmailInput(true);
-                                  if (data.message.includes('save this recommendation') && data.message.includes('Premium')) setIsPremiumPrompt(true);
-                                  if (data.data?.recommendation && currentStep === 'select') {
-                                    setRecommendation(data.data.recommendation);
-                                    setShowRecommendation(true);
-                                  }
-                                  setMessages(prev => [...prev, { 
-                                    role: 'assistant', 
-                                    content: data.message,
-                                    step: data.currentStep || detectStepFromContent(data.message),
-                                    responseOptions: data.data?.responseOptions || data.responseOptions
-                                  }]);
-                                })
-                                .catch(error => {
-                                  console.error('Error:', error);
-                                  setMessages(prev => [...prev, { 
-                                    role: 'assistant', 
-                                    content: 'I apologize, but I encountered an error. Please try again.',
-                                    step: currentStep
-                                  }]);
-                                })
-                                .finally(() => setIsLoading(false));
-                              }, 100);
-                            }}
-                            className="block w-full text-left px-3 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition-colors text-sm border border-indigo-200 dark:border-indigo-700"
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%] rounded-lg p-4 bg-gray-100 dark:bg-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"></div>
-                      <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce delay-75"></div>
-                      <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce delay-150"></div>
+                  {message.role === 'assistant' && message.step && message.step !== 'intro' && (
+                    <div className="text-xs font-medium mb-1 text-indigo-600 dark:text-indigo-400">
+                      {stepIcons[message.step || 'intro']} {message.step.charAt(0).toUpperCase() + message.step.slice(1)}
                     </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 animate-pulse">
-                      AICURATE is analyzing...
-                    </span>
-                  </div>
+                  )}
+                  <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                  
+                  {/* Response options as buttons */}
+                  {message.role === 'assistant' && message.responseOptions && message.responseOptions.length > 0 && (
+                    <div className="mt-1 space-y-1">
+                      {message.responseOptions.map((option, optionIndex) => (
+                        <button
+                          key={optionIndex}
+                          onClick={() => {
+                            setInput(option);
+                            // Auto-send the response option
+                            setTimeout(() => {
+                              const userMessage: Message = { role: 'user', content: option, step: currentStep };
+                              setMessages(prev => [...prev, userMessage]);
+                              setInput('');
+                              setIsLoading(true);
+                              
+                              fetch('/api/agent', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  input: option,
+                                  userId,
+                                  sessionId,
+                                  currentStep,
+                                  messages: [...messages, userMessage],
+                                }),
+                              })
+                              .then(res => res.json())
+                              .then(data => {
+                                if (data.currentStep) setCurrentStep(data.currentStep);
+                                if (data.sessionId) setSessionId(data.sessionId);
+                                if (data.message.includes('Would you like a copy sent to your email')) setShowEmailInput(true);
+                                if (data.message.includes('save this recommendation') && data.message.includes('Premium')) setIsPremiumPrompt(true);
+                                if (data.data?.recommendation && currentStep === 'select') {
+                                  setRecommendation(data.data.recommendation);
+                                  setShowRecommendation(true);
+                                }
+                                setMessages(prev => [...prev, { 
+                                  role: 'assistant', 
+                                  content: data.message,
+                                  step: data.currentStep || detectStepFromContent(data.message),
+                                  responseOptions: data.data?.responseOptions || data.responseOptions
+                                }]);
+                              })
+                              .catch(error => {
+                                console.error('Error:', error);
+                                setMessages(prev => [...prev, { 
+                                  role: 'assistant', 
+                                  content: 'I apologize, but I encountered an error. Please try again.',
+                                  step: currentStep
+                                }]);
+                              })
+                              .finally(() => setIsLoading(false));
+                            }, 100);
+                          }}
+                          className="block w-full text-left px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded hover:bg-indigo-100 dark:hover:bg-indigo-800/40 transition-colors text-xs border border-indigo-200 dark:border-indigo-700"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="flex gap-2">
-            {currentStep === 'intro' && messages.length <= 1 ? (
-              // Show conversation starters on small screens
-              <div className="md:hidden w-full">
-                <select 
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                  onChange={(e) => setInput(e.target.value)}
-                  value=""
-                >
-                  <option value="" disabled>Choose a starting point...</option>
-                  {conversationStarters.map((starter, index) => (
-                    <option key={index} value={starter}>
-                      {starter.length > 60 ? starter.substring(0, 57) + '...' : starter}
-                    </option>
-                  ))}
-                </select>
+            ))
+          )}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-lg p-2 bg-gray-100 dark:bg-gray-700">
+                <div className="flex items-center space-x-2">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce"></div>
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce delay-75"></div>
+                    <div className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce delay-150"></div>
+                  </div>
+                  <span className="text-xs text-gray-600 dark:text-gray-400 animate-pulse">
+                    AICURATE is analyzing...
+                  </span>
+                </div>
               </div>
-            ) : null}
-            
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder={showEmailInput ? "Enter your email address..." : "Type your message..."}
-              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              disabled={isLoading}
-            />
-            <Button
-              onClick={handleSend}
-              disabled={isLoading || !input.trim()}
-              className="px-4"
-            >
-              {isLoading ? 'Sending...' : 'Send'}
-            </Button>
-          </div>
-          
-          {currentStep === 'select' && (
-            <div className="mt-4 flex justify-end">
-              <Button
-                onClick={handleNewSession}
-                className="px-4"
-              >
-                New Session
-              </Button>
             </div>
           )}
-          
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            AICurate AI provides general information only. It is not medical, financial, therapeutic, or professional advice.
-          </div>
+          <div ref={messagesEndRef} />
         </div>
+
+        {/* Compact Input Area */}
+        <div className="flex gap-2 flex-shrink-0 p-3 border-t border-gray-100 dark:border-gray-700">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+            placeholder={showEmailInput ? "Enter your email address..." : "Type your message..."}
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
+            disabled={isLoading}
+          />
+          <Button
+            onClick={handleSend}
+            disabled={isLoading || !input.trim()}
+            className="px-4 py-2 text-sm"
+          >
+            {isLoading ? '...' : 'Send'}
+          </Button>
+        </div>
+        
+        {currentStep === 'select' && (
+          <div className="flex justify-end flex-shrink-0 px-3 pb-2">
+            <Button
+              onClick={handleNewSession}
+              className="px-3 py-1 text-xs"
+            >
+              New Session
+            </Button>
+          </div>
+        )}
       </div>
       
       {/* AI Tool Recommendation Modal */}

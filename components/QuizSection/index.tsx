@@ -292,6 +292,20 @@ const quizSteps: QuizStep[] = [
       { label: "Builder / Developer", icon: "🧱", desc: "Maker spirit" },
     ],
   },
+  {
+    key: 'budget',
+    title: "What's your monthly budget for AI tools?",
+    subtitle: "Help us recommend the right tools for your budget",
+    type: 'single',
+    options: [
+      { label: "Free only", icon: "💰", desc: "I prefer free tools" },
+      { label: "$1 - $20", icon: "💵", desc: "Small budget" },
+      { label: "$21 - $50", icon: "💳", desc: "Moderate budget" },
+      { label: "$51 - $100", icon: "🏦", desc: "Professional budget" },
+      { label: "$100+", icon: "💎", desc: "Enterprise budget" },
+      { label: "Not sure yet", icon: "🤔", desc: "Still exploring" },
+    ],
+  },
 ];
 
 // Add types for quiz steps and options
@@ -658,6 +672,13 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
     }
   };
 
+  // Previous step - NEW: Add back navigation
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   // Next step
   const handleNext = async () => {
     if (currentStep === quizSteps.length - 1) {
@@ -722,6 +743,8 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
         setShowReveal(false);
         setShowAlreadyMinted(true);
         setIsMinting(false);
+        setShowConfetti(false);
+        setShowMintSuccess(true);
         return;
       }
 
@@ -829,6 +852,7 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
       // Show success after minting
       setIsMinting(false);
       setShowReveal(false);
+      setShowConfetti(false);
       setShowMintSuccess(true);
 
     } catch (error) {
@@ -839,9 +863,19 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
   };
 
   const handleViewWallet = () => {
+    // Reset all quiz states to avoid showing quiz briefly
     setShowMintSuccess(false);
-    // Use replace instead of push to avoid navigation issues
-    router.replace("/settings/wallet");
+    setShowReveal(false);
+    setShowEmailCollection(false);
+    setShowIntro(false);
+    setShowAlreadyMinted(false);
+    setShowConfetti(false);
+    
+    // Small delay to ensure state changes are processed
+    setTimeout(() => {
+      // Use replace instead of push to avoid navigation issues
+      router.replace("/settings/wallet");
+    }, 100);
   };
 
   // NEW: Render intro page
@@ -940,8 +974,13 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
          <p className="text-lg text-gray-600">
            You&apos;ve completed your first AI Hunt
          </p>
-        <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
-          <span className="text-green-600 font-bold">+ 50 ProofPoints™ earned!</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+            <span className="text-green-600 font-bold">+ 50 ProofPoints™ earned!</span>
+          </div>
+          <div className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <span className="text-blue-600 font-bold">🪙 + 3 Credits earned!</span>
+          </div>
         </div>
       </motion.div>
 
@@ -971,6 +1010,26 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
         >
           {isCheckingEdgeOS ? 'Checking...' : 'Continue →'}
         </button>
+
+        {/* Debug button for testing - only show in development or on test domains */}
+        {(process.env.NODE_ENV === 'development' || 
+          (typeof window !== 'undefined' && (
+            window.location.hostname === 'localhost' ||
+            window.location.hostname.includes('vercel.app') ||
+            window.location.hostname.includes('test')
+          ))
+        ) && (
+          <button
+            onClick={() => {
+              console.log('🧪 Debug: Forcing minting page display');
+              setShowEmailCollection(false);
+              setShowReveal(true);
+            }}
+            className="w-full px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium text-sm transition-all"
+          >
+            🧪 Debug: Skip to Minting (Test Mode)
+          </button>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -981,6 +1040,8 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
     
     setIsCheckingEdgeOS(true);
     try {
+      console.log(`🔍 Checking EdgeOS status for ${userEmail}...`);
+      
       // Call EdgeOS API to check if email is part of Edge Esmeralda
       const response = await fetch('/api/check-edgeos-email', {
         method: 'POST',
@@ -992,7 +1053,15 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
         })
       });
 
+      if (!response.ok) {
+        console.error(`❌ EdgeOS API response not ok: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`API returned ${response.status}: ${errorText}`);
+      }
+
       const result = await response.json();
+      console.log('🔍 EdgeOS API result:', result);
       
       if (result.isEdgeEsmeralda) {
         // User is part of Edge Esmeralda, proceed to badge minting
@@ -1000,14 +1069,45 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
         setShowEmailCollection(false);
         setShowReveal(true);
       } else {
-        // User is not part of Edge Esmeralda, redirect to dashboard
-        console.log(`Email ${userEmail} saved, redirecting to dashboard`);
-        setShowEmailCollection(false);
-        router.push('/dashboard');
+        // Check if this is a test environment or if we want to show minting anyway
+        const isTestMode = process.env.NODE_ENV === 'development' || 
+                          window.location.hostname === 'localhost' ||
+                          userEmail.includes('test@') ||
+                          userEmail.includes('@test.com');
+        
+        if (isTestMode) {
+          console.log(`🧪 Test mode detected - showing minting page for ${userEmail}`);
+          setShowEmailCollection(false);
+          setShowReveal(true);
+        } else {
+          // User is not part of Edge Esmeralda, redirect to dashboard
+          console.log(`Email ${userEmail} saved, redirecting to dashboard`);
+          setShowEmailCollection(false);
+          router.push('/dashboard');
+        }
       }
     } catch (error) {
-      console.error('Error checking EdgeOS email:', error);
-      alert('There was an error checking your email. Please try again.');
+      console.error('❌ Error checking EdgeOS email:', error);
+      
+      // In case of API failure, show different options based on environment
+      const isDevelopment = process.env.NODE_ENV === 'development' || 
+                           window.location.hostname === 'localhost';
+      
+      if (isDevelopment) {
+        const continueAnyway = confirm(
+          `EdgeOS API failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\n` +
+          'This is development mode. Would you like to continue to minting page anyway?'
+        );
+        
+        if (continueAnyway) {
+          console.log('🧪 Development mode - continuing to minting despite API error');
+          setShowEmailCollection(false);
+          setShowReveal(true);
+          return;
+        }
+      }
+      
+      alert(`There was an error checking your email: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsCheckingEdgeOS(false);
     }
@@ -1050,14 +1150,29 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                   )}
                   {renderStep(quizSteps[currentStep], currentStep)}
                 </motion.div>
-                <motion.button
-                  className="w-full mt-8 px-4 py-3 text-white font-bold text-lg bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                >
-                  {currentStep === quizSteps.length - 1 ? 'Continue' : 'Next →'}
-                </motion.button>
+                {/* Navigation Buttons */}
+                <div className="w-full mt-8 flex gap-3">
+                  {/* Back Button - only show if not on first step */}
+                  {currentStep > 0 && (
+                    <motion.button
+                      className="px-6 py-3 text-gray-700 font-medium text-lg bg-gray-100 hover:bg-gray-200 rounded-2xl shadow-md focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleBack}
+                    >
+                      ← Back
+                    </motion.button>
+                  )}
+                  
+                  {/* Next Button */}
+                  <motion.button
+                    className={`${currentStep > 0 ? 'flex-1' : 'w-full'} px-4 py-3 text-white font-bold text-lg bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl shadow-lg hover:from-indigo-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 disabled:opacity-50 transition-all flex items-center justify-center gap-2`}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleNext}
+                    disabled={!canProceed()}
+                  >
+                    {currentStep === quizSteps.length - 1 ? 'Continue' : 'Next →'}
+                  </motion.button>
+                </div>
               </>
             )}
           </div>
@@ -1333,7 +1448,14 @@ export function QuizSection({ onQuizComplete }: { onQuizComplete?: () => void } 
                 <div className="w-full">
                   <button
                     onClick={() => {
+                      // Reset all quiz states to avoid showing quiz briefly
                       setShowAlreadyMinted(false);
+                      setShowMintSuccess(false);
+                      setShowReveal(false);
+                      setShowEmailCollection(false);
+                      setShowIntro(false);
+                      setShowConfetti(false);
+                      
                       // Use replace to avoid navigation issues
                       router.replace("/settings/wallet");
                     }}

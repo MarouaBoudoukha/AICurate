@@ -1,6 +1,6 @@
 "use client";
 import { motion } from 'framer-motion';
-import { User, CreditCard, Vault, Bell, HelpCircle, Shield, LogOut, ChevronRight, Edit } from 'lucide-react';
+import { User, CreditCard, Wallet, Bell, HelpCircle, Shield, LogOut, ChevronRight, Edit } from 'lucide-react';
 import Link from 'next/link';
 
 const settingsOptions = [
@@ -23,8 +23,8 @@ const settingsOptions = [
     path: '/settings/quiz'
   },
   {
-    label: 'Vault',
-    icon: Vault,
+    label: 'Wallet',
+    icon: Wallet,
     color: 'text-yellow-500',
     path: '/settings/wallet'
   },
@@ -63,7 +63,7 @@ export default function SettingsPage() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
     >
       <motion.h1
-        className="text-2xl font-bold mb-2 text-indigo-700"
+        className="text-2xl font-bold mb-6 text-indigo-700"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.5 }}
@@ -71,34 +71,11 @@ export default function SettingsPage() {
         Settings
       </motion.h1>
 
-      {/* Stats Widget */}
-      <motion.div
-        className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl shadow px-5 py-4 mb-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <div className="flex items-center gap-3">
-          <User className="w-7 h-7 text-indigo-500" />
-          <div>
-            <div className="text-xs text-gray-500">Account Status</div>
-            <div className="text-xl font-bold text-indigo-700">Active</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Vault className="w-7 h-7 text-purple-500" />
-          <div>
-            <div className="text-xs text-gray-500">Credits</div>
-            <div className="text-xl font-bold text-purple-700">3</div>
-          </div>
-        </div>
-      </motion.div>
-
       <motion.div
         className="bg-white rounded-xl shadow-lg p-4 space-y-2"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
       >
         {settingsOptions.map((option, index) => (
           <motion.div

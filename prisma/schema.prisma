@@ -1031,6 +1031,7 @@ enum ActivityType {
   SIGNUP
   UPGRADE
   CUR8_REWARD_MINTED
+  PROFILE_UPDATED
 }
 
 enum TrendingPeriod {
