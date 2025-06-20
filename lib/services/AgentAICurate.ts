@@ -380,7 +380,7 @@ Find the single best AI tool that matches their need with highest compatibility 
           parsedResponse.responseOptions = ["Option A", "Option B", "Option C", "Other"];
         } else if (this.currentStep === 'question3') {
           parsedResponse.responseOptions = ["High priority", "Medium priority", "Low priority", "Other"];
-        } else {
+      } else {
           parsedResponse.responseOptions = ["Yes", "No", "Maybe", "Other"];
         }
       }

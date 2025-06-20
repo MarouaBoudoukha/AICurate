@@ -11,9 +11,11 @@ import {
   TestTube, 
   Brain, 
   CheckCircle,
-  Star 
+  Star,
+  Coins 
 } from 'lucide-react';
 import { useUnifiedSession } from '@/hooks/useUnifiedSession';
+import { useCreditsStore } from '@/store/credits';
 import Image from "next/image";
 
 // Step icons for TASKS framework
@@ -294,9 +296,10 @@ function AIToolRecommendationModal({
 }
 
 export default function AgentGuideScreen() {
-  const unifiedSession = useUnifiedSession();
+  const { user, status } = useUnifiedSession();
+  const { credits, deductCredit } = useCreditsStore();
   const guestId = useMemo(() => `guest-${Math.random().toString(36).slice(2, 10)}`, []);
-  const userId = unifiedSession.user?.id || guestId;
+  const userId = user?.id || guestId;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -345,6 +348,20 @@ export default function AgentGuideScreen() {
 
   const handleSend = async () => {
     if (!input.trim()) return;
+
+    // Check if user has credits (skip for free conversation starters or email inputs)
+    if (messages.length > 0 && !isPremiumPrompt && !showEmailInput && credits <= 0) {
+      setMessages(prev => [...prev, 
+        { role: 'user', content: input, step: currentStep },
+        { 
+          role: 'assistant', 
+          content: "🪙 You've run out of credits! Each AI Guide conversation uses 1 credit. You can purchase more credits to continue getting personalized AI tool recommendations.", 
+          step: currentStep 
+        }
+      ]);
+      setInput('');
+      return;
+    }
 
     // Handle premium subscription prompt
     if (isPremiumPrompt) {
@@ -406,6 +423,11 @@ export default function AgentGuideScreen() {
       });
 
       const data = await response.json();
+      
+      // Check if response was successful and deduct credit (only for actual AI conversations, not free features)
+      if (response.ok && messages.length > 0) {
+        deductCredit();
+      }
       
       // Update current step if provided by the API
       if (data.currentStep) {
@@ -484,6 +506,19 @@ export default function AgentGuideScreen() {
 
   // Handle starting new session with a conversation starter
   const handleStarterClick = async (starter: string) => {
+    // Check if user has credits for conversation starters
+    if (credits <= 0) {
+      setMessages([
+        { role: 'user', content: starter, step: currentStep },
+        { 
+          role: 'assistant', 
+          content: "🪙 You need credits to start an AI Guide conversation! Each conversation uses 1 credit. Purchase credits to get personalized AI tool recommendations.", 
+          step: currentStep 
+        }
+      ]);
+      return;
+    }
+
     const userMessage: Message = { role: 'user', content: starter, step: currentStep };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
@@ -504,6 +539,11 @@ export default function AgentGuideScreen() {
       });
 
       const data = await response.json();
+      
+      // Check if response was successful and deduct credit
+      if (response.ok) {
+        deductCredit();
+      }
       
       // Update current step if provided by the API
       if (data.currentStep) {
@@ -584,15 +624,26 @@ export default function AgentGuideScreen() {
     <div className="h-full bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header - relative positioning */}
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 shadow-sm flex-shrink-0">
-        <div className="flex items-center">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
-            <MessageCircle className="text-white" size={12} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
+              <MessageCircle className="text-white" size={12} />
+            </div>
+            <div className="ml-2">
+              <h1 className="text-sm font-bold dark:text-white">AI Guide</h1>
+              <p className="text-xs text-gray-600 dark:text-gray-300">
+                Find the perfect AI tool for your needs
+              </p>
+            </div>
           </div>
-          <div className="ml-2">
-            <h1 className="text-sm font-bold dark:text-white">AI Guide</h1>
-            <p className="text-xs text-gray-600 dark:text-gray-300">
-              Find the perfect AI tool for your needs
-            </p>
+          
+          {/* Credits Display */}
+          <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 px-3 py-1 rounded-full border border-yellow-200 dark:border-yellow-700">
+            <Coins className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+            <div className="text-right">
+              <div className="text-xs text-gray-500 dark:text-gray-400">Credits</div>
+              <div className="text-sm font-bold text-yellow-700 dark:text-yellow-300">{credits}</div>
+            </div>
           </div>
         </div>
       </header>
@@ -621,12 +672,31 @@ export default function AgentGuideScreen() {
                   <button
                     key={index}
                     onClick={() => handleStarterClick(starter)}
-                    className="p-2 text-xs text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                    disabled={credits <= 0}
+                    className={`p-2 text-xs text-left rounded-lg transition-colors border ${
+                      credits <= 0 
+                        ? 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-500 cursor-not-allowed'
+                        : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
                   >
-                    <span className="text-gray-700 dark:text-gray-200">{starter}</span>
+                    <span className={credits <= 0 ? 'text-gray-400 dark:text-gray-500' : 'text-gray-700 dark:text-gray-200'}>
+                      {starter}
+                    </span>
                   </button>
                 ))}
               </div>
+              
+              {/* Credits warning for welcome screen */}
+              {credits <= 0 && (
+                <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg text-center">
+                  <div className="text-sm text-yellow-800 dark:text-yellow-200">
+                    🪙 You need credits to start an AI Guide conversation
+                  </div>
+                  <div className="text-xs text-yellow-600 dark:text-yellow-300 mt-1">
+                    Purchase credits to get personalized AI tool recommendations
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             messages.map((message, index) => (
@@ -660,11 +730,21 @@ export default function AgentGuideScreen() {
                             setInput(option);
                             handleSend();
                           }}
-                          className="block w-full text-left p-2 text-xs bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                          disabled={credits <= 0}
+                          className={`block w-full text-left p-2 text-xs rounded border transition-colors ${
+                            credits <= 0
+                              ? 'bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 border-gray-300 dark:border-gray-500 cursor-not-allowed'
+                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                          }`}
                         >
                           {option}
                         </button>
                       ))}
+                      {credits <= 0 && (
+                        <div className="text-xs text-yellow-600 dark:text-yellow-400 text-center mt-2">
+                          🪙 Purchase credits to continue conversation
+                        </div>
+                      )}
                     </div>
                   )}
                   
@@ -766,13 +846,25 @@ export default function AgentGuideScreen() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder={showEmailInput ? "Enter your email address..." : "Type your message or select an option above..."}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white text-sm"
-            disabled={isLoading}
+            placeholder={
+              showEmailInput 
+                ? "Enter your email address..." 
+                : credits <= 0 && messages.length === 0
+                  ? "🪙 Purchase credits to start conversation..."
+                  : credits <= 0 && messages.length > 0
+                    ? "🪙 Purchase credits to continue..."
+                    : "Type your message or select an option above..."
+            }
+            className={`flex-1 px-3 py-2 border rounded-lg focus:outline-none text-sm ${
+              credits <= 0 && !showEmailInput && !isPremiumPrompt
+                ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white'
+            }`}
+            disabled={isLoading || (credits <= 0 && !showEmailInput && !isPremiumPrompt)}
           />
           <Button
             onClick={handleSend}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || (credits <= 0 && !showEmailInput && !isPremiumPrompt)}
             className="px-4 py-2 text-sm"
           >
             {isLoading ? '...' : 'Send'}
